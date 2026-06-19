@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block content %}
+<div class="page-header">
+  <div><h1>My Wallet</h1><div class="subtitle">Balance, top-ups and usage</div></div>
+  <a href="{% url 'wallet:topup' %}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Top Up Wallet</a>
+</div>
+
+<div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+  <div class="stat-card">
+    <div class="stat-icon indigo"><i class="bi bi-wallet2"></i></div>
+    <div class="stat-info">
+      <div class="label">Current Balance</div>
+      <div class="value">{{ wallet.balance|floatformat:0 }} Coins</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="bi bi-arrow-down-circle"></i></div>
+    <div class="stat-info">
+      <div class="label">Total Credits</div>
+      <div class="value">{{ wallet.transactions.all|length }}</div>
+      <div class="sub">Lifetime top-ups</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon amber"><i class="bi bi-arrow-up-circle"></i></div>
+    <div class="stat-info">
+      <div class="label">Recent Services</div>
+      <div class="value">{{ recent_usage|length }}</div>
+      <div class="sub">Last transactions</div>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="bi bi-clock-history"></i> Recent Transactions</div>
+      <a href="{% url 'wallet:transactions' %}" class="btn btn-secondary btn-sm">All</a>
+    </div>
+    {% if recent_txns %}
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead><tr><th>Type</th><th>Amount</th><th>Balance After</th><th>Date</th></tr></thead>
+        <tbody>
+        {% for t in recent_txns %}
+        <tr>
+          <td><span class="badge {% if t.transaction_type == 'credit' %}badge-success{% else %}badge-danger{% endif %}">{{ t.get_transaction_type_display }}</span></td>
+          <td><span class="{% if t.transaction_type == 'credit' %}amount-positive{% else %}amount-negative{% endif %}">{% if t.transaction_type == 'credit' %}+{% else %}-{% endif %}{{ t.amount|floatformat:0 }} Coins</span></td>
+          <td>{{ t.balance_after|floatformat:0 }} Coins</td>
+          <td class="text-muted text-sm">{{ t.created_at|date:"d M Y, H:i" }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}<div class="empty-state"><i class="bi bi-credit-card"></i><p>No transactions yet</p></div>{% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="bi bi-gear"></i> Recent Service Usage</div>
+      <a href="{% url 'wallet:usage' %}" class="btn btn-secondary btn-sm">All</a>
+    </div>
+    {% if recent_usage %}
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead><tr><th>Service</th><th>Cost</th><th>Date</th></tr></thead>
+        <tbody>
+        {% for u in recent_usage %}
+        <tr>
+          <td>{{ u.service_name }}</td>
+          <td><span class="amount-negative">-{{ u.cost|floatformat:0 }} Coins</span></td>
+          <td class="text-muted text-sm">{{ u.created_at|date:"d M, H:i" }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}<div class="empty-state"><i class="bi bi-bar-chart"></i><p>No usage yet</p></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

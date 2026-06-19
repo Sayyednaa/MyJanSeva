@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <div><h1>Transaction History</h1></div>
+</div>
+<div class="card">
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead><tr><th>Date</th><th>Type</th><th>Amount (Coins)</th><th>Method</th><th>Balance After (Coins)</th><th>Note</th></tr></thead>
+      <tbody>
+      {% for t in page_obj %}
+      <tr>
+        <td class="text-sm text-muted">{{ t.created_at|date:"d M Y, H:i" }}</td>
+        <td><span class="badge {% if t.transaction_type == 'credit' %}badge-success{% elif t.transaction_type == 'debit' %}badge-danger{% else %}badge-info{% endif %}">{{ t.get_transaction_type_display }}</span></td>
+        <td><span class="{% if t.transaction_type == 'credit' %}amount-positive{% else %}amount-negative{% endif %}">{% if t.transaction_type == 'credit' %}+{% else %}-{% endif %}{{ t.amount|floatformat:0 }} Coins</span></td>
+        <td class="text-muted text-sm">{{ t.get_method_display }}</td>
+        <td>{{ t.balance_after|floatformat:0 }} Coins</td>
+        <td class="text-muted text-sm">{{ t.note|default:"—" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6"><div class="empty-state"><i class="bi bi-credit-card"></i><p>No transactions yet</p></div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj.has_other_pages %}
+  <div class="pagination">
+    {% if page_obj.has_previous %}<a class="page-btn" href="?page={{ page_obj.previous_page_number }}"><i class="bi bi-chevron-left"></i></a>{% endif %}
+    {% for n in page_obj.paginator.page_range %}
+    <a class="page-btn {% if n == page_obj.number %}active{% endif %}" href="?page={{ n }}">{{ n }}</a>
+    {% endfor %}
+    {% if page_obj.has_next %}<a class="page-btn" href="?page={{ page_obj.next_page_number }}"><i class="bi bi-chevron-right"></i></a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

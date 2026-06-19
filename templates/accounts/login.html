@@ -1,0 +1,105 @@
+{% extends "auth_base.html" %}
+{% block title %}Login — Jan Seva Workspace{% endblock %}
+{% block auth_body %}
+<div class="auth-card">
+  <div class="auth-logo">
+    <div class="auth-logo-icon">🏛️</div>
+    <h1>Jan Seva Workspace</h1>
+    <p>Sign in to your operator account</p>
+  </div>
+
+  <form method="post" autocomplete="on">
+    {% csrf_token %}
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <div class="search-bar">
+        <i class="bi bi-person"></i>
+        {{ form.username }}
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <div class="search-bar">
+        <i class="bi bi-lock"></i>
+        {{ form.password }}
+      </div>
+    </div>
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger">
+      <i class="bi bi-x-circle-fill"></i>{{ form.non_field_errors.0 }}
+    </div>
+    {% endif %}
+    <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:8px">
+      <i class="bi bi-box-arrow-in-right"></i> Sign In
+    </button>
+  </form>
+
+  <p style="text-align:center;margin-top:20px;color:var(--text-secondary);font-size:13px">
+    New operator? <a href="{% url 'accounts:register' %}">Create account</a>
+  </p>
+
+  <div style="margin-top: 24px; padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px;">
+    <div style="font-weight: 600; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+      <i class="bi bi-shield-lock-fill"></i>
+      <span>Quick Login (Click to Autofill)</span>
+    </div>
+    
+    <div style="display: grid; gap: 12px;">
+      <!-- Operator -->
+      <div onclick="fillCreds('demo_operator', 'operator123')" 
+           style="background: rgba(255,255,255,0.01); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.03); cursor: pointer; transition: all 0.15s;"
+           onmouseover="this.style.background='rgba(255,255,255,0.04)'; this.style.borderColor='var(--accent)';"
+           onmouseout="this.style.background='rgba(255,255,255,0.01)'; this.style.borderColor='rgba(255,255,255,0.03)';">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+          <strong style="color: var(--text-primary);">Demo Operator (Portal User)</strong>
+          <span style="color: var(--success); font-size: 11px; font-weight: 600; background: var(--success-soft); padding: 1px 6px; border-radius: 4px;">500 Coins</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-family: monospace; color: var(--text-secondary);">
+          <span>User: <strong style="color: var(--text-primary);">demo_operator</strong></span>
+          <span>Pass: <strong style="color: var(--text-primary);">operator123</strong></span>
+        </div>
+      </div>
+      
+      <!-- Admin -->
+      <div onclick="fillCreds('admin', 'admin123')" 
+           style="background: rgba(255,255,255,0.01); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.03); cursor: pointer; transition: all 0.15s;"
+           onmouseover="this.style.background='rgba(255,255,255,0.04)'; this.style.borderColor='var(--accent)';"
+           onmouseout="this.style.background='rgba(255,255,255,0.01)'; this.style.borderColor='rgba(255,255,255,0.03)';">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+          <strong style="color: var(--text-primary);">Super Admin</strong>
+          <span style="color: var(--info); font-size: 11px; font-weight: 600; background: var(--info-soft); padding: 1px 6px; border-radius: 4px;">1000 Coins</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-family: monospace; color: var(--text-secondary);">
+          <span>User: <strong style="color: var(--text-primary);">admin</strong></span>
+          <span>Pass: <strong style="color: var(--text-primary);">admin123</strong></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function fillCreds(user, pass) {
+  const userEl = document.querySelector('input[name="username"]');
+  const passEl = document.querySelector('input[name="password"]');
+  if (userEl && passEl) {
+    userEl.value = user;
+    passEl.value = pass;
+    
+    // Add micro-animation effect to input wrappers to highlight the fill action
+    [userEl, passEl].forEach(el => {
+      const container = el.closest('.search-bar');
+      if (container) {
+        container.style.borderColor = 'var(--accent)';
+        container.style.boxShadow = '0 0 12px var(--accent-glow)';
+        setTimeout(() => {
+          container.style.borderColor = '';
+          container.style.boxShadow = '';
+        }, 600);
+      }
+    });
+  }
+}
+</script>
+{% endblock %}
+

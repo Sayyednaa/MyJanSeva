@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <div><h1>Upload Document</h1></div>
+  <a href="{% url 'documents:list' %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div class="form-section">
+    <div class="form-section-title"><i class="bi bi-folder2-open"></i> Document Details</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Customer *</label>
+        {{ form.customer }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Document Name *</label>
+        {{ form.name }}
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Category *</label>
+        {{ form.category }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Document Type *</label>
+        {{ form.doc_type }}
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title"><i class="bi bi-cloud-upload"></i> File Upload</div>
+    <div class="form-group">
+      <label class="form-label">Document File *</label>
+      <div class="file-upload-area">
+        {{ form.file }}
+        <div class="upload-icon"><i class="bi bi-file-earmark-arrow-up"></i></div>
+        <div class="upload-text">Choose a file to upload</div>
+        <div class="upload-sub">PDF, JPG, PNG or any document format</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title"><i class="bi bi-journal-text"></i> Additional Notes</div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      {{ form.notes }}
+    </div>
+  </div>
+
+  <div class="d-flex gap-1" style="justify-content:flex-end">
+    <a href="{% url 'documents:list' %}" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-cloud-upload"></i> Upload Document</button>
+  </div>
+</form>
+{% endblock %}

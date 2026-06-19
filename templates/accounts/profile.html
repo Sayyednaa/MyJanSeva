@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>My Profile</h1>
+    <div class="subtitle">Update your account information</div>
+  </div>
+  <a href="{% url 'accounts:change_password' %}" class="btn btn-secondary"><i class="bi bi-shield-lock"></i> Change Password</a>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+
+  <div class="form-section">
+    <div class="form-section-title"><i class="bi bi-person-circle"></i> Account Information</div>
+    <div class="form-row-3">
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input type="text" class="form-control" value="{{ user.username }}" disabled>
+        <div class="text-sm text-muted" style="margin-top:4px">Username cannot be changed</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">First Name</label>
+        {{ form.first_name }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Last Name</label>
+        {{ form.last_name }}
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title"><i class="bi bi-envelope"></i> Contact Details</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        {{ form.email }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        {{ form.phone }}
+      </div>
+    </div>
+  </div>
+
+  {% if form.shop_name %}
+  <div class="form-section">
+    <div class="form-section-title"><i class="bi bi-shop"></i> Business Info</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Shop / Business Name</label>
+        {{ form.shop_name }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Address</label>
+        {{ form.shop_address }}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if form.errors %}
+  <div class="card mb-2" style="border:1px solid var(--danger)">
+    <div style="padding:16px">
+      <div style="font-weight:600;color:var(--danger);margin-bottom:8px"><i class="bi bi-exclamation-triangle"></i> Please fix the errors below:</div>
+      {% for field, errors in form.errors.items %}
+        {% for error in errors %}
+        <div class="text-sm" style="color:var(--danger)">{{ field|title }}: {{ error }}</div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="d-flex gap-1" style="justify-content:flex-end">
+    <a href="{% url 'dashboard:home' %}" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check-lg"></i> Save Profile</button>
+  </div>
+</form>
+{% endblock %}

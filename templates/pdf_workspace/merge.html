@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <div><h1>Merge PDFs</h1></div>
+  <a href="{% url 'pdf_workspace:home' %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+<div class="card" style="max-width:600px">
+  <form id="mergeForm">
+    {% csrf_token %}
+    <div class="form-group">
+      <label class="form-label">Select PDFs to merge (2+)</label>
+      <div class="file-upload-area">
+        <input type="file" id="pdfInput" accept=".pdf" multiple required>
+        <div class="upload-icon"><i class="bi bi-files"></i></div>
+        <div class="upload-text">Select multiple PDF files</div>
+        <div class="upload-sub">Files will be merged in selection order</div>
+      </div>
+    </div>
+    <div id="progressMsg" class="text-primary text-sm mb-2" style="display:none"></div>
+    <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn"><i class="bi bi-download"></i> Merge & Download</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+<script>
+document.getElementById('mergeForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const files = document.getElementById('pdfInput').files;
+    if(files.length < 2) return alert('Select at least 2 PDFs.');
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const msg = document.getElementById('progressMsg');
+    submitBtn.disabled = true;
+    msg.style.display = 'block';
+    
+    // Charge wallet
+    msg.textContent = 'Verifying wallet balance...';
+    let formData = new FormData();
+    formData.append('service_slug', 'pdf-merge');
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    try {
+        let resp = await fetch('{% url "wallet:ajax_charge" %}', {method: 'POST', body: formData});
+        let json = await resp.json();
+        if(json.status === 'error') throw new Error(json.message);
+        
+        msg.textContent = 'Merging PDFs...';
+        const { PDFDocument } = PDFLib;
+        const mergedPdf = await PDFDocument.create();
+        for (let file of files) {
+            let arrBuffer = await file.arrayBuffer();
+            let pdf = await PDFDocument.load(arrBuffer);
+            let pages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+            pages.forEach(p => mergedPdf.addPage(p));
+        }
+        let pdfBytes = await mergedPdf.save();
+        let blob = new Blob([pdfBytes], {type: "application/pdf"});
+        let link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'merged.pdf';
+        link.click();
+        msg.textContent = 'Done!';
+    } catch(err) {
+        alert('Error: ' + err.message);
+        msg.style.display = 'none';
+    } finally {
+        submitBtn.disabled = false;
+    }
+});
+</script>
+{% endblock %}

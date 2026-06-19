@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Top Up Wallet</h1>
+    <div class="subtitle">Purchase Coin Packages to use Jan Seva Services</div>
+  </div>
+</div>
+
+<div style="max-width:550px;margin:0 auto">
+  <div class="card mb-2" style="background: linear-gradient(145deg, var(--bg-surface) 0%, var(--accent-soft) 100%); border-color: var(--accent-glow);">
+    <div class="card-header"><div class="card-title"><i class="bi bi-wallet2"></i> Current Balance</div></div>
+    <div style="font-size:36px;font-weight:800;color:var(--accent);text-align:center;padding:24px;display:flex;align-items:center;justify-content:center;gap:10px;">
+      <span>🪙 {{ wallet_balance|floatformat:0 }}</span>
+      <span style="font-size:20px;color:var(--text-secondary);font-weight:500;">Coins</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="bi bi-coin"></i> Select Coin Package</div></div>
+    <div style="padding:20px">
+      <form method="post" id="topupForm">
+        {% csrf_token %}
+        <input type="hidden" name="coins" id="selectedCoins" value="">
+        <input type="hidden" name="amount" id="selectedAmount" value="">
+        
+        <div class="packages-grid" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+          {% for pkg in packages %}
+          <div class="package-card" onclick="selectPackage(this, {{ pkg.coins }}, {{ pkg.price }})" style="cursor:pointer; border:2px solid var(--border); padding:16px; border-radius:var(--radius); text-align:center; transition: all 0.2s ease-in-out; background:var(--bg-raised);">
+            <div style="font-size:20px; font-weight:800; color:var(--accent);">🪙 {{ pkg.coins }}</div>
+            <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">Coins</div>
+            <div style="font-size:14px; font-weight:700; color:var(--text-primary); margin-top:8px; background:rgba(255,255,255,0.03); padding:4px 8px; border-radius:4px; display:inline-block;">₹{{ pkg.price }}</div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div id="paymentDetails" class="payment-details-area" style="display:none; border-top:1px solid var(--border); padding-top:24px; text-align:center;">
+          <div style="font-size:16px; font-weight:600; color:var(--text-primary); margin-bottom:16px;">
+            Pay <span id="paymentAmountText" style="color:var(--accent); font-weight:800; font-size:20px;">₹0</span> for <span id="paymentCoinsText" style="font-weight:800; font-size:20px; color:var(--success)">0 Coins</span>
+          </div>
+          
+          <div class="qr-container-wrapper" style="background:#fff; padding:16px; display:inline-block; border-radius:var(--radius); margin-bottom:12px; box-shadow: var(--shadow-md);">
+            <img id="upiQrImg" src="" alt="UPI QR Code" style="width:200px; height:200px; display:block;">
+          </div>
+          
+          <div class="text-sm text-secondary" style="margin-bottom:24px;">
+            <i class="bi bi-qr-code-scan"></i> Scan using any UPI App (GPay, PhonePe, Paytm, BHIM)
+          </div>
+          
+          <div class="form-group" style="text-align:left; max-width:340px; margin:0 auto 24px auto;">
+            <label class="form-label" style="font-weight:600;">Transaction UTR / Ref No. *</label>
+            <input type="text" name="utr" id="utrField" class="form-control" placeholder="Enter 12-digit UPI Ref/UTR No." pattern="\d{12}" minlength="12" maxlength="12" required style="font-size:15px; letter-spacing:1px; text-align:center;">
+            <div class="text-xs text-secondary" style="margin-top:6px; line-height:1.4;">Enter the 12-digit transaction ID or UTR number from your payment confirmation screen to claim your coins.</div>
+          </div>
+          
+          <button type="submit" class="btn btn-primary btn-block btn-lg" style="max-width:340px; margin:0 auto;">
+            <i class="bi bi-check-circle-fill"></i> Submit UTR & Get Coins
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if user_requests %}
+  <div class="card mt-3">
+    <div class="card-header">
+      <div class="card-title"><i class="bi bi-clock-history"></i> Top-up Request History</div>
+    </div>
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>UTR</th>
+            <th>Coins (Amount)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in user_requests %}
+          <tr>
+            <td class="text-sm text-muted">{{ r.created_at|date:"d M Y, H:i" }}</td>
+            <td style="font-family: monospace;">{{ r.utr }}</td>
+            <td>
+              <span style="font-weight:600;color:var(--accent);">{{ r.coins }} Coins</span><br>
+              <span class="text-xs text-secondary">₹{{ r.amount }}</span>
+            </td>
+            <td>
+              {% if r.status == 'pending' %}
+                <span class="badge badge-warning"><i class="bi bi-hourglass-split"></i> Pending</span>
+              {% elif r.status == 'approved' %}
+                <span class="badge badge-success"><i class="bi bi-check-circle-fill"></i> Approved</span>
+              {% else %}
+                <span class="badge badge-danger" title="{{ r.rejection_reason }}"><i class="bi bi-x-circle-fill"></i> Rejected</span>
+                {% if r.rejection_reason %}
+                  <div class="text-xs text-danger" style="margin-top: 4px; max-width: 150px; line-height: 1.2;">
+                    Reason: {{ r.rejection_reason }}
+                  </div>
+                {% endif %}
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function selectPackage(cardEl, coins, price) {
+    // Highlight selected card
+    document.querySelectorAll('.package-card').forEach(card => {
+        card.style.borderColor = 'var(--border)';
+        card.style.background = 'var(--bg-raised)';
+        card.style.transform = 'none';
+        card.style.boxShadow = 'none';
+    });
+    cardEl.style.borderColor = 'var(--accent)';
+    cardEl.style.background = 'var(--accent-soft)';
+    cardEl.style.transform = 'translateY(-2px)';
+    cardEl.style.boxShadow = '0 8px 24px var(--accent-glow)';
+    
+    // Set hidden inputs
+    document.getElementById('selectedCoins').value = coins;
+    document.getElementById('selectedAmount').value = price;
+    
+    // Update labels
+    document.getElementById('paymentAmountText').textContent = '₹' + price;
+    document.getElementById('paymentCoinsText').textContent = coins + ' Coins';
+    
+    // Generate UPI QR Code URL (pointing to abdulali@ptyes UPI ID)
+    const upiLink = `upi://pay?pa=abdulali@ptyes&pn=JanSeva&am=${price}&cu=INR`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
+    document.getElementById('upiQrImg').src = qrUrl;
+    
+    // Show payment section
+    document.getElementById('paymentDetails').style.display = 'block';
+    
+    // Scroll payment details into view smoothly
+    setTimeout(() => {
+        document.getElementById('paymentDetails').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 120);
+}
+</script>
+{% endblock %}

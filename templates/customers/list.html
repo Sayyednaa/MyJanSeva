@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <div><h1>Customer Vault</h1><div class="subtitle">{{ total }} customer{{ total|pluralize }} found</div></div>
+  <a href="{% url 'customers:create' %}" class="btn btn-primary"><i class="bi bi-person-plus"></i> Add Customer</a>
+</div>
+
+<div class="card mb-2">
+  <form method="get" class="d-flex gap-1" style="align-items:center">
+    <div class="search-bar flex-1">
+      <i class="bi bi-search"></i>
+      <input type="text" name="q" value="{{ query }}" placeholder="Search by name, mobile, Aadhaar or PAN…">
+    </div>
+    <button type="submit" class="btn btn-primary">Search</button>
+    {% if query %}<a href="{% url 'customers:list' %}" class="btn btn-secondary">Clear</a>{% endif %}
+  </form>
+</div>
+
+<div class="card">
+  {% if page_obj %}
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead><tr><th>Customer</th><th>Mobile</th><th>Aadhaar</th><th>PAN</th><th>Added</th><th>Actions</th></tr></thead>
+      <tbody>
+      {% for c in page_obj %}
+      <tr>
+        <td>
+          <div class="d-flex align-center gap-1">
+            {% if c.photo %}
+            <img src="{{ c.photo.url }}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">
+            {% else %}
+            <div class="customer-avatar" style="width:36px;height:36px;font-size:12px">{{ c.get_initials }}</div>
+            {% endif %}
+            <div>
+              <div style="font-weight:600">{{ c.full_name }}</div>
+              <div class="text-sm text-muted">{{ c.village|default:c.district|default:"—" }}</div>
+            </div>
+          </div>
+        </td>
+        <td>{{ c.mobile }}</td>
+        <td class="text-sm text-muted">{{ c.aadhaar_number|default:"—" }}</td>
+        <td class="text-sm text-muted">{{ c.pan_number|default:"—" }}</td>
+        <td class="text-sm text-muted">{{ c.created_at|date:"d M Y" }}</td>
+        <td>
+          <div class="d-flex gap-1">
+            <a href="{% url 'customers:detail' c.pk %}" class="btn btn-secondary btn-sm"><i class="bi bi-eye"></i></a>
+            <a href="{% url 'customers:edit' c.pk %}" class="btn btn-secondary btn-sm"><i class="bi bi-pencil"></i></a>
+            <a href="{% url 'documents:list_customer' c.pk %}" class="btn btn-secondary btn-sm"><i class="bi bi-folder2"></i></a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj.has_other_pages %}
+  <div class="pagination">
+    {% if page_obj.has_previous %}<a class="page-btn" href="?page={{ page_obj.previous_page_number }}&q={{ query }}"><i class="bi bi-chevron-left"></i></a>{% endif %}
+    {% for n in page_obj.paginator.page_range %}<a class="page-btn {% if n == page_obj.number %}active{% endif %}" href="?page={{ n }}&q={{ query }}">{{ n }}</a>{% endfor %}
+    {% if page_obj.has_next %}<a class="page-btn" href="?page={{ page_obj.next_page_number }}&q={{ query }}"><i class="bi bi-chevron-right"></i></a>{% endif %}
+  </div>
+  {% endif %}
+  {% else %}
+  <div class="empty-state">
+    <i class="bi bi-people"></i>
+    <h3>No customers found</h3>
+    <p>{% if query %}No results for "{{ query }}"{% else %}Add your first customer to get started{% endif %}</p>
+    <a href="{% url 'customers:create' %}" class="btn btn-primary" style="margin-top:16px"><i class="bi bi-person-plus"></i> Add Customer</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

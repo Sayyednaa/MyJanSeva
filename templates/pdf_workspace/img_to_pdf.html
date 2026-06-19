@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <div><h1>Images to PDF</h1></div>
+  <a href="{% url 'pdf_workspace:home' %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+<div class="card" style="max-width:600px">
+  <form id="imgToPdfForm">
+    {% csrf_token %}
+    <div class="form-group">
+      <label class="form-label">Select Images (JPG, PNG)</label>
+      <div class="file-upload-area">
+        <input type="file" id="imagesInput" accept="image/*" multiple required>
+        <div class="upload-icon"><i class="bi bi-images"></i></div>
+        <div class="upload-text">Select multiple image files</div>
+        <div class="upload-sub">They will be converted to a single PDF</div>
+      </div>
+    </div>
+    <div id="progressMsg" class="text-primary text-sm mb-2" style="display:none"></div>
+    <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn"><i class="bi bi-download"></i> Convert & Download</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+document.getElementById('imgToPdfForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const files = document.getElementById('imagesInput').files;
+    if(files.length === 0) return alert('Select at least one image.');
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const msg = document.getElementById('progressMsg');
+    submitBtn.disabled = true;
+    msg.style.display = 'block';
+    
+    // Charge wallet
+    msg.textContent = 'Verifying wallet balance...';
+    let formData = new FormData();
+    formData.append('service_slug', 'image-to-pdf'); // assumed slug
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    try {
+        let resp = await fetch('{% url "wallet:ajax_charge" %}', {method: 'POST', body: formData});
+        let json = await resp.json();
+        if(json.status === 'error') throw new Error(json.message);
+        
+        msg.textContent = 'Converting...';
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF();
+        
+        for (let i = 0; i < files.length; i++) {
+            let file = files[i];
+            let dataUrl = await new Promise((resolve) => {
+                let reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(file);
+            });
+            
+            // Get image dimensions
+            let img = new Image();
+            img.src = dataUrl;
+            await new Promise((resolve) => { img.onload = resolve; });
+            
+            let pdfWidth = pdf.internal.pageSize.getWidth();
+            let pdfHeight = pdf.internal.pageSize.getHeight();
+            let imgRatio = img.width / img.height;
+            let renderWidth = pdfWidth;
+            let renderHeight = renderWidth / imgRatio;
+            if(renderHeight > pdfHeight) {
+                renderHeight = pdfHeight;
+                renderWidth = renderHeight * imgRatio;
+            }
+            
+            if(i > 0) pdf.addPage();
+            pdf.addImage(dataUrl, 'JPEG', (pdfWidth - renderWidth) / 2, (pdfHeight - renderHeight) / 2, renderWidth, renderHeight);
+        }
+        
+        pdf.save('images_to_pdf.pdf');
+        msg.textContent = 'Done!';
+    } catch(err) {
+        alert('Error: ' + err.message);
+        msg.style.display = 'none';
+    } finally {
+        submitBtn.disabled = false;
+    }
+});
+</script>
+{% endblock %}

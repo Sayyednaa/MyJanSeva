@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="max-width:500px;margin:40px auto">
+  <div class="card-header"><div class="card-title text-danger"><i class="bi bi-exclamation-triangle"></i> Delete Customer</div></div>
+  <p style="margin-bottom:16px">Are you sure you want to delete <strong>{{ customer.full_name }}</strong>? This action cannot be undone and will also delete all associated documents.</p>
+  <form method="post">
+    {% csrf_token %}
+    <div class="d-flex gap-1" style="justify-content:flex-end">
+      <a href="{% url 'customers:detail' customer.pk %}" class="btn btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Delete</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

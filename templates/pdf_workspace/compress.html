@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <div><h1>Compress PDF</h1></div>
+  <a href="{% url 'pdf_workspace:home' %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+<div class="card" style="max-width:600px">
+  <form id="compressForm">
+    {% csrf_token %}
+    <div class="form-group">
+      <label class="form-label">Select PDF to compress</label>
+      <div class="file-upload-area">
+        <input type="file" id="pdfInput" accept=".pdf" required>
+        <div class="upload-icon"><i class="bi bi-file-earmark-zip"></i></div>
+        <div class="upload-text">Choose a PDF file</div>
+        <div class="upload-sub">We will optimize and compress it locally</div>
+      </div>
+    </div>
+    <div id="progressMsg" class="text-primary text-sm mb-2" style="display:none"></div>
+    <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn"><i class="bi bi-download"></i> Compress & Download</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+<script>
+document.getElementById('compressForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const file = document.getElementById('pdfInput').files[0];
+    if(!file) return alert('Select a PDF.');
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const msg = document.getElementById('progressMsg');
+    submitBtn.disabled = true;
+    msg.style.display = 'block';
+    
+    // Charge wallet
+    msg.textContent = 'Verifying wallet balance...';
+    let formData = new FormData();
+    formData.append('service_slug', 'pdf-compress');
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    try {
+        let resp = await fetch('{% url "wallet:ajax_charge" %}', {method: 'POST', body: formData});
+        let json = await resp.json();
+        if(json.status === 'error') throw new Error(json.message);
+        
+        msg.textContent = 'Compressing PDF...';
+        const { PDFDocument } = PDFLib;
+        let arrBuffer = await file.arrayBuffer();
+        let pdf = await PDFDocument.load(arrBuffer);
+        // pdf-lib's save with useObjectStreams helps compress
+        let pdfBytes = await pdf.save({ useObjectStreams: true });
+        
+        let blob = new Blob([pdfBytes], {type: "application/pdf"});
+        let link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'compressed.pdf';
+        link.click();
+        msg.textContent = 'Done!';
+    } catch(err) {
+        alert('Error: ' + err.message);
+        msg.style.display = 'none';
+    } finally {
+        submitBtn.disabled = false;
+    }
+});
+</script>
+{% endblock %}

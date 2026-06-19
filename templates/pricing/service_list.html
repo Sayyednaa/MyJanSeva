@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Service Pricing</h1>
+    <div class="subtitle">Manage service rates and availability</div>
+  </div>
+  <a href="{% url 'pricing:create' %}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Service</a>
+</div>
+
+<div class="card">
+  {% if services %}
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Service Name</th>
+          <th>Category</th>
+          <th>Price (Coins)</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in services %}
+        <tr>
+          <td>
+            <div style="font-weight:600">{{ s.name }}</div>
+          </td>
+          <td>
+            <span class="badge badge-info">{{ s.category|default:"General" }}</span>
+          </td>
+          <td>
+            <span style="font-weight:600;color:var(--accent)">{{ s.price|floatformat:0 }} Coins</span>
+          </td>
+          <td>
+            <form method="post" action="{% url 'pricing:toggle' pk=s.pk %}" style="display:inline">
+              {% csrf_token %}
+              <button type="submit" class="btn {% if s.is_active %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">
+                {% if s.is_active %}
+                <i class="bi bi-check-circle"></i> Active
+                {% else %}
+                <i class="bi bi-x-circle"></i> Inactive
+                {% endif %}
+              </button>
+            </form>
+          </td>
+          <td>
+            <a href="{% url 'pricing:edit' pk=s.pk %}" class="btn btn-secondary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="bi bi-tags"></i>
+    <h3>No services configured</h3>
+    <p>Add your first service to set up pricing</p>
+    <a href="{% url 'pricing:create' %}" class="btn btn-primary" style="margin-top:16px"><i class="bi bi-plus-lg"></i> Add Service</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

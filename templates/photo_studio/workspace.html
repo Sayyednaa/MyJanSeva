@@ -1,0 +1,1466 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1><i class="bi bi-camera"></i> Photo Studio</h1>
+    <div class="subtitle">Upload, edit, and layout photos for printing</div>
+  </div>
+  <div>
+    <button class="btn btn-secondary" onclick="location.reload()">
+      <i class="bi bi-arrow-clockwise"></i> Reset Workspace
+    </button>
+  </div>
+</div>
+
+<div class="studio-layout">
+  <!-- GALLERY SIDEBAR / SLIDER -->
+  <aside class="studio-sidebar">
+    <div class="studio-sidebar-header">
+      <h3><i class="bi bi-images"></i> Gallery</h3>
+    </div>
+    <div class="studio-sidebar-content">
+      <button class="btn btn-primary w-100" onclick="document.getElementById('galleryInput').click()">
+        <i class="bi bi-cloud-arrow-up"></i> Upload Photos
+      </button>
+      <input type="file" id="galleryInput" multiple accept="image/*" style="display:none">
+      
+      <div id="galleryContainer" class="gallery-grid">
+        <div class="gallery-empty" id="emptyGalleryMsg">
+          <i class="bi bi-image"></i>
+          <p>No photos uploaded yet</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN WORKSPACE -->
+  <main class="studio-main">
+    <!-- Tab Controls -->
+    <div class="studio-tabs">
+      <button class="studio-tab-btn active" data-bs-toggle="tab" data-bs-target="#tab-edit">
+        <i class="bi bi-crop"></i> <span>Crop & Resize</span>
+      </button>
+      <button class="studio-tab-btn" data-bs-toggle="tab" data-bs-target="#tab-bg">
+        <i class="bi bi-person-bounding-box"></i> <span>Background</span>
+      </button>
+      <button class="studio-tab-btn" data-bs-toggle="tab" data-bs-target="#tab-compress">
+        <i class="bi bi-file-zip"></i> <span>Compress</span>
+      </button>
+      <button class="studio-tab-btn" data-bs-toggle="tab" data-bs-target="#tab-print">
+        <i class="bi bi-printer"></i> <span>A4 Layout</span>
+      </button>
+    </div>
+    
+    <!-- Tab Content Panes -->
+    <div class="studio-content">
+      
+      <!-- EDIT TAB -->
+      <div class="tab-pane active" id="tab-edit">
+        <div class="tool-bar">
+          <div class="btn-group">
+            <button class="btn btn-secondary btn-sm" onclick="setCropRatio(3.5/4.5)">Passport (3.5x4.5)</button>
+            <button class="btn btn-secondary btn-sm" onclick="setCropRatio(1)">Square</button>
+            <button class="btn btn-secondary btn-sm" onclick="setCropRatio(NaN)">Free</button>
+          </div>
+          <div class="toolbar-divider"></div>
+          <div class="input-group-compact">
+            <span>W (px)</span>
+            <input type="number" id="resizeW" class="input-field-sm">
+          </div>
+          <div class="input-group-compact">
+            <span>H (px)</span>
+            <input type="number" id="resizeH" class="input-field-sm">
+          </div>
+          <div class="toolbar-actions">
+            <button class="btn btn-secondary btn-sm" onclick="applyCropAndResize()"><i class="bi bi-save"></i> Save Copy</button>
+            <button class="btn btn-success btn-sm" onclick="exportActive('passport-photo')"><i class="bi bi-download"></i> Export (3 Coins)</button>
+          </div>
+        </div>
+        <div class="canvas-container-area editor-bg">
+          <div class="image-wrapper">
+             <img id="editImage">
+          </div>
+        </div>
+      </div>
+
+      <!-- BACKGROUND TAB -->
+      <div class="tab-pane" id="tab-bg">
+        <div class="tool-bar">
+          <button class="btn btn-primary btn-sm" id="removeBgBtn" onclick="removeBackground()">
+            <i class="bi bi-stars"></i> Remove Background
+          </button>
+          <div class="toolbar-divider"></div>
+          <div class="bg-color-options">
+            <span class="text-sm fw-600 text-muted">BG Color:</span>
+            <button class="color-btn active" title="Transparent" onclick="setBgColor(this, 'transparent')" style="background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 8px 8px; border: 1px solid var(--border-strong);"></button>
+            <button class="color-btn" title="White" onclick="setBgColor(this, '#ffffff')" style="background-color: #ffffff;"></button>
+            <button class="color-btn" title="Light Blue" onclick="setBgColor(this, '#a0c8f0')" style="background-color: #a0c8f0;"></button>
+            <button class="color-btn" title="Royal Blue" onclick="setBgColor(this, '#0033a0')" style="background-color: #0033a0;"></button>
+            <button class="color-btn" title="Red" onclick="setBgColor(this, '#d00000')" style="background-color: #d00000;"></button>
+            <input type="color" id="bgColorPicker" title="Custom Color" onchange="setBgColor(null, this.value)" class="color-picker-input">
+          </div>
+          <button class="btn btn-secondary btn-sm" id="applyBgColorBtn" onclick="applyBackgroundColor()">
+            <i class="bi bi-check-lg"></i> Apply Color
+          </button>
+          <div class="toolbar-actions">
+            <button class="btn btn-success btn-sm" onclick="exportBackgroundTab('passport-photo')"><i class="bi bi-download"></i> Export (3 Coins)</button>
+          </div>
+        </div>
+        <div class="canvas-container-area editor-bg">
+          <div class="preview-wrapper transparent-bg" id="bgContainerArea" style="position: relative; display: inline-block;">
+            <div class="scanner-overlay" id="scannerOverlay">
+              <div class="scanner-shimmer"></div>
+              <div class="scanner-line"></div>
+            </div>
+            <img id="bgImage" class="preview-img" style="display: block;">
+          </div>
+        </div>
+      </div>
+
+      <!-- COMPRESS TAB -->
+      <div class="tab-pane" id="tab-compress">
+        <div class="tool-bar">
+          <div class="input-group-compact">
+            <span>Target Size (KB)</span>
+            <input type="number" id="targetKb" value="100" class="input-field-sm" style="width: 70px;">
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="compressImage()"><i class="bi bi-arrows-collapse"></i> Compress</button>
+          <span id="compressStatus" class="status-msg success"></span>
+          <div class="toolbar-actions">
+            <button class="btn btn-success btn-sm" onclick="exportActive('passport-photo')"><i class="bi bi-download"></i> Export (3 Coins)</button>
+          </div>
+        </div>
+        <div class="canvas-container-area editor-bg">
+          <img id="compressImage" class="preview-img">
+        </div>
+      </div>
+
+      <!-- PRINT TAB -->
+      <div class="tab-pane" id="tab-print">
+        <div class="tool-bar">
+          <button class="btn btn-outline-primary btn-sm" onclick="addSelectedToCanvas()"><i class="bi bi-plus-circle"></i> Add Selected</button>
+          <button class="btn btn-outline-danger btn-sm" onclick="clearCanvas()"><i class="bi bi-trash"></i> Clear</button>
+          <span class="status-msg"><i class="bi bi-info-circle"></i> Drag photos. Move with mouse. Select & hit Delete.</span>
+          <div class="toolbar-actions">
+            <button class="btn btn-primary btn-sm" id="printDirectBtn" onclick="printA4Direct()"><i class="bi bi-printer"></i> Print Sheet (3 Coins)</button>
+            <button class="btn btn-success btn-sm" id="exportPrintBtn" onclick="exportA4()"><i class="bi bi-file-earmark-pdf"></i> Export PDF (3 Coins)</button>
+          </div>
+        </div>
+        <div class="canvas-container-area print-layout-bg">
+          <div class="canvas-shadow-wrapper" id="a4Wrapper">
+            <canvas id="a4Canvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+{% csrf_token %}
+{% endblock %}
+
+{% block extra_js %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.1/dist/browser-image-compression.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+/* ==========================================================================
+   PHOTO STUDIO DESIGN SYSTEM (Obsidian Glass Theme & Full Responsiveness)
+   ========================================================================== */
+
+.studio-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 20px;
+  height: calc(100vh - 180px);
+  min-height: 520px;
+  margin-top: 10px;
+}
+
+/* Background Color Option Styles */
+.bg-color-options {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+}
+
+.color-btn:hover {
+  transform: scale(1.15);
+  border-color: var(--accent);
+}
+
+.color-btn.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.color-picker-input {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 2px solid var(--border-strong);
+  border-radius: 50%;
+  cursor: pointer;
+  background: none;
+  outline: none;
+  overflow: hidden;
+  box-sizing: border-box;
+  transition: all 0.2s;
+}
+
+.color-picker-input:hover {
+  transform: scale(1.15);
+  border-color: var(--accent);
+}
+
+.color-picker-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-picker-input::-webkit-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+
+/* Samsung AI Scanner Animation Overlay */
+.scanner-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(99, 102, 241, 0.15);
+  overflow: hidden;
+  display: none;
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.scanner-overlay.active {
+  display: block;
+}
+
+.scanner-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(to bottom, transparent, var(--accent), transparent);
+  box-shadow: 0 0 15px 3px var(--accent);
+  animation: scanSweep 2s ease-in-out infinite;
+}
+
+.scanner-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.25) 40%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0.25) 60%,
+    transparent 70%
+  );
+  background-size: 200% 200%;
+  animation: shimmerSweep 2.5s linear infinite;
+}
+
+@keyframes scanSweep {
+  0% { top: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+@keyframes shimmerSweep {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Sidebar Styling */
+.studio-sidebar {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.studio-sidebar-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-raised);
+}
+
+.studio-sidebar-header h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.studio-sidebar-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Gallery Grid */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 10px;
+  flex: 1;
+}
+
+.gallery-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 10px;
+  text-align: center;
+  color: var(--text-tertiary);
+  gap: 10px;
+}
+
+.gallery-empty i {
+  font-size: 28px;
+}
+
+.gallery-empty p {
+  font-size: 12px;
+}
+
+.gallery-item {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-sm);
+  border: 2px solid transparent;
+  background: var(--bg-raised);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gallery-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-strong);
+}
+
+.gallery-item.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gallery-item .remove-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.85);
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  cursor: pointer;
+  z-index: 5;
+}
+
+.gallery-item:hover .remove-btn {
+  opacity: 1;
+}
+
+/* Main Workspace */
+.studio-main {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Custom Tabs */
+.studio-tabs {
+  display: flex;
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--border);
+  padding: 0 10px;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+}
+
+.studio-tabs::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.studio-tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 14px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.studio-tab-btn:hover {
+  color: var(--text-primary);
+}
+
+.studio-tab-btn.active {
+  color: var(--accent);
+}
+
+.studio-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 12px;
+  right: 12px;
+  height: 3px;
+  background: var(--accent);
+  border-radius: 3px 3px 0 0;
+  box-shadow: 0 -1px 8px var(--accent-glow);
+}
+
+/* Content Area */
+.studio-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tab-pane {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.tab-pane.active {
+  display: flex;
+}
+
+/* Toolbar */
+.tool-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  z-index: 10;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border-strong);
+}
+
+.toolbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Form Inputs Compact */
+.input-group-compact {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.input-field-sm {
+  width: 80px;
+  height: 30px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  padding: 0 8px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input-field-sm:focus {
+  border-color: var(--accent);
+}
+
+/* Success Button styling */
+.btn-success {
+  background: var(--success-soft);
+  color: var(--success);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.btn-success:hover {
+  background: var(--success);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.btn-outline-primary:hover {
+  background: var(--accent-soft);
+}
+
+.btn-outline-danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+.btn-outline-danger:hover {
+  background: var(--danger-soft);
+}
+
+/* Canvas & Background Viewports */
+.canvas-container-area {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+}
+
+.editor-bg {
+  background: var(--bg-raised);
+}
+
+.print-layout-bg {
+  background: var(--bg-body);
+}
+
+.canvas-shadow-wrapper {
+  background: #ffffff;
+  box-shadow: var(--shadow-lg);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.image-wrapper {
+  max-width: 100%;
+  max-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.image-wrapper img {
+  max-width: 100%;
+  max-height: calc(100vh - 300px);
+  object-fit: contain;
+}
+
+.preview-img {
+  max-width: 100%;
+  max-height: calc(100vh - 300px);
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+}
+
+.status-msg {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.status-msg.success {
+  color: var(--success);
+  font-weight: 600;
+}
+
+/* Transparency Grid Background */
+.transparent-bg {
+  background-image: 
+    linear-gradient(45deg, var(--border-strong) 25%, transparent 25%), 
+    linear-gradient(-45deg, var(--border-strong) 25%, transparent 25%), 
+    linear-gradient(45deg, transparent 75%, var(--border-strong) 75%), 
+    linear-gradient(-45deg, transparent 75%, var(--border-strong) 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  background-color: var(--bg-raised);
+}
+
+/* ==========================================================================
+   RESPONSIVE LAYOUT (Mobile adjustments)
+   ========================================================================== */
+
+@media (max-width: 1023px) {
+  .studio-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 16px;
+    height: auto;
+  }
+  
+  .studio-sidebar {
+    height: auto;
+  }
+  
+  .studio-sidebar-header {
+    padding: 10px 14px;
+  }
+  
+  .studio-sidebar-content {
+    flex-direction: row;
+    align-items: center;
+    padding: 10px;
+    gap: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 110px;
+  }
+  
+  .studio-sidebar-content .btn {
+    width: auto;
+    height: 70px;
+    flex-shrink: 0;
+    padding: 0 16px;
+  }
+  
+  .gallery-grid {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 8px;
+  }
+  
+  .gallery-empty {
+    padding: 10px 20px;
+    flex-direction: row;
+  }
+  
+  .gallery-empty i {
+    font-size: 18px;
+  }
+  
+  .gallery-item {
+    width: 70px;
+    height: 70px;
+    flex-shrink: 0;
+  }
+  
+  .studio-main {
+    height: calc(100vh - 300px);
+    min-height: 480px;
+  }
+  
+  .tool-bar {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  
+  .toolbar-divider {
+    display: none;
+  }
+  
+  .toolbar-actions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
+  }
+  
+  .studio-tab-btn span {
+    display: none; /* Hide tab text on mobile, icons only */
+  }
+  
+  .studio-tab-btn {
+    padding: 12px 14px;
+  }
+}
+
+@media (max-width: 599px) {
+  .studio-main {
+    height: calc(100vh - 280px);
+    min-height: 440px;
+  }
+  
+  .canvas-container-area {
+    padding: 10px;
+  }
+}
+</style>
+
+<script>
+window.imglyRemoveBackground = null;
+window.imglyRemoveBackgroundModule = function() { return window.imglyRemoveBackground; };
+</script>
+
+<script type="module">
+import { removeBackground } from 'https://cdn.jsdelivr.net/npm/@imgly/background-removal/+esm';
+window.imglyRemoveBackground = removeBackground;
+</script>
+
+<script>
+let gallery = [];
+let selectedId = null;
+let cropper = null;
+let fabricCanvas = null;
+let selectedBgColor = 'transparent';
+let loadingBoxIndices = new Set();
+
+const A4_W = 826;
+const A4_H = 1169;
+
+window.onload = () => {
+    fabricCanvas = new fabric.Canvas('a4Canvas', { width: A4_W, height: A4_H, backgroundColor: '#ffffff' });
+    drawGridGuides();
+    
+    // Restrict objects within the printable area (20px margins)
+    fabricCanvas.on('object:moving', function (e) {
+        const obj = e.target;
+        if (!obj || obj.isGuide) return;
+        const minMargin = 20;
+        const boundaryW = A4_W - minMargin;
+        const boundaryH = A4_H - minMargin;
+        const bound = obj.getBoundingRect();
+        
+        if (obj.left < minMargin) obj.left = minMargin;
+        if (obj.top < minMargin) obj.top = minMargin;
+        if (obj.left + bound.width > boundaryW) obj.left = boundaryW - bound.width;
+        if (obj.top + bound.height > boundaryH) obj.top = boundaryH - bound.height;
+    });
+
+    fabricCanvas.on('object:scaling', function (e) {
+        const obj = e.target;
+        if (!obj || obj.isGuide) return;
+        const minMargin = 20;
+        const boundaryW = A4_W - minMargin;
+        const boundaryH = A4_H - minMargin;
+        const bound = obj.getBoundingRect();
+        
+        if (obj.left < minMargin) obj.left = minMargin;
+        if (obj.top < minMargin) obj.top = minMargin;
+        if (obj.left + bound.width > boundaryW) {
+            obj.scaleX = (boundaryW - obj.left) / obj.width;
+            obj.scaleY = obj.scaleX;
+        }
+        if (obj.top + bound.height > boundaryH) {
+            obj.scaleY = (boundaryH - obj.top) / obj.height;
+            obj.scaleX = obj.scaleY;
+        }
+    });
+    
+    // Custom Vanilla JS Tab Switching Logic (Fixes broken Bootstrap tabs)
+    const tabBtns = document.querySelectorAll('.studio-tab-btn');
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remove active classes
+            tabBtns.forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            
+            // Add active to clicked tab button
+            this.classList.add('active');
+            
+            // Show corresponding tab pane
+            const targetSelector = this.getAttribute('data-bs-target');
+            const targetPane = document.querySelector(targetSelector);
+            if(targetPane) {
+                targetPane.classList.add('active');
+            }
+            
+            if (targetSelector === '#tab-print') {
+                setTimeout(resizeCanvasToFit, 50);
+            }
+            
+            // Reload active image view
+            loadActiveImage();
+        });
+    });
+
+    const dropZone = document.getElementById('galleryContainer');
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.opacity = '0.5'; });
+    dropZone.addEventListener('dragleave', e => { dropZone.style.opacity = '1'; });
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.style.opacity = '1';
+        handleFiles(e.dataTransfer.files);
+    });
+
+    // A4 drop with grid snapping
+    const a4Wrapper = document.getElementById('a4Wrapper');
+    a4Wrapper.addEventListener('dragover', e => e.preventDefault());
+    a4Wrapper.addEventListener('drop', e => {
+        e.preventDefault();
+        const id = e.dataTransfer.getData('text/plain');
+        if(id) {
+            const rect = a4Wrapper.getBoundingClientRect();
+            const dropX = e.clientX - rect.left;
+            const dropY = e.clientY - rect.top;
+            
+            // Find nearest guide box
+            let targetBox = null;
+            let minDist = Infinity;
+            
+            gridBoxes.forEach(box => {
+                const centerX = box.x + box.w / 2;
+                const centerY = box.y + box.h / 2;
+                const dist = Math.hypot(dropX - centerX, dropY - centerY);
+                if (dist < minDist && dist < 150) {
+                    minDist = dist;
+                    targetBox = box;
+                }
+            });
+            
+            if (targetBox) {
+                addImageToCanvasInBox(id, targetBox);
+            } else {
+                addImageToCanvas(id, dropX - 65, dropY - 83);
+            }
+        }
+    });
+    window.addEventListener('resize', resizeCanvasToFit);
+};
+
+document.getElementById('galleryInput').addEventListener('change', e => handleFiles(e.target.files));
+
+function handleFiles(files) {
+    document.getElementById('emptyGalleryMsg').style.display = 'none';
+    Array.from(files).forEach(file => {
+        const id = 'img_' + Date.now() + Math.random();
+        const url = URL.createObjectURL(file);
+        gallery.push({ id, file, url, name: file.name });
+        renderGallery();
+        if(!selectedId) selectImage(id);
+    });
+}
+
+function renderGallery() {
+    const container = document.getElementById('galleryContainer');
+    Array.from(container.children).forEach(c => {
+        if(c.id !== 'emptyGalleryMsg') c.remove();
+    });
+    if(gallery.length === 0) document.getElementById('emptyGalleryMsg').style.display = 'block';
+    
+    gallery.forEach(item => {
+        const div = document.createElement('div');
+        div.className = `gallery-item ${item.id === selectedId ? 'selected' : ''}`;
+        div.onclick = () => selectImage(item.id);
+        div.draggable = true;
+        div.ondragstart = (e) => { e.dataTransfer.setData('text/plain', item.id); };
+        
+        div.innerHTML = `
+            <img src="${item.url}" title="${item.name}">
+            <button class="remove-btn" onclick="event.stopPropagation(); removeGalleryItem('${item.id}')"><i class="bi bi-x"></i></button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function selectImage(id) {
+    selectedId = id;
+    renderGallery();
+    loadActiveImage();
+}
+
+function removeGalleryItem(id) {
+    gallery = gallery.filter(i => i.id !== id);
+    if(selectedId === id) {
+        selectedId = gallery.length ? gallery[0].id : null;
+    }
+    renderGallery();
+    loadActiveImage();
+}
+
+function getActiveItem() {
+    return gallery.find(i => i.id === selectedId);
+}
+
+function saveToGallery(blob, prefix) {
+    const active = getActiveItem();
+    const id = 'img_' + Date.now();
+    const file = new File([blob], prefix + '_' + (active ? active.name : 'image.png'), { type: blob.type });
+    const url = URL.createObjectURL(file);
+    gallery.push({ id, file, url, name: file.name });
+    selectImage(id);
+}
+
+function loadActiveImage() {
+    const item = getActiveItem();
+    const activeTabObj = document.querySelector('.studio-tab-btn.active');
+    if(!activeTabObj) return;
+    const activeTab = activeTabObj.getAttribute('data-bs-target').replace('#tab-', '');
+    
+    if(cropper) { cropper.destroy(); cropper = null; }
+    
+    const editImg = document.getElementById('editImage');
+    const bgImg = document.getElementById('bgImage');
+    const compImg = document.getElementById('compressImage');
+    
+    if(!item) {
+        editImg.src = ''; bgImg.src = ''; compImg.src = '';
+        return;
+    }
+
+    if(activeTab === 'edit') {
+        editImg.src = item.url;
+        editImg.style.display = 'block';
+        editImg.onload = () => {
+            // Re-init cropper once visible
+            cropper = new Cropper(editImg, { 
+                viewMode: 1,
+                background: true,
+                autoCropArea: 0.8,
+            });
+            let tempImg = new Image();
+            tempImg.src = item.url;
+            tempImg.onload = () => {
+                document.getElementById('resizeW').value = tempImg.width;
+                document.getElementById('resizeH').value = tempImg.height;
+            };
+        };
+    } else if (activeTab === 'bg') {
+        bgImg.src = item.url;
+    } else if (activeTab === 'compress') {
+        compImg.src = item.url;
+    }
+}
+
+function setCropRatio(ratio) {
+    if(cropper) cropper.setAspectRatio(ratio);
+}
+
+function applyCropAndResize() {
+    if(!cropper) return alert('Select an image and go to Crop tab first.');
+    let w = parseInt(document.getElementById('resizeW').value);
+    let h = parseInt(document.getElementById('resizeH').value);
+    
+    const opts = { imageSmoothingEnabled: true, imageSmoothingQuality: 'high' };
+    if(!isNaN(w) && w > 0) opts.width = w;
+    if(!isNaN(h) && h > 0) opts.height = h;
+    
+    const canvas = cropper.getCroppedCanvas(opts);
+    if(!canvas) return;
+    
+    canvas.toBlob(blob => {
+        saveToGallery(blob, 'edited');
+    }, 'image/png', 1.0);
+}
+
+async function removeBackground() {
+    const item = getActiveItem();
+    if(!item) return alert('Select an image');
+    
+    const imglyFn = window.imglyRemoveBackgroundModule();
+    if(!imglyFn) return alert('Background removal module is still loading or failed to load. Check console.');
+    
+    const btn = document.getElementById('removeBgBtn');
+    const overlay = document.getElementById('scannerOverlay');
+    const originalHtml = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Removing...';
+    if(overlay) overlay.classList.add('active');
+    
+    try {
+        const blob = await imglyFn(item.file);
+        if(overlay) overlay.classList.remove('active');
+        saveToGallery(blob, 'nobg');
+    } catch(err) {
+        if(overlay) overlay.classList.remove('active');
+        alert('Failed to remove background. Please check console for details.');
+        console.error(err);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+    }
+}
+
+function setBgColor(btnEl, color) {
+    selectedBgColor = color;
+    const bgContainer = document.getElementById('bgContainerArea');
+    if (!bgContainer) return;
+    
+    bgContainer.style.backgroundColor = '';
+    bgContainer.classList.remove('transparent-bg');
+    
+    if (color === 'transparent') {
+        bgContainer.classList.add('transparent-bg');
+    } else {
+        bgContainer.style.backgroundColor = color;
+    }
+    
+    if (btnEl) {
+        document.querySelectorAll('.bg-color-options .color-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        btnEl.classList.add('active');
+    } else {
+        document.querySelectorAll('.bg-color-options .color-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+    }
+}
+
+function applyBackgroundColor() {
+    const item = getActiveItem();
+    if (!item) return alert('Select an image first.');
+    if (selectedBgColor === 'transparent') return alert('Select a solid color background first.');
+    
+    const img = document.getElementById('bgImage');
+    if (!img || !img.src || img.src === window.location.href) return alert('No background image loaded.');
+    
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    const tempImg = new Image();
+    tempImg.onload = function() {
+        canvas.width = tempImg.width;
+        canvas.height = tempImg.height;
+        
+        ctx.fillStyle = selectedBgColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.drawImage(tempImg, 0, 0);
+        
+        canvas.toBlob(blob => {
+            saveToGallery(blob, 'bgcolored');
+            alert('Saved colored background copy to gallery!');
+        }, 'image/png', 1.0);
+    };
+    tempImg.crossOrigin = 'anonymous';
+    tempImg.src = img.src;
+}
+
+async function exportBackgroundTab(slug) {
+    const item = getActiveItem();
+    if(!item) return alert('Select an image from the gallery.');
+    
+    try {
+        if (selectedBgColor === 'transparent') {
+            await exportActive(slug);
+            return;
+        }
+        
+        const img = document.getElementById('bgImage');
+        if (!img || !img.src || img.src === window.location.href) return alert('No background image loaded.');
+        
+        await chargeWallet(slug);
+        
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        const tempImg = new Image();
+        tempImg.onload = function() {
+            canvas.width = tempImg.width;
+            canvas.height = tempImg.height;
+            
+            ctx.fillStyle = selectedBgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.drawImage(tempImg, 0, 0);
+            
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png', 1.0);
+            link.download = 'colored_' + item.name;
+            link.click();
+        };
+        tempImg.crossOrigin = 'anonymous';
+        tempImg.src = img.src;
+    } catch(err) {
+        alert('Export failed: ' + err.message);
+    }
+}
+
+async function compressImage() {
+    const item = getActiveItem();
+    if(!item) return alert('Select an image');
+    const kb = parseInt(document.getElementById('targetKb').value);
+    if(isNaN(kb) || kb <= 0) return alert('Enter a valid KB size');
+    
+    const status = document.getElementById('compressStatus');
+    status.textContent = 'Compressing...';
+    
+    try {
+        const compressedFile = await imageCompression(item.file, {
+            maxSizeMB: kb / 1024,
+            useWebWorker: true,
+            initialQuality: 0.8
+        });
+        status.textContent = `Done! Size: ${(compressedFile.size/1024).toFixed(1)} KB`;
+        saveToGallery(compressedFile, 'compressed');
+    } catch(err) {
+        status.textContent = 'Failed';
+        alert(err);
+    }
+}
+
+const gridBoxes = [];
+
+function drawGridGuides() {
+    const guidesToRemove = [];
+    fabricCanvas.forEachObject(obj => {
+        if (obj && obj.isGuide) guidesToRemove.push(obj);
+    });
+    guidesToRemove.forEach(obj => fabricCanvas.remove(obj));
+    
+    gridBoxes.length = 0;
+    
+    const cols = 5;
+    const rows = 5;
+    const w = 130;
+    const h = 167;
+    const gapX = 15;
+    const gapY = 20;
+    const startX = 58;
+    const startY = 127;
+    
+    // Draw guide outline rectangles
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const x = startX + c * (w + gapX);
+            const y = startY + r * (h + gapY);
+            
+            gridBoxes.push({ x, y, w, h });
+            
+            const rect = new fabric.Rect({
+                left: x,
+                top: y,
+                width: w,
+                height: h,
+                fill: 'transparent',
+                stroke: '#cbd5e1',
+                strokeWidth: 1,
+                strokeDashArray: [4, 4],
+                selectable: false,
+                evented: false,
+                isGuide: true
+            });
+            fabricCanvas.add(rect);
+        }
+    }
+    
+    // Draw horizontal dotted cutting lines in gaps
+    for (let r = 1; r < rows; r++) {
+        const y = startY + r * (h + gapY) - gapY / 2;
+        const line = new fabric.Line([startX - 20, y, startX + cols * (w + gapX) - gapX + 20, y], {
+            stroke: '#94a3b8',
+            strokeWidth: 1,
+            strokeDashArray: [2, 4],
+            selectable: false,
+            evented: false,
+            isGuide: true
+        });
+        fabricCanvas.add(line);
+    }
+    
+    // Draw vertical dotted cutting lines in gaps
+    for (let c = 1; c < cols; c++) {
+        const x = startX + c * (w + gapX) - gapX / 2;
+        const line = new fabric.Line([x, startY - 20, x, startY + rows * (h + gapY) - gapY + 20], {
+            stroke: '#94a3b8',
+            strokeWidth: 1,
+            strokeDashArray: [2, 4],
+            selectable: false,
+            evented: false,
+            isGuide: true
+        });
+        fabricCanvas.add(line);
+    }
+    
+    fabricCanvas.renderAll();
+}
+
+function addSelectedToCanvas() {
+    if(selectedId) {
+        fillNextEmptyGridBox(selectedId);
+    } else {
+        alert('Select an image from gallery first.');
+    }
+}
+
+function fillNextEmptyGridBox(id) {
+    const item = gallery.find(i => i.id === id);
+    if(!item) return;
+    
+    let emptyBox = null;
+    let emptyBoxIndex = -1;
+    
+    for (let i = 0; i < gridBoxes.length; i++) {
+        const box = gridBoxes[i];
+        let isOccupied = false;
+        
+        fabricCanvas.forEachObject(obj => {
+            if (obj && !obj.isGuide) {
+                if (Math.abs(obj.left - box.x) < 5 && Math.abs(obj.top - box.y) < 5) {
+                    isOccupied = true;
+                }
+            }
+        });
+        
+        if (loadingBoxIndices.has(i)) {
+            isOccupied = true;
+        }
+        
+        if (!isOccupied) {
+            emptyBox = box;
+            emptyBoxIndex = i;
+            break;
+        }
+    }
+    
+    if (emptyBox) {
+        loadingBoxIndices.add(emptyBoxIndex);
+        addImageToCanvasInBox(id, emptyBox, emptyBoxIndex);
+    } else {
+        alert('All passport guide boxes on the A4 page are full!');
+    }
+}
+
+function addImageToCanvasInBox(id, box, boxIndex) {
+    const item = gallery.find(i => i.id === id);
+    if(!item) {
+        if (boxIndex !== undefined) loadingBoxIndices.delete(boxIndex);
+        return;
+    }
+    
+    fabric.Image.fromURL(item.url, function(img) {
+        if (boxIndex !== undefined) loadingBoxIndices.delete(boxIndex);
+        
+        img.set({ 
+            left: box.x, 
+            top: box.y,
+            selectable: true,
+            hasControls: true,
+            cornerColor: '#6366f1',
+            borderColor: '#6366f1',
+            cornerStrokeColor: '#fff',
+            cornerSize: 10,
+            transparentCorners: false
+        });
+        img.scaleToWidth(box.w);
+        img.scaleToHeight(box.h);
+        
+        // Remove existing non-guide object in the same box safely
+        const overlapped = [];
+        fabricCanvas.forEachObject(obj => {
+            if (obj && !obj.isGuide && Math.abs(obj.left - box.x) < 5 && Math.abs(obj.top - box.y) < 5) {
+                overlapped.push(obj);
+            }
+        });
+        overlapped.forEach(obj => fabricCanvas.remove(obj));
+        
+        fabricCanvas.add(img);
+        fabricCanvas.setActiveObject(img);
+        fabricCanvas.renderAll();
+    });
+}
+
+function addImageToCanvas(id, x, y) {
+    const item = gallery.find(i => i.id === id);
+    if(!item) return;
+    
+    fabric.Image.fromURL(item.url, function(img) {
+        if(img.width > 300) img.scaleToWidth(130);
+        img.set({ 
+            left: x, 
+            top: y, 
+            cornerSize: 10, 
+            transparentCorners: false,
+            cornerColor: '#6366f1',
+            borderColor: '#6366f1',
+            cornerStrokeColor: '#fff',
+            borderScaleFactor: 2
+        });
+        fabricCanvas.add(img);
+        fabricCanvas.setActiveObject(img);
+    });
+}
+
+function clearCanvas() {
+    if(confirm('Clear entire A4 sheet?')) {
+        fabricCanvas.clear();
+        loadingBoxIndices.clear();
+        drawGridGuides();
+    }
+}
+
+document.addEventListener('keydown', (e) => {
+    if(e.key === 'Delete' || e.key === 'Backspace') {
+        const activeTab = document.querySelector('.studio-tab-btn.active');
+        if(activeTab && activeTab.getAttribute('data-bs-target') === '#tab-print') {
+            const active = fabricCanvas.getActiveObject();
+            if(active && active.type !== 'i-text') {
+                fabricCanvas.remove(active);
+            }
+        }
+    }
+});
+
+async function chargeWallet(slug) {
+    let formData = new FormData();
+    formData.append('service_slug', slug);
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    let resp = await fetch('{% url "wallet:ajax_charge" %}', {method: 'POST', body: formData});
+    let json = await resp.json();
+    if(json.status === 'error') throw new Error(json.message);
+}
+
+async function exportActive(slug) {
+    const item = getActiveItem();
+    if(!item) return alert('Select an image from the gallery.');
+    try {
+        await chargeWallet(slug);
+        const link = document.createElement('a');
+        link.href = item.url;
+        link.download = item.name;
+        link.click();
+    } catch(err) {
+        alert('Export failed: ' + err.message);
+    }
+}
+
+async function exportA4() {
+    if(!fabricCanvas || fabricCanvas.getObjects().length === 0) return alert('Canvas is empty. Add photos to the sheet first.');
+    
+    const btn = document.getElementById('exportPrintBtn');
+    const origHtml = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Exporting...';
+    btn.disabled = true;
+    
+    try {
+        await chargeWallet('photo-sheet');
+        
+        const dataUrl = fabricCanvas.toDataURL({ format: 'jpeg', quality: 0.95, multiplier: 3 / fabricCanvas.getZoom() }); 
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        pdf.addImage(dataUrl, 'JPEG', 0, 0, 210, 297);
+        pdf.save('a4_photo_sheet.pdf');
+    } catch(err) {
+        alert('Export failed: ' + err.message);
+    } finally {
+        btn.innerHTML = origHtml;
+        btn.disabled = false;
+    }
+}
+
+async function printA4Direct() {
+    if(!fabricCanvas || fabricCanvas.getObjects().length === 0) return alert('Canvas is empty. Add photos to the sheet first.');
+    
+    const btn = document.getElementById('printDirectBtn');
+    const origHtml = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Printing...';
+    btn.disabled = true;
+    
+    try {
+        await chargeWallet('photo-sheet');
+        
+        const dataUrl = fabricCanvas.toDataURL({ format: 'png', multiplier: 2 / fabricCanvas.getZoom() });
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>Print Photo Sheet</title>
+                <style>
+                    @page { size: A4 portrait; margin: 0; }
+                    body { margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; height: 100vh; background: white; }
+                    img { width: 210mm; height: 297mm; object-fit: contain; }
+                </style>
+            </head>
+            <body>
+                <img src="${dataUrl}" onload="window.print(); window.close();">
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    } catch(err) {
+        alert('Print failed: ' + err.message);
+    } finally {
+        btn.innerHTML = origHtml;
+        btn.disabled = false;
+    }
+}
+
+function resizeCanvasToFit() {
+    if (!fabricCanvas) return;
+    const container = document.querySelector('#tab-print .canvas-container-area');
+    if (!container) return;
+    
+    const containerW = container.clientWidth;
+    const containerH = container.clientHeight;
+    
+    if (containerW === 0 || containerH === 0) return;
+    
+    const scaleX = (containerW - 40) / A4_W;
+    const scaleY = (containerH - 40) / A4_H;
+    const scale = Math.min(scaleX, scaleY);
+    
+    fabricCanvas.setZoom(scale);
+    fabricCanvas.setDimensions({ width: A4_W * scale, height: A4_H * scale });
+    fabricCanvas.renderAll();
+}
+</script>
+{% endblock %}

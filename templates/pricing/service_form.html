@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ page_title|default:"Add Service" }}</h1>
+  </div>
+  <a href="{% url 'pricing:list' %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+<form method="post">
+  {% csrf_token %}
+
+  <div class="form-section">
+    <div class="form-section-title"><i class="bi bi-info-circle"></i> Service Information</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Service Name *</label>
+        {{ form.name }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        {{ form.category }}
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      {{ form.description }}
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title"><i class="bi bi-coin"></i> Pricing</div>
+    <div class="form-group" style="max-width: 300px;">
+      <label class="form-label">Price (Coins) *</label>
+      {{ form.price }}
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title"><i class="bi bi-toggles"></i> Settings</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <div class="d-flex align-center gap-1" style="padding-top:8px">
+          {{ form.is_active }}
+          <label for="{{ form.is_active.id_for_label }}" class="text-sm">Service is active and visible</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if form.errors %}
+  <div class="card mb-2" style="border:1px solid var(--danger)">
+    <div style="padding:16px">
+      <div style="font-weight:600;color:var(--danger);margin-bottom:8px"><i class="bi bi-exclamation-triangle"></i> Please fix the errors below:</div>
+      {% for field, errors in form.errors.items %}
+        {% for error in errors %}
+        <div class="text-sm" style="color:var(--danger)">{{ field|title }}: {{ error }}</div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="d-flex gap-1" style="justify-content:flex-end">
+    <a href="{% url 'pricing:list' %}" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check-lg"></i> {% if service %}Update{% else %}Create{% endif %} Service</button>
+  </div>
+</form>
+{% endblock %}

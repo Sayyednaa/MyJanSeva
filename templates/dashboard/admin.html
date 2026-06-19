@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <div><h1>Admin Dashboard</h1><div class="subtitle">Platform overview & analytics</div></div>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-icon indigo"><i class="bi bi-coin"></i></div>
+    <div class="stat-info"><div class="label">Total Revenue</div><div class="value">{{ total_revenue|floatformat:0 }} Coins</div><div class="sub">All time deductions</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="bi bi-graph-up-arrow"></i></div>
+    <div class="stat-info"><div class="label">This Month</div><div class="value">{{ month_revenue|floatformat:0 }} Coins</div><div class="sub">Current month revenue</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon amber"><i class="bi bi-arrow-down-circle"></i></div>
+    <div class="stat-info"><div class="label">Total Top-ups</div><div class="value">{{ total_topups|floatformat:0 }} Coins</div><div class="sub">All wallet credits</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon purple"><i class="bi bi-people-fill"></i></div>
+    <div class="stat-info"><div class="label">Operators</div><div class="value">{{ total_users }}</div><div class="sub">Registered users</div></div>
+  </div>
+</div>
+
+<div class="grid-2" style="margin-bottom:24px">
+  <!-- Revenue Chart -->
+  <div class="card" style="grid-column:1/-1">
+    <div class="card-header">
+      <div class="card-title"><i class="bi bi-bar-chart-fill"></i> Daily Revenue — Last 14 Days</div>
+    </div>
+    <canvas id="revenueChart" height="80"></canvas>
+  </div>
+</div>
+
+<!-- Top Services -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title"><i class="bi bi-trophy-fill"></i> Top Services</div>
+  </div>
+  {% if top_services %}
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead><tr><th>#</th><th>Service</th><th>Usage Count</th><th>Revenue</th></tr></thead>
+      <tbody>
+      {% for s in top_services %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ s.service_name }}</td>
+        <td><span class="badge badge-accent">{{ s.count }}</span></td>
+        <td class="amount-positive">{{ s.revenue|floatformat:0 }} Coins</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><i class="bi bi-bar-chart"></i><p>No service data yet</p></div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const ctx = document.getElementById('revenueChart').getContext('2d');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: {{ daily_labels|safe }},
+    datasets: [{
+      label: 'Revenue (Coins)',
+      data: {{ daily_data|safe }},
+      backgroundColor: 'rgba(99,102,241,0.5)',
+      borderColor: '#6366f1',
+      borderWidth: 2,
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { labels: { color: '#94a3b8' } } },
+    scales: {
+      x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+      y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+    }
+  }
+});
+</script>
+{% endblock %}

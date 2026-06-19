@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Dashboard</h1>
+    <div class="subtitle">Welcome back, {{ user.get_full_name|default:user.username }} 👋</div>
+  </div>
+  <div class="d-flex gap-1">
+    <a href="{% url 'customers:create' %}" class="btn btn-primary"><i class="bi bi-person-plus"></i> Add Customer</a>
+    <a href="{% url 'wallet:topup' %}" class="btn btn-secondary"><i class="bi bi-plus-circle"></i> Top Up</a>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-icon indigo"><i class="bi bi-wallet2"></i></div>
+    <div class="stat-info">
+      <div class="label">Wallet Balance</div>
+      <div class="value">{{ wallet.balance|floatformat:0 }} Coins</div>
+      <div class="sub"><a href="{% url 'wallet:topup' %}">Top up →</a></div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon amber"><i class="bi bi-calendar-day"></i></div>
+    <div class="stat-info">
+      <div class="label">Today's Spend</div>
+      <div class="value">{{ today_usage|floatformat:0 }} Coins</div>
+      <div class="sub"><a href="{% url 'wallet:usage' %}">View usage →</a></div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="bi bi-calendar-month"></i></div>
+    <div class="stat-info">
+      <div class="label">This Month</div>
+      <div class="value">{{ month_usage|floatformat:0 }} Coins</div>
+      <div class="sub">Service charges</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon purple"><i class="bi bi-people-fill"></i></div>
+    <div class="stat-info">
+      <div class="label">Customers</div>
+      <div class="value">{{ customers_count }}</div>
+      <div class="sub"><a href="{% url 'customers:list' %}">View all →</a></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Quick Actions -->
+<div class="card mb-3">
+  <div class="card-header">
+    <div class="card-title"><i class="bi bi-lightning-charge-fill"></i> Quick Actions</div>
+  </div>
+  <div class="action-grid">
+    <a href="{% url 'id_cards:home' %}" class="action-tile">
+      <div class="tile-icon">🌾</div><div class="tile-label">Farmer ID</div>
+    </a>
+
+    <a href="{% url 'customers:create' %}" class="action-tile">
+      <div class="tile-icon">👤</div><div class="tile-label">Add Customer</div>
+    </a>
+
+    <a href="{% url 'photo_studio:workspace' %}" class="action-tile">
+      <div class="tile-icon">📸</div><div class="tile-label">Passport Photo</div>
+    </a>
+
+    <a href="{% url 'pdf_workspace:merge' %}" class="action-tile">
+      <div class="tile-icon">📄</div><div class="tile-label">Merge PDF</div>
+    </a>
+
+    <a href="{% url 'documents:upload' %}" class="action-tile">
+      <div class="tile-icon">📁</div><div class="tile-label">Upload Doc</div>
+    </a>
+    <a href="{% url 'photo_studio:workspace' %}" class="action-tile">
+      <div class="tile-icon">🗒️</div><div class="tile-label">Photo Sheet</div>
+    </a>
+    <a href="{% url 'wallet:transactions' %}" class="action-tile">
+      <div class="tile-icon">💳</div><div class="tile-label">Transactions</div>
+    </a>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Recent Usage -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="bi bi-clock-history"></i> Recent Usage</div>
+      <a href="{% url 'wallet:usage' %}" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    {% if recent_usage %}
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead><tr><th>Service</th><th>Cost</th><th>Date</th></tr></thead>
+        <tbody>
+        {% for u in recent_usage %}
+        <tr>
+          <td>{{ u.service_name }}</td>
+          <td><span class="amount-negative">-{{ u.cost|floatformat:0 }} Coins</span></td>
+          <td class="text-muted text-sm">{{ u.created_at|date:"d M, H:i" }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:30px">
+      <i class="bi bi-clock"></i>
+      <p>No services used yet</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Recent Transactions -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="bi bi-arrow-left-right"></i> Recent Transactions</div>
+      <a href="{% url 'wallet:transactions' %}" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    {% if recent_txns %}
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead><tr><th>Type</th><th>Amount</th><th>Date</th></tr></thead>
+        <tbody>
+        {% for t in recent_txns %}
+        <tr>
+          <td><span class="badge {% if t.transaction_type == 'credit' %}badge-success{% else %}badge-danger{% endif %}">{{ t.get_transaction_type_display }}</span></td>
+          <td><span class="{% if t.transaction_type == 'credit' %}amount-positive{% else %}amount-negative{% endif %}">{% if t.transaction_type == 'credit' %}+{% else %}-{% endif %}{{ t.amount|floatformat:0 }} Coins</span></td>
+          <td class="text-muted text-sm">{{ t.created_at|date:"d M, H:i" }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:30px">
+      <i class="bi bi-credit-card"></i>
+      <p>No transactions yet</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

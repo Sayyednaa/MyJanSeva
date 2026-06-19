@@ -1,0 +1,210 @@
+{% load static humanize %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ page_title|default:"Dashboard" }} — Jan Seva{% endblock %}</title>
+  <meta name="description" content="Jan Seva — Complete Document & Government Services Platform">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+  {% block extra_css %}{% endblock %}
+  <script>
+    (function(){
+      var t = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+</head>
+<body>
+
+{% if user.is_authenticated %}
+<div class="app-shell">
+
+  <!-- ===== MOBILE TOP BAR ===== -->
+  <header class="mobile-header" id="mobileHeader">
+    <button class="mobile-menu-btn" id="menuOpenBtn" aria-label="Open menu">
+      <i class="bi bi-list"></i>
+    </button>
+    <div class="mobile-brand">Jan Seva</div>
+    <div class="mobile-actions">
+      <button id="themeToggleMobile" class="mobile-icon-btn" aria-label="Toggle theme">
+        <i class="bi bi-sun-fill" id="themeIconMobile"></i>
+      </button>
+      <a href="{% url 'accounts:profile' %}" class="mobile-avatar">
+        {{ user.get_full_name|slice:":1"|upper|default:user.username|slice:":1"|upper }}
+      </a>
+    </div>
+  </header>
+
+  <!-- ===== SIDEBAR OVERLAY (mobile) ===== -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon"><i class="bi bi-building"></i></div>
+        <div class="sidebar-brand-text">
+          <span class="sidebar-brand-name">Jan Seva</span>
+          <span class="sidebar-brand-sub">Workspace</span>
+        </div>
+      </div>
+      <button class="sidebar-close-btn" id="menuCloseBtn" aria-label="Close menu">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebarNav">
+      <div class="nav-group">
+        <div class="nav-group-label">Overview</div>
+        <a href="{% url 'id_cards:home' %}" class="nav-link {% if request.resolver_match.namespace == 'id_cards' %}active{% endif %}">
+          <i class="bi bi-card-heading"></i><span>Farmer ID</span>
+        </a>
+        <a href="{% url 'dashboard:home' %}" class="nav-link {% if request.resolver_match.namespace == 'dashboard' %}active{% endif %}">
+          <i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span>
+        </a>
+        <a href="{% url 'wallet:dashboard' %}" class="nav-link {% if request.resolver_match.namespace == 'wallet' %}active{% endif %}">
+          <i class="bi bi-wallet2"></i><span>Wallet</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-label">Data</div>
+        <a href="{% url 'customers:list' %}" class="nav-link {% if request.resolver_match.namespace == 'customers' %}active{% endif %}">
+          <i class="bi bi-people-fill"></i><span>Customers</span>
+        </a>
+        <a href="{% url 'documents:list' %}" class="nav-link {% if request.resolver_match.namespace == 'documents' %}active{% endif %}">
+          <i class="bi bi-folder2-open"></i><span>Documents</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-label">Tools</div>
+        <a href="{% url 'photo_studio:workspace' %}" class="nav-link {% if request.resolver_match.namespace == 'photo_studio' %}active{% endif %}">
+          <i class="bi bi-camera-fill"></i><span>Photo Studio</span>
+        </a>
+        <a href="{% url 'pdf_workspace:home' %}" class="nav-link {% if request.resolver_match.namespace == 'pdf_workspace' %}active{% endif %}">
+          <i class="bi bi-file-earmark-pdf-fill"></i><span>PDF Tools</span>
+        </a>
+      </div>
+
+      {% if user.is_admin %}
+      <div class="nav-group">
+        <div class="nav-group-label">Admin</div>
+        <a href="{% url 'pricing:list' %}" class="nav-link {% if request.resolver_match.namespace == 'pricing' %}active{% endif %}">
+          <i class="bi bi-tags-fill"></i><span>Pricing</span>
+        </a>
+        <a href="{% url 'wallet:admin_topup_requests' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_topup_requests' %}active{% endif %}">
+          <i class="bi bi-coin"></i><span>Top-up Requests</span>
+        </a>
+        <a href="/admin/" class="nav-link">
+          <i class="bi bi-shield-lock-fill"></i><span>Django Admin</span>
+        </a>
+      </div>
+      {% endif %}
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-wallet">
+        <div class="sidebar-wallet-row">
+          <span class="sidebar-wallet-label"><i class="bi bi-wallet2"></i> Balance</span>
+          <span class="sidebar-wallet-amt">{{ wallet_balance|floatformat:0 }} Coins</span>
+        </div>
+        <a href="{% url 'wallet:topup' %}" class="btn btn-primary btn-sm btn-block">
+          <i class="bi bi-plus-lg"></i> Top Up
+        </a>
+      </div>
+      <div class="sidebar-actions">
+        <button id="themeToggleBtn" class="sidebar-action-btn" title="Toggle Theme">
+          <i id="themeToggleIcon" class="bi bi-sun-fill"></i>
+        </button>
+        <a href="{% url 'accounts:profile' %}" class="sidebar-action-btn" title="Profile">
+          <i class="bi bi-person-circle"></i>
+        </a>
+        <a href="{% url 'accounts:logout' %}" class="sidebar-action-btn sidebar-action-btn--danger" title="Logout">
+          <i class="bi bi-box-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN AREA ===== -->
+  <div class="main-area">
+    {% if messages %}
+    <div class="toast-stack" id="toastStack">
+      {% for msg in messages %}
+      <div class="toast toast--{{ msg.tags }}" role="alert">
+        <i class="bi bi-{% if msg.tags == 'success' %}check-circle-fill{% elif msg.tags == 'danger' or msg.tags == 'error' %}x-circle-fill{% elif msg.tags == 'warning' %}exclamation-triangle-fill{% else %}info-circle-fill{% endif %}"></i>
+        <span>{{ msg }}</span>
+        <button class="toast-close" onclick="this.parentElement.remove()" aria-label="Close">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <main class="page-body">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+</div>
+
+{% else %}
+  {% block auth_content %}{% endblock %}
+{% endif %}
+
+<script>
+(function(){
+  // Toast auto-dismiss
+  document.querySelectorAll('.toast').forEach(function(t, i){
+    setTimeout(function(){ t.style.opacity='0'; t.style.transform='translateX(20px)'; }, 4000 + i*300);
+    setTimeout(function(){ t.remove(); }, 4500 + i*300);
+  });
+
+  // Sidebar toggle (mobile)
+  var sidebar = document.getElementById('sidebar');
+  var overlay = document.getElementById('sidebarOverlay');
+  var openBtn = document.getElementById('menuOpenBtn');
+  var closeBtn = document.getElementById('menuCloseBtn');
+
+  function openSidebar(){ sidebar.classList.add('open'); overlay.classList.add('visible'); document.body.style.overflow='hidden'; }
+  function closeSidebar(){ sidebar.classList.remove('open'); overlay.classList.remove('visible'); document.body.style.overflow=''; }
+
+  if(openBtn) openBtn.addEventListener('click', openSidebar);
+  if(closeBtn) closeBtn.addEventListener('click', closeSidebar);
+  if(overlay) overlay.addEventListener('click', closeSidebar);
+
+  // Close sidebar on nav click (mobile)
+  document.querySelectorAll('.sidebar-nav .nav-link').forEach(function(a){
+    a.addEventListener('click', function(){ if(window.innerWidth < 1024) closeSidebar(); });
+  });
+
+  // Theme toggle (works for both desktop & mobile buttons)
+  function setTheme(theme){
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    var icon = theme === 'light' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+    var els = document.querySelectorAll('#themeToggleIcon, #themeIconMobile');
+    els.forEach(function(el){ el.className = icon; });
+  }
+
+  var curTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+  setTheme(curTheme); // sync icons
+
+  document.querySelectorAll('#themeToggleBtn, #themeToggleMobile').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      setTheme(next);
+    });
+  });
+})();
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

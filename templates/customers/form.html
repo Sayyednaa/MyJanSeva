@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <div><h1>{{ page_title }}</h1></div>
+  <a href="{% url 'customers:list' %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div class="form-section">
+    <div class="form-section-title"><i class="bi bi-person"></i> Personal Information</div>
+    <div class="form-row-3">
+      <div class="form-group"><label class="form-label">Full Name *</label>{{ form.full_name }}</div>
+      <div class="form-group"><label class="form-label">Father's Name</label>{{ form.father_name }}</div>
+      <div class="form-group"><label class="form-label">Mother's Name</label>{{ form.mother_name }}</div>
+    </div>
+    <div class="form-row-3">
+      <div class="form-group"><label class="form-label">Gender</label>{{ form.gender }}</div>
+      <div class="form-group"><label class="form-label">Date of Birth</label>{{ form.dob }}</div>
+      <div class="form-group"><label class="form-label">Mobile *</label>{{ form.mobile }}</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Alt. Mobile</label>{{ form.alternate_mobile }}</div>
+      <div class="form-group"><label class="form-label">Email</label>{{ form.email }}</div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title"><i class="bi bi-geo-alt"></i> Address</div>
+    <div class="form-group"><label class="form-label">Full Address</label>{{ form.address }}</div>
+    <div class="form-row-3">
+      <div class="form-group"><label class="form-label">Village</label>{{ form.village }}</div>
+      <div class="form-group"><label class="form-label">Taluka</label>{{ form.taluka }}</div>
+      <div class="form-group"><label class="form-label">District</label>{{ form.district }}</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">State</label>{{ form.state }}</div>
+      <div class="form-group"><label class="form-label">Pincode</label>{{ form.pincode }}</div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title"><i class="bi bi-card-text"></i> Identity Documents</div>
+    <div class="form-row-3">
+      <div class="form-group"><label class="form-label">Aadhaar Number</label>{{ form.aadhaar_number }}</div>
+      <div class="form-group"><label class="form-label">PAN Number</label>{{ form.pan_number }}</div>
+      <div class="form-group"><label class="form-label">Voter ID</label>{{ form.voter_id }}</div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title"><i class="bi bi-image"></i> Photos</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Photo</label>{{ form.photo }}</div>
+      <div class="form-group"><label class="form-label">Signature</label>{{ form.signature }}</div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title"><i class="bi bi-journal-text"></i> Notes</div>
+    <div class="form-group">{{ form.notes }}</div>
+  </div>
+
+  <div class="d-flex gap-1" style="justify-content:flex-end">
+    <a href="{% url 'customers:list' %}" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check-lg"></i> {% if customer %}Update{% else %}Save{% endif %} Customer</button>
+  </div>
+</form>
+{% endblock %}

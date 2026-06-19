@@ -1,0 +1,63 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>{% block title %}Jan Seva Workspace{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script>
+    (function(){
+      var t = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+</head>
+<body>
+<div class="auth-shell">
+  <button id="themeToggleBtn" class="auth-theme-btn" aria-label="Toggle theme">
+    <i id="themeToggleIcon" class="bi bi-sun-fill"></i>
+  </button>
+
+  {% if messages %}
+  <div class="toast-stack" style="position:fixed;top:20px;right:20px;z-index:9999;">
+    {% for msg in messages %}
+    <div class="toast toast--{{ msg.tags }}" role="alert">
+      <i class="bi bi-info-circle-fill"></i>
+      <span>{{ msg }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% block auth_body %}{% endblock %}
+</div>
+
+<script>
+document.querySelectorAll('.toast').forEach(function(t){ setTimeout(function(){t.remove();},4000); });
+
+var themeToggleBtn = document.getElementById('themeToggleBtn');
+var themeToggleIcon = document.getElementById('themeToggleIcon');
+
+function setTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+  if(themeToggleIcon) themeToggleIcon.className = theme === 'light' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+}
+
+var curTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+setTheme(curTheme);
+
+if(themeToggleBtn){
+  themeToggleBtn.addEventListener('click', function(){
+    var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    setTheme(next);
+  });
+}
+</script>
+</body>
+</html>
