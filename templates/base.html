@@ -76,6 +76,9 @@
         <a href="{% url 'pricing:view_pricing' %}" class="nav-link {% if request.resolver_match.url_name == 'view_pricing' %}active{% endif %}">
           <i class="bi bi-tags"></i><span>Service Pricing</span>
         </a>
+        <a href="{% url 'dashboard:help' %}" class="nav-link {% if request.resolver_match.url_name == 'help' %}active{% endif %}">
+          <i class="bi bi-question-circle"></i><span>Help & Support</span>
+        </a>
       </div>
 
       <div class="nav-group">
@@ -101,6 +104,12 @@
       {% if user.is_admin %}
       <div class="nav-group">
         <div class="nav-group-label">Admin</div>
+        <a href="{% url 'dashboard:admin_users' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_users' %}active{% endif %}">
+          <i class="bi bi-people-fill"></i><span>Users & Analytics</span>
+        </a>
+        <a href="{% url 'dashboard:admin_support' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_support' %}active{% endif %}">
+          <i class="bi bi-chat-left-dots-fill"></i><span>Support Tickets</span>
+        </a>
         <a href="{% url 'pricing:list' %}" class="nav-link {% if request.resolver_match.namespace == 'pricing' %}active{% endif %}">
           <i class="bi bi-tags-fill"></i><span>Pricing</span>
         </a>
@@ -371,7 +380,50 @@
     "PDF Split": "पीडीएफ स्प्लिट",
     "Passport Photo": "पासपोर्ट फोटो",
     "Photo Sheet": "फोटो शीट",
-    "Signature Resize": "हस्ताक्षर का आकार बदलना"
+    "Signature Resize": "हस्ताक्षर का आकार बदलना",
+    "Operator Directory & Analytics": "ऑपरेटर निर्देशिका और विश्लेषण",
+    "Monitor activity, manage wallet balances, and configure user permissions": "गतिविधि की निगरानी करें, वॉलेट बैलेंस प्रबंधित करें, और उपयोगकर्ता अनुमतियां कॉन्फ़िगर करें",
+    "Total Operators": "कुल ऑपरेटर",
+    "active accounts": "सक्रिय खाते",
+    "Equivalent to": "के बराबर",
+    "Total Coins Spent": "कुल खर्च किए गए सिक्के",
+    "Revenue equivalent:": "राजस्व समतुल्य:",
+    "Search Operators": "ऑपरेटर खोजें",
+    "Operator / Business": "ऑपरेटर / व्यवसाय",
+    "Contact Details": "संपर्क विवरण",
+    "Usage Analytics": "उपयोग विश्लेषण",
+    "Actions": "कार्रवाई",
+    "Block": "ब्लॉक करें",
+    "Activate": "सक्रिय करें",
+    "Disapprove": "अस्वीकार करें",
+    "Adjust Wallet Balance": "वॉलेट बैलेंस समायोजित करें",
+    "Adjustment Action": "समायोजन कार्रवाई",
+    "Credit (+) Add Coins": "क्रेडिट (+) सिक्के जोड़ें",
+    "Deduct (-) Remove Coins": "डेबिट (-) सिक्के निकालें",
+    "Coin Amount *": "सिक्के की राशि *",
+    "Enter amount of coins": "सिक्कों की संख्या दर्ज करें",
+    "Adjustment Note / Reason": "समायोजन नोट / कारण",
+    "E.g., Cash topup, correction": "जैसे, नकद टॉपअप, सुधार",
+    "Apply Adjustment": "समायोजन लागू करें",
+    "User:": "उपयोगकर्ता:",
+    "Current Balance:": "वर्तमान बैलेंस:",
+    "Help & Support": "सहायता और समर्थन",
+    "Submit support requests, ask questions, or report issues directly to the administration": "प्रशासन को सीधे सहायता अनुरोध सबमिट करें, प्रश्न पूछें, या समस्याओं की रिपोर्ट करें",
+    "New Support Ticket": "नया सहायता टिकट",
+    "Subject *": "विषय *",
+    "Describe Your Problem *": "अपनी समस्या का वर्णन करें *",
+    "E.g., Wallet issue, Farmer ID loading error": "जैसे, वॉलेट की समस्या, किसान आईडी लोडिंग त्रुटि",
+    "Please provide detailed information about the issue you are facing...": "कृपया आपके सामने आ रही समस्या के बारे में विस्तृत जानकारी प्रदान करें...",
+    "Send Support Request": "सहायता अनुरोध भेजें",
+    "Ticket History": "टिकट इतिहास",
+    "Awaiting Admin": "प्रशासक की प्रतीक्षा",
+    "Resolved": "हल किया गया",
+    "Submitted on": "को सबमिट किया गया",
+    "Admin Reply:": "प्रशासक का उत्तर:",
+    "Replied on": "को उत्तर दिया गया",
+    "Admin will review and respond to your request shortly.": "प्रशासक शीघ्र ही आपके अनुरोध की समीक्षा करेगा और उत्तर देगा।",
+    "No support requests submitted yet.": "अभी तक कोई सहायता अनुरोध सबमिट नहीं किया गया है।",
+    "Support Tickets": "सहायता टिकट"
   };
 
   function translateDOM() {

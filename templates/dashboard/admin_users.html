@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Operator Directory & Analytics</h1>
+    <div class="subtitle">Monitor activity, manage wallet balances, and configure user permissions</div>
+  </div>
+</div>
+
+<div class="stat-grid" style="margin-bottom: 24px;">
+  <div class="stat-card">
+    <div class="stat-icon purple"><i class="bi bi-people-fill"></i></div>
+    <div class="stat-info">
+      <div class="label">Total Operators</div>
+      <div class="value">{{ total_operators }}</div>
+      <div class="sub">{{ active_operators }} active accounts</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon indigo"><i class="bi bi-wallet2"></i></div>
+    <div class="stat-info">
+      <div class="label">Total Wallet Balance</div>
+      <div class="value">{{ total_balance_coins|floatformat:0 }} Coins</div>
+      <div class="sub">Equivalent to ₹{{ total_balance_inr|floatformat:2 }}</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="bi bi-currency-rupee"></i></div>
+    <div class="stat-info">
+      <div class="label">Total Coins Spent</div>
+      <div class="value">{{ total_spent_coins|floatformat:0 }} Coins</div>
+      <div class="sub">Revenue equivalent: ₹{{ total_spent_inr|floatformat:2 }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+    <div class="card-title"><i class="bi bi-search"></i> Search Operators</div>
+    <form method="get" action="" style="display:flex; gap:10px; width:100%; max-width:400px;">
+      <input type="text" name="search" class="form-control" placeholder="Search by name, email, business..." value="{{ search_query }}" style="flex:1;">
+      <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
+      {% if search_query %}
+        <a href="{% url 'dashboard:admin_users' %}" class="btn btn-secondary"><i class="bi bi-x-lg"></i></a>
+      {% endif %}
+    </form>
+  </div>
+
+  {% if operators %}
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Operator / Business</th>
+          <th>Contact Details</th>
+          <th>Wallet Balance</th>
+          <th>Usage Analytics</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for op in operators %}
+        <tr>
+          <td>
+            <div style="font-weight:600; color:var(--text-primary);">{{ op.get_full_name|default:op.username }}</div>
+            {% if op.business_name %}
+              <div style="font-size:11px; color:var(--accent); font-weight:600; margin-top:2px;">
+                <i class="bi bi-building"></i> {{ op.business_name }}
+              </div>
+            {% endif %}
+            <div class="text-xs text-secondary" style="margin-top:2px;">Joined: {{ op.created_at|date:"d M Y" }}</div>
+          </td>
+          <td>
+            <div style="font-size:13px;"><i class="bi bi-envelope"></i> {{ op.email }}</div>
+            {% if op.phone %}
+              <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;"><i class="bi bi-phone"></i> {{ op.phone }}</div>
+            {% endif %}
+            {% if op.city or op.state %}
+              <div class="text-xs text-tertiary" style="margin-top:2px;"><i class="bi bi-geo-alt"></i> {{ op.city }}, {{ op.state }}</div>
+            {% endif %}
+          </td>
+          <td>
+            <div style="font-weight:700; color:var(--accent);">🪙 {{ op.wallet_balance|floatformat:0 }}</div>
+            <div class="text-xs text-secondary" style="margin-top:2px;">Value: ₹{{ op.wallet_balance_inr|floatformat:2 }}</div>
+          </td>
+          <td>
+            <div style="font-weight:600;">Cost: {{ op.total_spent|floatformat:0 }} Coins</div>
+            <div class="text-xs text-secondary" style="margin-top:2px;">Volume: {{ op.total_usage_count }} services</div>
+          </td>
+          <td>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              {% if op.is_active %}
+                <span class="badge badge-success" style="width:fit-content;"><i class="bi bi-check-circle-fill"></i> Active</span>
+              {% else %}
+                <span class="badge badge-danger" style="width:fit-content;"><i class="bi bi-dash-circle-fill"></i> Blocked</span>
+              {% endif %}
+
+              {% if op.is_approved %}
+                <span class="badge badge-accent" style="width:fit-content;"><i class="bi bi-shield-check"></i> Approved</span>
+              {% else %}
+                <span class="badge badge-warning" style="width:fit-content;"><i class="bi bi-shield-slash"></i> Pending Approval</span>
+              {% endif %}
+            </div>
+          </td>
+          <td>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn btn-secondary btn-sm" onclick="openAdjustModal({{ op.pk }}, '{{ op.username }}', {{ op.wallet_balance|floatformat:0 }})">
+                <i class="bi bi-coin"></i> Balance
+              </button>
+              
+              <a href="{% url 'dashboard:admin_user_toggle_active' pk=op.pk %}" class="btn {% if op.is_active %}btn-danger{% else %}btn-primary{% endif %} btn-sm" style="padding: 4px 8px;">
+                {% if op.is_active %}<i class="bi bi-slash-circle"></i> Block{% else %}<i class="bi bi-check-circle"></i> Activate{% endif %}
+              </a>
+
+              <a href="{% url 'dashboard:admin_user_toggle_approved' pk=op.pk %}" class="btn {% if op.is_approved %}btn-secondary{% else %}btn-primary{% endif %} btn-sm" style="padding: 4px 8px; font-size:12px;">
+                {% if op.is_approved %}Disapprove{% else %}Approve{% endif %}
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state" style="padding:40px;">
+    <i class="bi bi-people" style="font-size:48px; color:var(--text-tertiary);"></i>
+    <h3>No operators found</h3>
+    <p>Try refining your search keyword.</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Balance Adjustment Modal -->
+<div id="adjustModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1050; align-items:center; justify-content:center; padding:16px;">
+  <div class="card" style="width:100%; max-width:440px; border-radius:var(--radius); border:1px solid var(--border); overflow:hidden; background:var(--bg-raised); box-shadow:var(--shadow-lg);">
+    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px;">
+      <div class="card-title" style="margin:0;"><i class="bi bi-coin"></i> Adjust Wallet Balance</div>
+      <button class="btn-icon" onclick="closeAdjustModal()" style="border:none; background:none; color:var(--text-secondary); cursor:pointer;"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <form id="adjustForm" method="post" action="" style="padding:20px;">
+      {% csrf_token %}
+      <div style="margin-bottom:16px;">
+        <span style="font-weight:600; color:var(--text-secondary);">User:</span>
+        <span id="modalUsername" style="font-weight:700; color:var(--text-primary); margin-left:6px;"></span>
+      </div>
+      <div style="margin-bottom:16px;">
+        <span style="font-weight:600; color:var(--text-secondary);">Current Balance:</span>
+        <span id="modalCurrentCoins" style="font-weight:700; color:var(--accent); margin-left:6px;"></span> Coins
+      </div>
+      
+      <div class="form-group" style="margin-bottom:16px;">
+        <label class="form-label" style="font-weight:600;">Adjustment Action</label>
+        <select name="action" class="form-control" required style="width:100%; height:40px; border-radius:var(--radius-sm); background:var(--bg-input); border:1px solid var(--border); color:var(--text-primary); padding: 0 10px;">
+          <option value="credit">Credit (+) Add Coins</option>
+          <option value="deduct">Deduct (-) Remove Coins</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px;">
+        <label class="form-label" style="font-weight:600;">Coin Amount *</label>
+        <input type="number" name="amount" class="form-control" placeholder="Enter amount of coins" min="1" required style="width:100%;">
+      </div>
+
+      <div class="form-group" style="margin-bottom:24px;">
+        <label class="form-label" style="font-weight:600;">Adjustment Note / Reason</label>
+        <input type="text" name="note" class="form-control" placeholder="E.g., Cash topup, correction" style="width:100%;">
+      </div>
+
+      <div style="display:flex; gap:12px; justify-content:flex-end;">
+        <button type="button" class="btn btn-secondary" onclick="closeAdjustModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Apply Adjustment</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openAdjustModal(userId, username, currentCoins) {
+    const modal = document.getElementById('adjustModal');
+    const form = document.getElementById('adjustForm');
+    const usernameEl = document.getElementById('modalUsername');
+    const coinsEl = document.getElementById('modalCurrentCoins');
+    
+    usernameEl.textContent = username;
+    coinsEl.textContent = currentCoins;
+    
+    // Set dynamic form action
+    form.action = `/dashboard/admin/users/${userId}/adjust-balance/`;
+    
+    modal.style.display = 'flex';
+}
+
+function closeAdjustModal() {
+    const modal = document.getElementById('adjustModal');
+    modal.style.display = 'none';
+}
+
+// Close modal if clicked outside card
+window.addEventListener('click', function(e) {
+    const modal = document.getElementById('adjustModal');
+    if (e.target === modal) {
+        closeAdjustModal();
+    }
+});
+</script>
+{% endblock %}

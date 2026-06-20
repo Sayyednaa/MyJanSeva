@@ -17,9 +17,13 @@
     <div class="stat-icon amber"><i class="bi bi-currency-rupee"></i></div>
     <div class="stat-info"><div class="label">Total Top-ups</div><div class="value">₹{{ total_topups|floatformat:2 }}</div><div class="sub">All wallet credits</div></div>
   </div>
-  <div class="stat-card">
+  <div class="stat-card" onclick="window.location.href='{% url 'dashboard:admin_users' %}'" style="cursor:pointer; transition: transform 0.2s, box-shadow 0.2s;">
     <div class="stat-icon purple"><i class="bi bi-people-fill"></i></div>
-    <div class="stat-info"><div class="label">Operators</div><div class="value">{{ total_users }}</div><div class="sub">Registered users</div></div>
+    <div class="stat-info">
+      <div class="label">Operators</div>
+      <div class="value">{{ total_users }}</div>
+      <div class="sub">Manage registered users</div>
+    </div>
   </div>
 </div>
 

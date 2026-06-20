@@ -1,1 +1,29 @@
-.pyc
+# Python compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+**/*.pyc
+**/*/__pycache__/
+
+# Database
+db.sqlite3
+db.sqlite3-journal
+*.db
+*.db-journal
+
+# Media & Uploads (preserves operator/customer files)
+media/
+staticfiles/
+
+# Environment Variables & Credentials
+.env
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# IDE / Editor config
+.idea/
+.vscode/
+*.swp

@@ -123,3 +123,200 @@ def admin_dashboard(request):
         'top_services': top_services,
         'page_title': 'Admin Dashboard',
     })
+
+
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from django.db.models import Q
+from django.db.models.functions import Coalesce
+from apps.accounts.models import CustomUser
+
+def admin_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated or not request.user.is_admin:
+            messages.error(request, 'Admin access required.')
+            return redirect('dashboard:home')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+@login_required
+@admin_required
+def admin_users(request):
+    search_query = request.GET.get('search', '').strip()
+    
+    from decimal import Decimal
+    # Base query for all operators
+    operators = CustomUser.objects.filter(role='operator').select_related('wallet').annotate(
+        total_spent=Coalesce(Sum('usage_records__cost'), Decimal('0')),
+        total_usage_count=Count('usage_records__id')
+    )
+    
+    if search_query:
+        operators = operators.filter(
+            Q(username__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(phone__icontains=search_query) |
+            Q(business_name__icontains=search_query)
+        )
+        
+    operators = operators.order_by('-created_at')
+    
+    # Calculate operator metrics
+    total_operators = operators.count()
+    active_operators = operators.filter(is_active=True).count()
+    
+    # Wallet balances & spent calculations
+    COIN_TO_INR_RATE = 0.50
+    total_balance_coins = Wallet.objects.filter(user__role='operator').aggregate(total=Sum('balance'))['total'] or 0
+    total_balance_inr = float(total_balance_coins) * COIN_TO_INR_RATE
+    
+    total_spent_coins = UsageRecord.objects.aggregate(total=Sum('cost'))['total'] or 0
+    total_spent_inr = float(total_spent_coins) * COIN_TO_INR_RATE
+    
+    # Add rupee representations to operators list
+    for op in operators:
+        op.total_spent_inr = float(op.total_spent) * COIN_TO_INR_RATE
+        op.wallet_balance_inr = float(op.wallet_balance) * COIN_TO_INR_RATE
+        
+    return render(request, 'dashboard/admin_users.html', {
+        'operators': operators,
+        'search_query': search_query,
+        'total_operators': total_operators,
+        'active_operators': active_operators,
+        'total_balance_coins': total_balance_coins,
+        'total_balance_inr': total_balance_inr,
+        'total_spent_coins': total_spent_coins,
+        'total_spent_inr': total_spent_inr,
+        'page_title': 'Users & Analytics',
+    })
+
+
+@login_required
+@admin_required
+def admin_user_toggle_active(request, pk):
+    user = get_object_or_404(CustomUser, pk=pk, role='operator')
+    user.is_active = not user.is_active
+    user.save()
+    status = 'activated' if user.is_active else 'deactivated'
+    messages.success(request, f'User {user.username} has been {status}.')
+    return redirect('dashboard:admin_users')
+
+
+@login_required
+@admin_required
+def admin_user_toggle_approved(request, pk):
+    user = get_object_or_404(CustomUser, pk=pk, role='operator')
+    user.is_approved = not user.is_approved
+    user.save()
+    status = 'approved' if user.is_approved else 'disapproved'
+    messages.success(request, f'User {user.username} has been {status}.')
+    return redirect('dashboard:admin_users')
+
+
+@login_required
+@admin_required
+def admin_user_adjust_balance(request, pk):
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        amount_str = request.POST.get('amount', '0')
+        note = request.POST.get('note', '').strip()
+        
+        try:
+            amount = float(amount_str)
+            if amount <= 0:
+                raise ValueError
+        except ValueError:
+            messages.error(request, 'Invalid amount.')
+            return redirect('dashboard:admin_users')
+            
+        user = get_object_or_404(CustomUser, pk=pk, role='operator')
+        from apps.wallet.services import WalletService, InsufficientBalanceError
+        try:
+            if action == 'credit':
+                WalletService.credit(user, amount, method='manual', note=note or 'Admin balance adjustment')
+                messages.success(request, f'Successfully credited {amount:.0f} Coins to {user.get_full_name() or user.username}.')
+            elif action == 'deduct':
+                WalletService.deduct(user, 'Manual adjustment', 'admin-adjust', amount, extra_data={'note': note})
+                messages.success(request, f'Successfully deducted {amount:.0f} Coins from {user.get_full_name() or user.username}.')
+        except InsufficientBalanceError:
+            messages.error(request, 'Operator has insufficient balance to deduct.')
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
+            
+    return redirect('dashboard:admin_users')
+
+
+@login_required
+def help_view(request):
+    from .models import SupportTicket
+    if request.method == 'POST':
+        subject = request.POST.get('subject', '').strip()
+        message = request.POST.get('message', '').strip()
+        
+        if not subject or not message:
+            messages.error(request, 'Subject and message are required.')
+            return redirect('dashboard:help')
+            
+        ticket = SupportTicket.objects.create(
+            user=request.user,
+            subject=subject,
+            message=message
+        )
+        
+        # Send Telegram notification to admin
+        try:
+            from apps.wallet.utils import send_telegram_message
+            full_name = request.user.get_full_name() or request.user.username
+            msg = (
+                f"<b>🆘 New Support Ticket #{ticket.id}</b>\n\n"
+                f"• <b>User:</b> {full_name} ({request.user.email})\n"
+                f"• <b>Subject:</b> {subject}\n"
+                f"• <b>Message:</b>\n{message}\n"
+            )
+            send_telegram_message(msg)
+        except Exception:
+            pass
+            
+        messages.success(request, 'Support ticket submitted successfully! Admin will reply shortly.')
+        return redirect('dashboard:help')
+        
+    tickets = SupportTicket.objects.filter(user=request.user)
+    return render(request, 'dashboard/help.html', {
+        'tickets': tickets,
+        'page_title': 'Help & Support',
+    })
+
+
+@login_required
+@admin_required
+def admin_support(request):
+    from .models import SupportTicket
+    # Show pending tickets first, then resolved ones, ordered by newest first
+    tickets = SupportTicket.objects.all().select_related('user').order_by('status', '-created_at')
+    return render(request, 'dashboard/admin_support.html', {
+        'tickets': tickets,
+        'page_title': 'Support Tickets',
+    })
+
+
+@login_required
+@admin_required
+def admin_support_reply(request, pk):
+    from .models import SupportTicket
+    ticket = get_object_or_404(SupportTicket, pk=pk)
+    if request.method == 'POST':
+        reply = request.POST.get('reply', '').strip()
+        if not reply:
+            messages.error(request, 'Reply content cannot be empty.')
+            return redirect('dashboard:admin_support')
+            
+        ticket.reply = reply
+        ticket.status = 'resolved'
+        ticket.save()
+        messages.success(request, f'Reply sent to ticket #{ticket.id}.')
+    return redirect('dashboard:admin_support')
+
+

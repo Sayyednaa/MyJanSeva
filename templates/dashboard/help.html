@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Help & Support</h1>
+    <div class="subtitle">Submit support requests, ask questions, or report issues directly to the administration</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- New Ticket Form -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="bi bi-chat-left-text-fill"></i> New Support Ticket</div>
+    </div>
+    <div style="padding: 20px;">
+      <form method="post" action="">
+        {% csrf_token %}
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label" style="font-weight: 600;">Subject *</label>
+          <input type="text" name="subject" class="form-control" placeholder="E.g., Wallet issue, Farmer ID loading error" required style="width: 100%;">
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label class="form-label" style="font-weight: 600;">Describe Your Problem *</label>
+          <textarea name="message" class="form-control" placeholder="Please provide detailed information about the issue you are facing..." rows="5" required style="width: 100%; resize: vertical; min-height: 120px;"></textarea>
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-block">
+          <i class="bi bi-send-fill"></i> Send Support Request
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Ticket History -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="bi bi-clock-history"></i> Ticket History</div>
+    </div>
+    <div style="padding: 20px; display: flex; flex-direction: column; gap: 16px; max-height: 600px; overflow-y: auto;">
+      {% if tickets %}
+        {% for t in tickets %}
+          <div style="border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; background: var(--bg-raised); position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+              <span style="font-weight: 700; font-size: 15px; color: var(--text-primary);">{{ t.subject }}</span>
+              {% if t.status == 'pending' %}
+                <span class="badge badge-warning"><i class="bi bi-hourglass-split"></i> Awaiting Admin</span>
+              {% else %}
+                <span class="badge badge-success"><i class="bi bi-check-circle-fill"></i> Resolved</span>
+              {% endif %}
+            </div>
+            
+            <div class="text-xs text-tertiary" style="margin-bottom: 12px;">
+              Submitted on {{ t.created_at|date:"d M Y, H:i" }}
+            </div>
+            
+            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; white-space: pre-wrap; background: rgba(0,0,0,0.08); padding: 10px; border-radius: var(--radius-xs); border: 1px dashed var(--border); margin-bottom: 12px;">{{ t.message }}</div>
+            
+            {% if t.reply %}
+              <div style="background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 12px; border-radius: 0 var(--radius-xs) var(--radius-xs) 0; font-size: 13px; margin-top: 12px;">
+                <div style="font-weight: 700; color: var(--accent); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                  <i class="bi bi-chat-dots-fill"></i> Admin Reply:
+                </div>
+                <div style="color: var(--text-primary); line-height: 1.5; white-space: pre-wrap;">{{ t.reply }}</div>
+                <div class="text-xs text-tertiary" style="margin-top: 6px;">Replied on {{ t.updated_at|date:"d M Y, H:i" }}</div>
+              </div>
+            {% else %}
+              <div style="color: var(--text-tertiary); font-style: italic; font-size: 12px; display: flex; align-items: center; gap: 6px; margin-top: 8px;">
+                <i class="bi bi-info-circle"></i> Admin will review and respond to your request shortly.
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state" style="padding: 30px;">
+          <i class="bi bi-chat-square-quote" style="font-size: 40px; color: var(--text-tertiary); margin-bottom: 12px;"></i>
+          <p>No support requests submitted yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
