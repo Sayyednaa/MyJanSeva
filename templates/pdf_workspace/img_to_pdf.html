@@ -41,7 +41,9 @@ document.getElementById('imgToPdfForm').addEventListener('submit', async (e) => 
     formData.append('service_slug', 'image-to-pdf'); // assumed slug
     formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
     try {
-        let resp = await fetch('{% url "wallet:ajax_charge" %}', {method: 'POST', body: formData});
+        let resp = await fetch('{% url "wallet:ajax_charge" %}', {method: 'POST', body: formData, credentials: 'same-origin'});
+        const ct = resp.headers.get('content-type') || '';
+        if (!ct.includes('application/json')) { throw new Error('Server error (' + resp.status + '). Please refresh and try again.'); }
         let json = await resp.json();
         if(json.status === 'error') {
             let err = new Error(json.message);

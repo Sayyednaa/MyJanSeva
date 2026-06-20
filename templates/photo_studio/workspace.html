@@ -1364,7 +1364,18 @@ async function chargeWallet(slug) {
     let formData = new FormData();
     formData.append('service_slug', slug);
     formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
-    let resp = await fetch('{% url "wallet:ajax_charge" %}', {method: 'POST', body: formData});
+    let resp = await fetch('{% url "wallet:ajax_charge" %}', {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin',
+    });
+    // Guard against CSRF 403 HTML responses (PythonAnywhere without CSRF_TRUSTED_ORIGINS)
+    const contentType = resp.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+        let err = new Error('Server rejected the request. Please refresh the page and try again. (Status: ' + resp.status + ')');
+        err.isInsufficientBalance = false;
+        throw err;
+    }
     let json = await resp.json();
     if(json.status === 'error') {
         let err = new Error(json.message);
@@ -1375,6 +1386,7 @@ async function chargeWallet(slug) {
         throw err;
     }
 }
+
 
 async function exportActive(slug) {
     const item = getActiveItem();

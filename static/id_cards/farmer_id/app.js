@@ -18,8 +18,23 @@ function chargeWallet(slug, quantity) {
     formData.append('service_slug', slug);
     formData.append('quantity', quantity);
     formData.append('csrfmiddlewaretoken', window.CSRF_TOKEN);
-    return fetch(window.WALLET_CHARGE_URL, {method: 'POST', body: formData})
-        .then(r => r.json())
+    return fetch(window.WALLET_CHARGE_URL, {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin',  // Ensure session/CSRF cookies are sent on PythonAnywhere
+    })
+        .then(r => {
+            // Guard against non-JSON responses (e.g. CSRF 403 HTML page from Django).
+            // On PythonAnywhere without CSRF_TRUSTED_ORIGINS this response is HTML not JSON.
+            const contentType = r.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                // CSRF mismatch or server error — block the print
+                let err = new Error('Server rejected the request. Please refresh the page and try again. (Status: ' + r.status + ')');
+                err.isInsufficientBalance = false;
+                throw err;
+            }
+            return r.json();
+        })
         .then(json => {
             if(json.status === 'error') {
                 let err = new Error(json.message);
@@ -32,6 +47,7 @@ function chargeWallet(slug, quantity) {
             return json;
         });
 }
+
 
 // Initialize Application on Page Load
 document.addEventListener('DOMContentLoaded', async () => {

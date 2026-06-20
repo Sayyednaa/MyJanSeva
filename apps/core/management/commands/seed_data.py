@@ -27,6 +27,8 @@ class Command(BaseCommand):
             ('PAN PVC', 'pan-pvc', 5, 'id-cards'),
             ('Voter PVC', 'voter-pvc', 5, 'id-cards'),
             ('ID Card', 'id-card', 5, 'id-cards'),
+            # Farmer ID Card — must match the 'farmer-id' slug used in app.js chargeWallet
+            ('Farmer ID Card Print', 'farmer-id', 50, 'id-cards'),
             ('PDF Merge', 'pdf-merge', 2, 'pdf'),
             ('PDF Split', 'pdf-split', 2, 'pdf'),
             ('PDF Compress', 'pdf-compress', 2, 'pdf'),
