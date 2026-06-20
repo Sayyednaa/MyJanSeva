@@ -34,6 +34,14 @@
       <i class="bi bi-x-circle-fill"></i>{{ form.non_field_errors.0 }}
     </div>
     {% endif %}
+
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; font-size: 12px; color: var(--text-secondary);">
+      <input type="checkbox" id="accept_terms" name="accept_terms" checked required style="cursor: pointer; accent-color: var(--accent);">
+      <label for="accept_terms" style="cursor: pointer; user-select: none;">
+        I accept the <a href="{% url 'dashboard:terms' %}" target="_blank" style="color: var(--accent); text-decoration: underline;">Terms of Service</a> & <a href="{% url 'dashboard:privacy' %}" target="_blank" style="color: var(--accent); text-decoration: underline;">Privacy Policy</a>
+      </label>
+    </div>
+
     <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:8px">
       <i class="bi bi-box-arrow-in-right"></i> Sign In
     </button>

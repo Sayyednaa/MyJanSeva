@@ -41,6 +41,94 @@
   </div>
 </section>
 
+<!-- Farmer ID Highlight Section -->
+<section style="padding: 60px 5%; background: linear-gradient(135deg, var(--bg-surface) 0%, rgba(16, 185, 129, 0.05) 100%); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div style="max-width: 1100px; margin: 0 auto; display: flex; flex-direction: row; flex-wrap: wrap; gap: 40px; align-items: center; justify-content: space-between;">
+    <div style="flex: 1; min-width: 300px;">
+      <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; margin-bottom: 16px; text-transform: uppercase; border: 1px solid rgba(16, 185, 129, 0.2);">
+        🌾 Star Feature
+      </div>
+      <h2 style="font-size: 32px; font-weight: 800; margin-bottom: 16px; color: var(--text-primary); line-height: 1.25;">
+        Smart Farmer ID <br/>Card Generator
+      </h2>
+      <p style="color: var(--text-secondary); font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+        Empower farmers in your area with premium printed smart cards. Our system lets you input land details, automatically formats them into a clean front/back layout, and crops photos and signatures to standard PVC dimensions.
+      </p>
+      
+      <div style="display: grid; gap: 12px; font-size: 14px; color: var(--text-primary); margin-bottom: 30px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="bi bi-patch-check-fill" style="color: #10b981; font-size: 16px;"></i>
+          <span><strong>Dynamic QR Integration:</strong> Auto-generates scanner-ready codes for land info.</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="bi bi-patch-check-fill" style="color: #10b981; font-size: 16px;"></i>
+          <span><strong>Structured Land Records:</strong> Auto-formats up to 4 distinct land rows.</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="bi bi-patch-check-fill" style="color: #10b981; font-size: 16px;"></i>
+          <span><strong>Dual-Sided Print Ready:</strong> Exact standard PVC (CR-80) sizes with bleed.</span>
+        </div>
+      </div>
+      
+      <a href="{% url 'accounts:register' %}" class="btn btn-primary" style="padding: 12px 24px; font-weight: 600; text-decoration: none;">Create Your First Farmer ID</a>
+    </div>
+
+    <!-- Visual Mockup Card -->
+    <div style="flex: 1; min-width: 320px; display: flex; justify-content: center;">
+      <div style="background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%); padding: 24px; border-radius: var(--radius); width: 100%; max-width: 440px; box-shadow: 0 20px 40px rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); position: relative; overflow: hidden;">
+        <!-- Leaf decoration -->
+        <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; opacity: 0.15; background: radial-gradient(circle, #fff 0%, transparent 70%); pointer-events: none;"></div>
+        
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; border-bottom: 1.5px solid rgba(255,255,255,0.15); padding-bottom: 12px;">
+          <div style="background: #fff; border-radius: 50%; padding: 4px; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px;">
+            <img src="{% static 'logo.png' %}" alt="Logo" style="width: 24px; height: 24px; object-fit: contain;">
+          </div>
+          <div>
+            <h4 style="color: #fff; margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">कृषक पहचान पत्र</h4>
+            <h5 style="color: rgba(255,255,255,0.7); margin: 0; font-size: 10px; font-weight: 500;">FARMER IDENTITY CARD</h5>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 16px;">
+          <!-- Photo Placeholder -->
+          <div style="width: 85px; height: 105px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: rgba(255,255,255,0.4);">
+            <i class="bi bi-person-fill" style="font-size: 32px; margin-bottom: 4px;"></i>
+            <span style="font-size: 7px; text-transform: uppercase; font-weight: 600;">PHOTO</span>
+          </div>
+
+          <!-- Details Mock -->
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 6px; font-size: 10px; color: rgba(255,255,255,0.95); font-family: sans-serif;">
+            <div>
+              <span style="display: block; font-size: 7px; color: rgba(255,255,255,0.5); text-transform: uppercase; font-weight: 600;">Name / नाम</span>
+              <strong style="font-weight: 700; color: #fff;">RAMESH KUMAR / रमेश कुमार</strong>
+            </div>
+            <div>
+              <span style="display: block; font-size: 7px; color: rgba(255,255,255,0.5); text-transform: uppercase; font-weight: 600;">Father Name / पिता का नाम</span>
+              <span style="font-weight: 500;">SHREE LAL / श्री लाल</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div>
+                <span style="display: block; font-size: 7px; color: rgba(255,255,255,0.5); text-transform: uppercase; font-weight: 600;">Mobile / मोबाइल</span>
+                <span style="font-weight: 500;">XXXXXX1234</span>
+              </div>
+              <div>
+                <span style="display: block; font-size: 7px; color: rgba(255,255,255,0.5); text-transform: uppercase; font-weight: 600;">District / जनपद</span>
+                <span style="font-weight: 500;">SIDDHARTH NAGAR</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 14px; background: rgba(0,0,0,0.2); border-radius: 4px; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; border: 1.5px dashed rgba(255,255,255,0.15);">
+          <span style="font-size: 8px; color: rgba(255,255,255,0.6); font-weight: 600;">AGRI CARD ID: <strong style="color: #fff; font-family: monospace; font-size: 9px; font-weight: 700;">FC-2026-98741</strong></span>
+          <span style="color: #52b788; font-size: 8px; font-weight: 700; background: rgba(82, 183, 136, 0.1); padding: 1px 6px; border-radius: 3px;">✓ VERIFIED</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
 <!-- Feature Spotlight Cards -->
 <section style="padding: 60px 5%; background: var(--bg-body);">
   <div style="max-width: 1100px; margin: 0 auto;">
