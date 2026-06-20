@@ -189,6 +189,56 @@ function deleteCardFromDB(id) {
   });
 }
 
+// Read a single card by its IndexedDB id
+function getCardById(id) {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['cards'], 'readonly');
+    const store = transaction.objectStore('cards');
+    const request = store.get(id);
+    request.onsuccess = (event) => resolve(event.target.result || null);
+    request.onerror = (event) => reject(event.target.error);
+  });
+}
+
+/**
+ * Increment a card's printCount in IndexedDB.
+ * First 2 prints are free (paid at save-time).
+ * Every print beyond 2 charges 50 Coins.
+ * Returns the updated card object.
+ * Throws if the wallet charge fails (caller should block the print).
+ */
+async function processPrintCharge(card) {
+  const FREE_PRINTS = 2;
+
+  // Cards must have an IndexedDB id to track print count
+  if (!card.id) {
+    // Unsaved card — just print, no tracking
+    return card;
+  }
+
+  // Fetch fresh data from DB to avoid stale printCount from in-memory copy
+  const fresh = await getCardById(card.id);
+  if (!fresh) return card; // Card was deleted, still allow print
+
+  const currentCount = fresh.printCount || 0;
+  const newCount = currentCount + 1;
+
+  // Charge if this is the 3rd print or beyond
+  if (currentCount >= FREE_PRINTS) {
+    await chargeWallet('farmer-id', 1); // Throws on failure — caller must handle
+  }
+
+  // Persist updated print count
+  fresh.printCount = newCount;
+  await saveCard(fresh);
+
+  // Also refresh in-memory historyCards list
+  const idx = historyCards.findIndex(c => c.id === fresh.id);
+  if (idx !== -1) historyCards[idx].printCount = newCount;
+
+  return fresh;
+}
+
 /* ==========================================================================
    APP EVENT LISTENERS
    ========================================================================== */
@@ -681,15 +731,32 @@ async function handleFormSubmit(e) {
     createdAt: Date.now()
   };
 
-  if (currentEditingId !== null) {
+  const isEditing = currentEditingId !== null;
+  if (isEditing) {
     cardData.id = currentEditingId;
+  }
+
+  // Charge wallet only for NEW cards, not updates.
+  // This deducts coins at save-time so printing is always free.
+  if (!isEditing) {
+    const saveBtn = document.querySelector('#farmer-form button[type="submit"]');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<i data-lucide="loader"></i> Charging...'; if(typeof lucide !== 'undefined') lucide.createIcons(); }
+    try {
+      await chargeWallet('farmer-id', 1);
+    } catch (err) {
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i data-lucide="save"></i> Save Farmer Card'; if(typeof lucide !== 'undefined') lucide.createIcons(); }
+      alert('Cannot save card: ' + err.message);
+      if (err.isInsufficientBalance) {
+        window.location.href = err.redirectUrl || '/wallet/topup/';
+      }
+      return;
+    }
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i data-lucide="save"></i> Save Farmer Card'; if(typeof lucide !== 'undefined') lucide.createIcons(); }
   }
 
   try {
     await saveCard(cardData);
-    
-    alert(currentEditingId ? 'Farmer Record updated successfully!' : 'Farmer Card created and saved to local database!');
-    
+    alert(isEditing ? 'Farmer Record updated successfully!' : 'Farmer Card saved! 50 Coins deducted.');
     resetForm();
     await loadHistory();
     switchTab('history');
@@ -717,7 +784,7 @@ function renderHistoryList(records) {
   if (records.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="9" class="empty-state">
+        <td colspan="10" class="empty-state">
           <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder-open"><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2"/></svg>
           <p>No records found in database. Create your first card!</p>
         </td>
@@ -730,6 +797,15 @@ function renderHistoryList(records) {
     // Formatting variables
     const formattedAadhaar = `XXXX XXXX ${card.aadhaar.substr(8, 4)}`;
     
+    const printCount  = card.printCount || 0;
+    const freePrints  = 2;
+    const remaining   = Math.max(0, freePrints - printCount);
+    const printBadgeColor = remaining > 0 ? '#22c55e' : '#ef4444';
+    const printBadgeBg    = remaining > 0 ? '#dcfce7' : '#fee2e2';
+    const printBadgeTip   = remaining > 0
+      ? `${remaining} free print${remaining === 1 ? '' : 's'} remaining`
+      : `Free prints used — next print costs 50 Coins`;
+
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>
@@ -751,6 +827,11 @@ function renderHistoryList(records) {
       <td style="text-align: center;">
         <span class="badge" style="background-color: var(--light-sage); color: var(--primary-color); font-weight: bold; border-radius: 4px;">
           ${card.landDetails ? card.landDetails.length : 0}
+        </span>
+      </td>
+      <td style="text-align: center;">
+        <span title="${printBadgeTip}" style="display:inline-flex;align-items:center;gap:3px;font-size:0.75rem;font-weight:700;padding:2px 7px;border-radius:20px;background:${printBadgeBg};color:${printBadgeColor};border:1px solid ${printBadgeColor}40;cursor:default;">
+          🖨️ ${remaining > 0 ? remaining + ' left' : 'Paid'}
         </span>
       </td>
       <td>
@@ -1201,8 +1282,8 @@ window.removeCardFromQueueByIndex = function(index) {
    ========================================================================== */
 
 
-function printSingleCardDirectly(cardData) {
-  // If invoked with no argument, read from active form
+async function printSingleCardDirectly(cardData) {
+  // If invoked with no argument, read from active form (unsaved card)
   let card = cardData;
   if (!card || card instanceof Event) {
     const farmerId = document.getElementById('farmer-id').value;
@@ -1217,18 +1298,18 @@ function printSingleCardDirectly(cardData) {
     const photo = photoPreview.classList.contains('hidden') ? placeholderAvatar : photoPreview.src;
     const landDetails = getLandTableData();
 
-    card = {
-      farmerId,
-      nameEn,
-      nameHi,
-      dob,
-      gender,
-      mobile,
-      aadhaar,
-      address,
-      photo,
-      landDetails
-    };
+    card = { farmerId, nameEn, nameHi, dob, gender, mobile, aadhaar, address, photo, landDetails };
+  }
+
+  // Check and charge if this card has already been printed 2+ times
+  try {
+    card = await processPrintCharge(card);
+  } catch (err) {
+    alert('Print blocked: ' + err.message);
+    if (err.isInsufficientBalance) {
+      window.location.href = err.redirectUrl || '/wallet/topup/';
+    }
+    return;
   }
 
   const printContainer = document.getElementById('print-container');
@@ -1241,25 +1322,44 @@ function printSingleCardDirectly(cardData) {
   printPageDiv.appendChild(row);
   printContainer.appendChild(printPageDiv);
 
-  // Generate QR Code inside hidden div
+  // Generate QR Code then print
   setTimeout(() => {
     generatePrintQR(card, 0);
-    chargeWallet('farmer-id', 1).then(() => {
-        window.print();
-    }).catch(err => {
-        alert('Wallet Error: ' + err.message);
-        if (err.isInsufficientBalance) {
-            window.location.href = err.redirectUrl || '/wallet/topup/';
-        }
-    });
+    window.print();
   }, 150);
 }
 
-function printQueueA4Layout() {
+async function printQueueA4Layout() {
   if (printQueue.length === 0) {
     alert('The print queue is empty! Add cards to the queue first.');
     return;
   }
+
+  const btn = document.getElementById('trigger-batch-print');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i data-lucide="loader"></i> Preparing...'; if(typeof lucide !== 'undefined') lucide.createIcons(); }
+
+  // Check each card's print count and charge for any that exceed 2 free prints.
+  // All charges happen before any printing to prevent partial billing on failure.
+  const resolvedCards = [];
+  let chargedCount = 0;
+  try {
+    for (const card of printQueue) {
+      const fresh = await getCardById(card.id);
+      const currentCount = (fresh && fresh.printCount) || 0;
+      if (currentCount >= 2) chargedCount++; // Will be charged by processPrintCharge
+      const updated = await processPrintCharge(card);
+      resolvedCards.push(updated);
+    }
+  } catch (err) {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="printer"></i> Print Queue Now (A4 Layout)'; if(typeof lucide !== 'undefined') lucide.createIcons(); }
+    alert('Print blocked: ' + err.message);
+    if (err.isInsufficientBalance) {
+      window.location.href = err.redirectUrl || '/wallet/topup/';
+    }
+    return;
+  }
+
+  if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="printer"></i> Print Queue Now (A4 Layout)'; if(typeof lucide !== 'undefined') lucide.createIcons(); }
 
   const printContainer = document.getElementById('print-container');
   printContainer.innerHTML = '';
@@ -1269,38 +1369,23 @@ function printQueueA4Layout() {
   const cardsPerPage = parseInt(cardsPerPageSelect.value || '3');
 
   let currentPrintPage = null;
-  
-  printQueue.forEach((card, index) => {
-    // Group cards into A4 pages based on user preference
+  resolvedCards.forEach((card, index) => {
     if (index % cardsPerPage === 0) {
       currentPrintPage = document.createElement('div');
       currentPrintPage.className = 'print-page';
       printContainer.appendChild(currentPrintPage);
     }
-
     const row = createCardPrintRowHTML(card, index);
     currentPrintPage.appendChild(row);
   });
 
-  const btn = document.getElementById('trigger-batch-print');
-  if(btn) { btn.disabled = true; btn.innerHTML = '<i data-lucide="loader"></i> Charging...'; lucide.createIcons(); }
-  
-  chargeWallet('farmer-id', printQueue.length).then(() => {
-      if(btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="printer"></i> Print Queue Now (A4 Layout)'; lucide.createIcons(); }
-      // Generate QR codes for all print cards sequentially
-      setTimeout(() => {
-        printQueue.forEach((card, index) => {
-          generatePrintQR(card, index);
-        });
-        window.print();
-      }, 200);
-  }).catch(err => {
-      if(btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="printer"></i> Print Queue Now (A4 Layout)'; lucide.createIcons(); }
-      alert('Wallet Error: ' + err.message);
-      if (err.isInsufficientBalance) {
-          window.location.href = err.redirectUrl || '/wallet/topup/';
-      }
-  });
+  // Generate QR codes then print
+  setTimeout(() => {
+    resolvedCards.forEach((card, index) => {
+      generatePrintQR(card, index);
+    });
+    window.print();
+  }, 200);
 }
 
 /* ==========================================================================
