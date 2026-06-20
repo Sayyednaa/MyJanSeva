@@ -334,17 +334,6 @@
             </div>
           </div>
 
-          <div class="preview-actions">
-            <button type="button" class="btn btn-outline" id="rotate-preview" style="display: none;">
-              <i data-lucide="rotate-3d"></i> Flip View
-            </button>
-            <button type="button" class="btn btn-primary" id="print-single-card">
-              <i data-lucide="printer"></i> Print This Card
-            </button>
-            <button type="button" class="btn btn-secondary" id="add-to-queue-btn">
-              <i data-lucide="file-plus"></i> Add to Print Queue
-            </button>
-          </div>
         </div>
       </div>
     </section>
@@ -456,6 +445,8 @@
 window.WALLET_CHARGE_URL = "{% url 'wallet:ajax_charge' %}";
 window.CSRF_TOKEN = "{{ csrf_token }}";
 window.PLACEHOLDER_AVATAR_URL = "{% static 'id_cards/farmer_id/placeholder-avatar.png' %}";
+window.WALLET_BALANCE = {{ wallet_balance|default:0 }};
+window.FARMER_ID_PRICE = {{ farmer_id_price|default:50 }};
 </script>
 <script src="{% static 'id_cards/farmer_id/app.js' %}"></script>
 
@@ -464,6 +455,8 @@ function resizeIdCards() {
     const wrappers = document.querySelectorAll('.card-scale-wrapper');
     wrappers.forEach(wrapper => {
         const containerWidth = wrapper.clientWidth;
+        if (containerWidth === 0) return; // Skip hidden elements
+        
         const card = wrapper.querySelector('.id-card');
         if (!card) return;
         

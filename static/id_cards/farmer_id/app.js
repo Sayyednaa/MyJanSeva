@@ -265,8 +265,7 @@ function setupEventListeners() {
   document.getElementById('trigger-batch-print').addEventListener('click', printQueueA4Layout);
 
   // Preview quick actions
-  document.getElementById('print-single-card').addEventListener('click', printSingleCardDirectly);
-  document.getElementById('add-to-queue-btn').addEventListener('click', addCurrentCardToQueue);
+
 
   // PDF Upload Event Listeners
   const pdfInput = document.getElementById('pdf-upload');
@@ -358,6 +357,11 @@ function switchTab(tabId) {
     loadHistory();
   } else if (tabId === 'print-queue') {
     renderPrintQueue();
+  }
+
+  // Recalculate card preview scaling after tab transition is visible
+  if (typeof resizeIdCards === 'function') {
+    setTimeout(resizeIdCards, 50);
   }
 }
 
@@ -738,9 +742,6 @@ function renderHistoryList(records) {
           <button class="btn btn-secondary btn-sm btn-icon edit-card-btn" data-id="${card.id}" title="Edit Card Details">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-edit-3"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
           </button>
-          <button class="btn btn-primary btn-sm btn-icon print-card-btn" data-id="${card.id}" title="Print ID Card">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-printer"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
-          </button>
           <button class="btn btn-secondary btn-sm btn-icon queue-card-btn" data-id="${card.id}" title="Add to Print Queue">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-plus"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M9 15h6"/><path d="M12 12v6"/></svg>
           </button>
@@ -753,7 +754,6 @@ function renderHistoryList(records) {
 
     // Attach click triggers to buttons
     tr.querySelector('.edit-card-btn').addEventListener('click', () => editCard(card.id));
-    tr.querySelector('.print-card-btn').addEventListener('click', () => printSingleCardDirectly(card));
     tr.querySelector('.queue-card-btn').addEventListener('click', () => queueSingleCard(card));
     tr.querySelector('.delete-card-btn').addEventListener('click', () => deleteCardConfirm(card.id));
     
@@ -807,15 +807,15 @@ function editCard(id) {
 
   currentEditingId = card.id;
 
-  // Fill standard fields
-  document.getElementById('farmer-id').value = card.farmerId;
-  document.getElementById('gender').value = card.gender;
-  document.getElementById('name-en').value = card.nameEn;
-  document.getElementById('name-hi').value = card.nameHi;
-  document.getElementById('dob').value = card.dob;
-  document.getElementById('mobile').value = card.mobile;
-  document.getElementById('aadhaar').value = card.aadhaar;
-  document.getElementById('address').value = card.address;
+  // Fill standard fields safely
+  document.getElementById('farmer-id').value = card.farmerId || '';
+  document.getElementById('gender').value = card.gender || 'Male';
+  document.getElementById('name-en').value = card.nameEn || '';
+  document.getElementById('name-hi').value = card.nameHi || '';
+  document.getElementById('dob').value = card.dob || '';
+  document.getElementById('mobile').value = card.mobile || '';
+  document.getElementById('aadhaar').value = card.aadhaar || '';
+  document.getElementById('address').value = card.address || '';
 
   // Handle Photo
   const previewImg = document.getElementById('photo-preview-img');
@@ -827,6 +827,8 @@ function editCard(id) {
     previewImg.classList.remove('hidden');
     uploadPlaceholder.classList.add('hidden');
     removeBtn.classList.remove('hidden');
+    // Sync to live preview card
+    document.getElementById('card-photo').src = card.photo;
   } else {
     removeUploadedPhoto();
   }
