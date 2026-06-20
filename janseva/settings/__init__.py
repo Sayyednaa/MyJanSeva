@@ -1,4 +1,4 @@
-"""Jan Seva Workspace — Settings Package"""
+"""My Jan Seva — Settings Package"""
 from decouple import config
 
 # Dynamically load the correct environment settings package

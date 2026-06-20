@@ -595,7 +595,7 @@ function updateLivePreview() {
         <td>${row.vill || '-'}</td>
         <td>${row.sNo || '-'}</td>
         <td>${row.ss || '*'}</td>
-        <td>${row.area || '0.000000'}</td>
+        <td>${row.area ? parseFloat(row.area) : '0'}</td>
       `;
       cardTableBody.appendChild(tr);
     });
@@ -1015,7 +1015,7 @@ function renderPrintQueue() {
             <td>${row.vill || '-'}</td>
             <td>${row.sNo || '-'}</td>
             <td>${row.ss || '*'}</td>
-            <td>${row.area || '0.000000'}</td>
+            <td>${row.area ? parseFloat(row.area) : '0'}</td>
           </tr>
         `;
       });
@@ -1300,7 +1300,7 @@ function createCardPrintRowHTML(card, index) {
           <td>${row.vill || '-'}</td>
           <td>${row.sNo || '-'}</td>
           <td>${row.ss || '*'}</td>
-          <td>${row.area || '0.000000'}</td>
+          <td>${row.area ? parseFloat(row.area) : '0'}</td>
         </tr>
       `;
     });

@@ -11,11 +11,26 @@ from apps.wallet.models import Wallet, WalletTransaction, UsageRecord
 from apps.customers.models import Customer
 
 
-@login_required
 def home(request):
-    if request.user.is_admin:
-        return admin_dashboard(request)
-    return user_dashboard(request)
+    if request.user.is_authenticated:
+        if request.user.is_admin:
+            return admin_dashboard(request)
+        return user_dashboard(request)
+    return render(request, 'dashboard/landing.html', {
+        'page_title': 'My Jan Seva — Complete Document & ID Services Platform'
+    })
+
+
+def terms_view(request):
+    return render(request, 'dashboard/terms.html', {
+        'page_title': 'Terms of Service — My Jan Seva'
+    })
+
+
+def privacy_view(request):
+    return render(request, 'dashboard/privacy.html', {
+        'page_title': 'Privacy Policy — My Jan Seva'
+    })
 
 
 @login_required
@@ -55,17 +70,23 @@ def admin_dashboard(request):
 
     total_users = CustomUser.objects.filter(role='operator').count()
 
-    total_revenue = WalletTransaction.objects.filter(
+    # Convert all coin transactions to Rupees (INR) using 0.50 multiplier (2 Coins = ₹1)
+    COIN_TO_INR_RATE = 0.50
+
+    total_revenue_coins = WalletTransaction.objects.filter(
         transaction_type='debit'
     ).aggregate(total=Sum('amount'))['total'] or 0
+    total_revenue = float(total_revenue_coins) * COIN_TO_INR_RATE
 
-    month_revenue = WalletTransaction.objects.filter(
+    month_revenue_coins = WalletTransaction.objects.filter(
         transaction_type='debit', created_at__date__gte=month_start
     ).aggregate(total=Sum('amount'))['total'] or 0
+    month_revenue = float(month_revenue_coins) * COIN_TO_INR_RATE
 
-    total_topups = WalletTransaction.objects.filter(
+    total_topups_coins = WalletTransaction.objects.filter(
         transaction_type='credit'
     ).aggregate(total=Sum('amount'))['total'] or 0
+    total_topups = float(total_topups_coins) * COIN_TO_INR_RATE
 
     # Daily revenue last 14 days
     daily = WalletTransaction.objects.filter(
@@ -76,15 +97,21 @@ def admin_dashboard(request):
     ).order_by('day')
 
     daily_labels = [(today - timedelta(days=i)).strftime('%d %b') for i in range(13, -1, -1)]
-    daily_data_map = {str(d['day']): float(d['revenue']) for d in daily}
+    daily_data_map = {str(d['day']): float(d['revenue']) * COIN_TO_INR_RATE for d in daily}
     daily_data = [daily_data_map.get(
-        (today - timedelta(days=i)).strftime('%Y-%m-%d'), 0
+        (today - timedelta(days=i)).strftime('%Y-%m-%d'), 0.0
     ) for i in range(13, -1, -1)]
 
     # Top services
-    top_services = UsageRecord.objects.values('service_name').annotate(
+    top_services = list(UsageRecord.objects.values('service_name').annotate(
         count=Count('id'), revenue=Sum('cost')
-    ).order_by('-count')[:8]
+    ).order_by('-count')[:8])
+
+    for s in top_services:
+        if s['revenue'] is not None:
+            s['revenue'] = float(s['revenue']) * COIN_TO_INR_RATE
+        else:
+            s['revenue'] = 0.0
 
     return render(request, 'dashboard/admin.html', {
         'total_users': total_users,

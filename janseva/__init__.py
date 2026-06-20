@@ -1,1 +1,1 @@
-"""Jan Seva Workspace — Package"""
+"""My Jan Seva — Package"""

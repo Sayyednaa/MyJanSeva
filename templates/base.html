@@ -4,8 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}{{ page_title|default:"Dashboard" }} — Jan Seva{% endblock %}</title>
-  <meta name="description" content="Jan Seva — Complete Document & Government Services Platform">
+  <title>{% block title %}{{ page_title|default:"Dashboard" }} — My Jan Seva{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{% static 'logo.png' %}">
+  <meta name="description" content="My Jan Seva — Complete Document & Government Services Platform">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -29,7 +30,7 @@
     <button class="mobile-menu-btn" id="menuOpenBtn" aria-label="Open menu">
       <i class="bi bi-list"></i>
     </button>
-    <div class="mobile-brand">Jan Seva</div>
+    <div class="mobile-brand">My Jan Seva</div>
     <div class="mobile-actions">
       <button id="themeToggleMobile" class="mobile-icon-btn" aria-label="Toggle theme">
         <i class="bi bi-sun-fill" id="themeIconMobile"></i>
@@ -47,10 +48,9 @@
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-top">
       <div class="sidebar-brand">
-        <div class="sidebar-brand-icon"><i class="bi bi-building"></i></div>
+        <div class="sidebar-brand-icon" style="background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"><img src="{% static 'logo.png' %}" alt="Logo" style="width: 24px; height: 24px; object-fit: contain;"></div>
         <div class="sidebar-brand-text">
-          <span class="sidebar-brand-name">Jan Seva</span>
-          <span class="sidebar-brand-sub">Workspace</span>
+          <span class="sidebar-brand-name">My Jan Seva</span>
         </div>
       </div>
       <button class="sidebar-close-btn" id="menuCloseBtn" aria-label="Close menu">

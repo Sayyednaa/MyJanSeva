@@ -1,11 +1,16 @@
 {% extends "auth_base.html" %}
-{% block title %}Register — Jan Seva Workspace{% endblock %}
+{% load static %}
+{% block title %}Register — My Jan Seva{% endblock %}
 {% block auth_body %}
 <div class="auth-card" style="max-width:560px">
   <div class="auth-logo">
-    <div class="auth-logo-icon">🏛️</div>
+    <div class="auth-logo-icon" style="display: flex; justify-content: center; align-items: center; margin-bottom: 16px;">
+      <div style="background: white; padding: 8px; border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 64px; height: 64px;">
+        <img src="{% static 'logo.png' %}" alt="My Jan Seva Logo" style="height: 40px; width: 40px; object-fit: contain;">
+      </div>
+    </div>
     <h1>Create Account</h1>
-    <p>Register your Jan Seva / CSC Center</p>
+    <p>Register your My Jan Seva / CSC Center</p>
   </div>
 
   <form method="post">

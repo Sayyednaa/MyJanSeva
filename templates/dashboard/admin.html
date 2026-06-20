@@ -6,16 +6,16 @@
 
 <div class="stat-grid">
   <div class="stat-card">
-    <div class="stat-icon indigo"><i class="bi bi-coin"></i></div>
-    <div class="stat-info"><div class="label">Total Revenue</div><div class="value">{{ total_revenue|floatformat:0 }} Coins</div><div class="sub">All time deductions</div></div>
+    <div class="stat-icon indigo"><i class="bi bi-currency-rupee"></i></div>
+    <div class="stat-info"><div class="label">Total Revenue</div><div class="value">₹{{ total_revenue|floatformat:2 }}</div><div class="sub">All time deductions</div></div>
   </div>
   <div class="stat-card">
     <div class="stat-icon green"><i class="bi bi-graph-up-arrow"></i></div>
-    <div class="stat-info"><div class="label">This Month</div><div class="value">{{ month_revenue|floatformat:0 }} Coins</div><div class="sub">Current month revenue</div></div>
+    <div class="stat-info"><div class="label">This Month</div><div class="value">₹{{ month_revenue|floatformat:2 }}</div><div class="sub">Current month revenue</div></div>
   </div>
   <div class="stat-card">
-    <div class="stat-icon amber"><i class="bi bi-arrow-down-circle"></i></div>
-    <div class="stat-info"><div class="label">Total Top-ups</div><div class="value">{{ total_topups|floatformat:0 }} Coins</div><div class="sub">All wallet credits</div></div>
+    <div class="stat-icon amber"><i class="bi bi-currency-rupee"></i></div>
+    <div class="stat-info"><div class="label">Total Top-ups</div><div class="value">₹{{ total_topups|floatformat:2 }}</div><div class="sub">All wallet credits</div></div>
   </div>
   <div class="stat-card">
     <div class="stat-icon purple"><i class="bi bi-people-fill"></i></div>
@@ -41,14 +41,14 @@
   {% if top_services %}
   <div class="table-wrapper">
     <table class="data-table">
-      <thead><tr><th>#</th><th>Service</th><th>Usage Count</th><th>Revenue</th></tr></thead>
+      <thead><tr><th>#</th><th>Service</th><th>Usage Count</th><th>Revenue (₹)</th></tr></thead>
       <tbody>
       {% for s in top_services %}
       <tr>
         <td>{{ forloop.counter }}</td>
         <td>{{ s.service_name }}</td>
         <td><span class="badge badge-accent">{{ s.count }}</span></td>
-        <td class="amount-positive">{{ s.revenue|floatformat:0 }} Coins</td>
+        <td class="amount-positive">₹{{ s.revenue|floatformat:2 }}</td>
       </tr>
       {% endfor %}
       </tbody>
@@ -70,7 +70,7 @@ new Chart(ctx, {
   data: {
     labels: {{ daily_labels|safe }},
     datasets: [{
-      label: 'Revenue (Coins)',
+      label: 'Revenue (₹)',
       data: {{ daily_data|safe }},
       backgroundColor: 'rgba(99,102,241,0.5)',
       borderColor: '#6366f1',

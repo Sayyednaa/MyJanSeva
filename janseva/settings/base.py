@@ -1,4 +1,4 @@
-"""Jan Seva Workspace — Base Settings"""
+"""My Jan Seva — Base Settings"""
 import os
 from pathlib import Path
 from decouple import config

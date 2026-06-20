@@ -1,0 +1,59 @@
+{% extends "auth_base.html" %}
+{% block title %}Terms of Service — My Jan Seva{% endblock %}
+{% block auth_body %}
+<div class="auth-card" style="max-width: 700px; width: 90%; margin: 40px auto; text-align: left;">
+  <div class="auth-logo" style="text-align: center;">
+    <div class="auth-logo-icon">⚖️</div>
+    <h1>Terms of Service</h1>
+    <p>Please read these terms carefully before using the platform</p>
+  </div>
+
+  <div style="color: var(--text-secondary); line-height: 1.6; font-size: 14px; display: flex; flex-direction: column; gap: 16px;">
+    
+    <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); padding: 14px; border-radius: var(--radius); color: var(--text-primary);">
+      <strong style="color: var(--danger); display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+        <i class="bi bi-exclamation-triangle-fill"></i> CRITICAL LEGAL DISCLAIMER
+      </strong>
+      This platform, <strong>My Jan Seva</strong>, is a private document utility and helper tool. It is <strong>NOT</strong> affiliated with, associated with, authorized by, or endorsed by any government entity, department, ministry, or public portal (such as the Government of India, UIDAI, CSC SPV, PAN Portal, or Election Commission). This site does not represent or provide official government services.
+    </div>
+
+    <div>
+      <h3 style="color: var(--text-primary); margin-bottom: 6px;">1. Purpose of Service</h3>
+      My Jan Seva provides image editing, PDF utilities, and print layout formatting helpers for operators. Any and all document verification, certificate filings, or administrative tasks must be conducted directly through official channels.
+    </div>
+
+    <div>
+      <h3 style="color: var(--text-primary); margin-bottom: 6px;">2. Operator Responsibility</h3>
+      As an operator, you represent and warrant that you have obtained explicit consent from customers before uploading or processing any of their personal data, including identity details (Aadhaar, PAN, Voter ID), photos, and signatures. You are solely responsible for ensuring the accuracy and legitimacy of all information entered.
+    </div>
+
+    <div>
+      <h3 style="color: var(--text-primary); margin-bottom: 6px;">3. Complete Exemption of Liability</h3>
+      Under no circumstances shall My Jan Seva, its creators, or administrators be held liable for:
+      <ul style="margin: 6px 0 0 20px; padding: 0; list-style-type: disc;">
+        <li>Any inaccuracies, printing errors, or layout issues in generated documents.</li>
+        <li>Any actions, delays, or rejections by government agencies.</li>
+        <li>Financial losses, client disputes, database corruption, or system outages.</li>
+        <li>Any violations of local laws or regulations by the operator.</li>
+      </ul>
+      The service is provided on an <strong>"AS IS"</strong> and <strong>"AS AVAILABLE"</strong> basis without any express or implied warranties.
+    </div>
+
+    <div>
+      <h3 style="color: var(--text-primary); margin-bottom: 6px;">4. Wallet and Coins</h3>
+      Coins purchased within My Jan Seva are non-refundable virtual tokens used solely to pay for document formatting services on this portal. They have no cash value and cannot be redeemed or converted back into real-world currency.
+    </div>
+
+    <div>
+      <h3 style="color: var(--text-primary); margin-bottom: 6px;">5. Amendments</h3>
+      We reserve the right to modify these terms at any time without prior notice. Continuing to use the platform constitutes your acceptance of the updated terms.
+    </div>
+  </div>
+
+  <div style="text-align: center; margin-top: 32px; border-top: 1px solid var(--border); padding-top: 20px;">
+    <a href="{% url 'accounts:login' %}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+      <i class="bi bi-arrow-left"></i> Back to Login
+    </a>
+  </div>
+</div>
+{% endblock %}

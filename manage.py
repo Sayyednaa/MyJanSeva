@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Jan Seva Workspace — Django management utility."""
+"""My Jan Seva — Django management utility."""
 import os
 import sys
 

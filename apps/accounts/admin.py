@@ -10,7 +10,7 @@ class CustomUserAdmin(UserAdmin):
     list_filter = ('role', 'is_active', 'city')
     search_fields = ('username', 'email', 'first_name', 'last_name', 'phone')
     fieldsets = UserAdmin.fieldsets + (
-        ('Jan Seva Info', {
+        ('My Jan Seva Info', {
             'fields': ('role', 'phone', 'business_name', 'city', 'state', 'address', 'profile_photo', 'is_approved'),
         }),
     )

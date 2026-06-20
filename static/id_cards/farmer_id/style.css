@@ -548,7 +548,7 @@ h1, h2, h3, h4, h5, h6 {
 .id-card {
   width: var(--screen-card-w);
   height: var(--screen-card-h);
-  border-radius: 14px;
+  border-radius: 14px 14px 5px 14px;
   background-color: #ffffff;
   border: 1px solid #cbd5e1;
   box-shadow: var(--shadow-lg);

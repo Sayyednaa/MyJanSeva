@@ -1,0 +1,56 @@
+{% extends "auth_base.html" %}
+{% block title %}Privacy Policy — My Jan Seva{% endblock %}
+{% block auth_body %}
+<div class="auth-card" style="max-width: 700px; width: 90%; margin: 40px auto; text-align: left;">
+  <div class="auth-logo" style="text-align: center;">
+    <div class="auth-logo-icon">🛡️</div>
+    <h1>Privacy Policy</h1>
+    <p>How we handle data safety and privacy on the portal</p>
+  </div>
+
+  <div style="color: var(--text-secondary); line-height: 1.6; font-size: 14px; display: flex; flex-direction: column; gap: 16px;">
+    
+    <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 14px; border-radius: var(--radius); color: var(--text-primary);">
+      <strong style="color: var(--success); display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+        <i class="bi bi-shield-check"></i> TRANSIENT DATA POLICY
+      </strong>
+      We prioritize customer privacy. All uploaded documents, photos, and signatures are processed in memory or stored temporarily solely for the purpose of creating PDF print layouts. We do <strong>not</strong> permanently store or archive customer demographic records or identification numbers on our servers.
+    </div>
+
+    <div>
+      <h3 style="color: var(--text-primary); margin-bottom: 6px;">1. Information We Collect</h3>
+      We collect minimal information from operators:
+      <ul style="margin: 6px 0 0 20px; padding: 0; list-style-type: disc;">
+        <li><strong>Account Details:</strong> Name, business name, username, email, phone number, and password (hashed).</li>
+        <li><strong>Transactions:</strong> Coin deposits, service use charges, and wallet balance history.</li>
+      </ul>
+    </div>
+
+    <div>
+      <h3 style="color: var(--text-primary); margin-bottom: 6px;">2. Customer Data Processing</h3>
+      Any citizen identity details entered by operators (such as name, Aadhaar card number, photo, or address) are used strictly to generate the ID card preview and print layouts. This data is deleted immediately or within a short cleanup cycle, and is never shared with third parties.
+    </div>
+
+    <div>
+      <h3 style="color: var(--text-primary); margin-bottom: 6px;">3. Security Controls</h3>
+      We implement industry-standard encryption protocols (HTTPS/SSL) to protect all transmission data. However, operators must maintain security on their own devices and local storage to prevent unauthorized exposure of printouts.
+    </div>
+
+    <div>
+      <h3 style="color: var(--text-primary); margin-bottom: 6px;">4. Operator Legal Obligation</h3>
+      Operators are strictly required to:
+      <ul style="margin: 6px 0 0 20px; padding: 0; list-style-type: disc;">
+        <li>Inform customers that their details will be inputted into a formatting tool.</li>
+        <li>Obtain explicit consent before submitting any customer files or text.</li>
+        <li>Delete any downloaded customer PDFs from public computers or local download directories after printing.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="text-align: center; margin-top: 32px; border-top: 1px solid var(--border); padding-top: 20px;">
+    <a href="{% url 'accounts:login' %}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+      <i class="bi bi-arrow-left"></i> Back to Login
+    </a>
+  </div>
+</div>
+{% endblock %}

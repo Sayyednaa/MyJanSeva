@@ -1,5 +1,5 @@
 /* ================================================================
-   JAN SEVA — Complete Design System
+   MY JAN SEVA — Complete Design System
    Mobile-first. Dark/Light. Production-grade.
    ================================================================ */
 
@@ -651,6 +651,7 @@ table tr:hover td, .table tr:hover td {
 .auth-logo {
   text-align: center;
   margin-bottom: 28px;
+  align-self: center;
 }
 .auth-logo-icon {
   font-size: 40px;

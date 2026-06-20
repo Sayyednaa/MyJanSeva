@@ -18,7 +18,7 @@ def register_view(request):
             from apps.wallet.models import Wallet
             Wallet.objects.get_or_create(user=user)
             login(request, user)
-            messages.success(request, f'Welcome to Jan Seva Workspace, {user.get_full_name() or user.username}!')
+            messages.success(request, f'Welcome to My Jan Seva, {user.get_full_name() or user.username}!')
             return redirect('dashboard:home')
     else:
         form = RegisterForm()

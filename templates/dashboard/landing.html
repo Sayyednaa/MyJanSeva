@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}My Jan Seva — Complete Document & ID Services Platform{% endblock %}
+
+{% block auth_content %}
+<!-- Navbar -->
+<nav style="display: flex; justify-content: space-between; align-items: center; padding: 20px 5%; background: var(--bg-surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; backdrop-filter: blur(8px);">
+  <div style="display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; color: var(--accent);">
+    <div style="background: white; padding: 4px; border-radius: 6px; display: inline-flex; justify-content: center; align-items: center; width: 32px; height: 32px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+      <img src="{% static 'logo.png' %}" alt="Logo" style="height: 24px; width: 24px; object-fit: contain;">
+    </div>
+    <span style="background: linear-gradient(135deg, var(--accent) 0%, #10b981 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">My Jan Seva</span>
+  </div>
+  
+  <div style="display: flex; align-items: center; gap: 16px;">
+    <button id="themeToggleMobile" class="sidebar-action-btn" style="border: 1px solid var(--border); background: transparent; padding: 8px 12px; border-radius: var(--radius-sm); cursor: pointer; color: var(--text-primary);" title="Toggle Theme">
+      <i id="themeIconMobile" class="bi bi-sun-fill"></i>
+    </button>
+    <a href="{% url 'accounts:login' %}" class="btn" style="background: transparent; color: var(--text-primary); border: 1px solid var(--border); padding: 8px 18px; border-radius: var(--radius); font-weight: 500; text-decoration: none; font-size: 14px; transition: all 0.15s;">Sign In</a>
+    <a href="{% url 'accounts:register' %}" class="btn btn-primary" style="padding: 9px 20px; font-weight: 600; text-decoration: none; font-size: 14px;">Sign Up</a>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<section style="padding: 100px 5% 60px; text-align: center; background: radial-gradient(circle at top right, var(--accent-soft) 0%, transparent 40%);">
+  <div style="max-width: 800px; margin: 0 auto;">
+    <div style="display: inline-flex; align-items: center; gap: 6px; background: var(--accent-soft); color: var(--accent); padding: 6px 14px; border-radius: 30px; font-size: 12px; font-weight: 600; margin-bottom: 24px; border: 1px solid var(--accent-glow);">
+      <i class="bi bi-rocket-takeoff-fill"></i> Complete Digital Document Assistant
+    </div>
+    <h1 style="font-size: 48px; font-weight: 800; line-height: 1.15; margin-bottom: 20px; color: var(--text-primary); letter-spacing: -1px;">
+      Empower Your Operator Center with <br/>
+      <span style="background: linear-gradient(135deg, var(--accent) 0%, #10b981 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">My Jan Seva</span>
+    </h1>
+    <p style="font-size: 18px; color: var(--text-secondary); margin-bottom: 36px; line-height: 1.5; max-width: 600px; margin-left: auto; margin-right: auto;">
+      The ultimate document layout formatting workspace. Generate print-ready smart cards, resize photos and signatures, and process PDFs in seconds.
+    </p>
+    <div style="display: flex; gap: 16px; justify-content: center;">
+      <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg" style="padding: 14px 28px; font-size: 16px; font-weight: 700; text-decoration: none; border-radius: var(--radius);">Get Started Now</a>
+      <a href="{% url 'accounts:login' %}" class="btn btn-block btn-lg" style="background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border); padding: 14px 28px; font-size: 16px; font-weight: 500; text-decoration: none; border-radius: var(--radius); transition: all 0.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">Operator Login</a>
+    </div>
+  </div>
+</section>
+
+<!-- Feature Spotlight Cards -->
+<section style="padding: 60px 5%; background: var(--bg-body);">
+  <div style="max-width: 1100px; margin: 0 auto;">
+    <h2 style="font-size: 32px; font-weight: 800; text-align: center; margin-bottom: 48px; color: var(--text-primary);">
+      Designed for CSC and Cyber Cafe Operators
+    </h2>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+      <!-- Card 1 -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border); padding: 30px; border-radius: var(--radius); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div style="font-size: 32px; color: var(--accent); margin-bottom: 18px;"><i class="bi bi-card-heading"></i></div>
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 10px; color: var(--text-primary);">PVC Smart Cards</h3>
+        <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.5;">Format citizen details into high-definition PVC front & back layouts. Seamlessly fits standard credit card dimensions.</p>
+      </div>
+
+      <!-- Card 2 -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border); padding: 30px; border-radius: var(--radius); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div style="font-size: 32px; color: var(--accent); margin-bottom: 18px;"><i class="bi bi-camera-fill"></i></div>
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 10px; color: var(--text-primary);">Photo Studio</h3>
+        <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.5;">Instantly crop, resize, and position passport-sized photos and digital signatures for online form submissions.</p>
+      </div>
+
+      <!-- Card 3 -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border); padding: 30px; border-radius: var(--radius); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div style="font-size: 32px; color: var(--accent); margin-bottom: 18px;"><i class="bi bi-file-earmark-pdf-fill"></i></div>
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 10px; color: var(--text-primary);">PDF Workspace</h3>
+        <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.5;">Merge, split, and compress application PDFs directly within your dashboard. Encrypt files with custom passwords.</p>
+      </div>
+
+      <!-- Card 4 -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border); padding: 30px; border-radius: var(--radius); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div style="font-size: 32px; color: var(--accent); margin-bottom: 18px;"><i class="bi bi-wallet2"></i></div>
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 10px; color: var(--text-primary);">Digital Wallet</h3>
+        <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.5;">Load virtual coins via secure payment QR code requests, then pay as you go for only the document layouts you generate.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Strict Legal Disclaimer Section -->
+<section style="padding: 60px 5%; background: var(--bg-surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div style="max-width: 900px; margin: 0 auto; text-align: left;">
+    <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid var(--danger); padding: 24px; border-radius: var(--radius); display: flex; flex-direction: column; gap: 12px;">
+      <h3 style="color: var(--danger); display: flex; align-items: center; gap: 8px; margin: 0; font-size: 18px; font-weight: 800;">
+        <i class="bi bi-shield-slash-fill"></i> STRICT LEGAL DISCLAIMER & NON-AFFILIATION WARNING
+      </h3>
+      <p style="color: var(--text-primary); font-size: 14px; line-height: 1.6; margin: 0;">
+        <strong>My Jan Seva</strong> is a private utility tool designed to help operators with graphic formatting, document layout adjustments, and image editing.
+      </p>
+      <ul style="margin: 0; padding-left: 20px; color: var(--text-secondary); font-size: 13.5px; line-height: 1.6; display: flex; flex-direction: column; gap: 6px;">
+        <li>This portal is <strong>NOT</strong> associated with, affiliated with, authorized by, or in any way officially connected to any government entity, authority, or national scheme.</li>
+        <li>This portal is <strong>NOT</strong> an official "Jan Seva Kendra", Common Service Center (CSC), or government portal. Official applications must be made directly via official government web domains.</li>
+        <li>We take <strong>no responsibility or liability</strong> for any data entry mistakes, print layout errors, delays, or subsequent actions resulting from printed documents. The operator assumes full responsibility.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer style="background: var(--bg-surface); padding: 40px 5% 30px; border-top: 1px solid var(--border); text-align: center; font-size: 13px; color: var(--text-tertiary);">
+  <div style="max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; align-items: center;">
+    <div style="display: flex; gap: 24px; font-weight: 600;">
+      <a href="{% url 'dashboard:terms' %}" style="color: var(--text-secondary); text-decoration: none; transition: color 0.15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-secondary)'">Terms of Service</a>
+      <a href="{% url 'dashboard:privacy' %}" style="color: var(--text-secondary); text-decoration: none; transition: color 0.15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-secondary)'">Privacy Policy</a>
+      <a href="{% url 'accounts:login' %}" style="color: var(--text-secondary); text-decoration: none; transition: color 0.15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-secondary)'">Portal Login</a>
+    </div>
+    <div>
+      &copy; 2026 My Jan Seva. All Rights Reserved. Private Helper Utility.
+    </div>
+  </div>
+</footer>
+{% endblock %}
