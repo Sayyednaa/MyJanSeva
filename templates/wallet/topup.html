@@ -32,6 +32,27 @@
             <div style="font-size:14px; font-weight:700; color:var(--text-primary); margin-top:8px; background:rgba(255,255,255,0.03); padding:4px 8px; border-radius:4px; display:inline-block;">₹{{ pkg.price }}</div>
           </div>
           {% endfor %}
+          
+          <div class="package-card" id="customPkgCard" onclick="selectCustomPackage(this)" style="cursor:pointer; border:2px solid var(--border); padding:16px; border-radius:var(--radius); text-align:center; transition: all 0.2s ease-in-out; background:var(--bg-raised); display:flex; flex-direction:column; justify-content:center; align-items:center;">
+            <div style="font-size:20px; font-weight:800; color:var(--accent);"><i class="bi bi-pencil-square"></i> Custom</div>
+            <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">Enter Amount</div>
+            <div style="font-size:14px; font-weight:700; color:var(--text-primary); margin-top:8px; background:rgba(255,255,255,0.03); padding:4px 8px; border-radius:4px; display:inline-block;">Min ₹50</div>
+          </div>
+        </div>
+
+        <div id="customInputBlock" style="display:none; border: 1px solid var(--border); padding: 16px; border-radius: var(--radius); background: var(--bg-raised); margin-bottom: 24px;">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label" style="font-weight:600; display:flex; justify-content:space-between; margin-bottom:8px;">
+              <span>Enter Amount (in Rupees)</span>
+              <span style="color:var(--text-tertiary); font-weight:normal; font-size:12px;">₹1 = 2 Coins</span>
+            </label>
+            <div style="position:relative; display:flex; align-items:center;">
+              <span style="position:absolute; left:12px; font-size:16px; font-weight:600; color:var(--text-secondary);">₹</span>
+              <input type="number" id="customAmountInput" class="form-control" placeholder="Minimum 50" min="50" style="padding-left:28px; font-size:16px; font-weight:600;">
+            </div>
+            <div id="customError" class="text-xs text-danger" style="margin-top:6px; display:none; color:var(--danger)">Minimum top-up amount is ₹50.</div>
+            <div id="customCoinsPreview" class="text-xs text-success" style="margin-top:6px; font-weight:600; display:none; color:var(--success)">You will receive <span id="customCoinsValue">0</span> Coins</div>
+          </div>
         </div>
 
         <div id="paymentDetails" class="payment-details-area" style="display:none; border-top:1px solid var(--border); padding-top:24px; text-align:center;">
@@ -122,6 +143,10 @@ function selectPackage(cardEl, coins, price) {
     cardEl.style.transform = 'translateY(-2px)';
     cardEl.style.boxShadow = '0 8px 24px var(--accent-glow)';
     
+    // Hide custom input block
+    document.getElementById('customInputBlock').style.display = 'none';
+    document.getElementById('customAmountInput').removeAttribute('required');
+    
     // Set hidden inputs
     document.getElementById('selectedCoins').value = coins;
     document.getElementById('selectedAmount').value = price;
@@ -143,5 +168,89 @@ function selectPackage(cardEl, coins, price) {
         document.getElementById('paymentDetails').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 120);
 }
+
+function selectCustomPackage(cardEl) {
+    // Highlight selected card
+    document.querySelectorAll('.package-card').forEach(card => {
+        card.style.borderColor = 'var(--border)';
+        card.style.background = 'var(--bg-raised)';
+        card.style.transform = 'none';
+        card.style.boxShadow = 'none';
+    });
+    cardEl.style.borderColor = 'var(--accent)';
+    cardEl.style.background = 'var(--accent-soft)';
+    cardEl.style.transform = 'translateY(-2px)';
+    cardEl.style.boxShadow = '0 8px 24px var(--accent-glow)';
+    
+    // Show custom input block
+    document.getElementById('customInputBlock').style.display = 'block';
+    const amountInput = document.getElementById('customAmountInput');
+    amountInput.setAttribute('required', 'true');
+    amountInput.focus();
+    
+    // Hide payment details initially until they enter a valid amount
+    document.getElementById('paymentDetails').style.display = 'none';
+    document.getElementById('selectedCoins').value = '';
+    document.getElementById('selectedAmount').value = '';
+    
+    // Recalculate if there's already a value in input
+    updateCustomCalculation();
+}
+
+function updateCustomCalculation() {
+    const amountVal = parseFloat(document.getElementById('customAmountInput').value);
+    const errEl = document.getElementById('customError');
+    const previewEl = document.getElementById('customCoinsPreview');
+    const coinsValEl = document.getElementById('customCoinsValue');
+    const payDetails = document.getElementById('paymentDetails');
+    
+    if (isNaN(amountVal) || amountVal === 0) {
+        errEl.style.display = 'none';
+        previewEl.style.display = 'none';
+        payDetails.style.display = 'none';
+        return;
+    }
+    
+    if (amountVal < 50) {
+        errEl.style.display = 'block';
+        previewEl.style.display = 'none';
+        payDetails.style.display = 'none';
+        
+        document.getElementById('selectedCoins').value = '';
+        document.getElementById('selectedAmount').value = '';
+    } else {
+        errEl.style.display = 'none';
+        
+        // Calculate coins: 1 Rupee = 2 Coins
+        const coins = Math.floor(amountVal * 2);
+        
+        coinsValEl.textContent = coins;
+        previewEl.style.display = 'block';
+        
+        // Set hidden inputs
+        document.getElementById('selectedCoins').value = coins;
+        document.getElementById('selectedAmount').value = amountVal;
+        
+        // Update labels
+        document.getElementById('paymentAmountText').textContent = '₹' + amountVal;
+        document.getElementById('paymentCoinsText').textContent = coins + ' Coins';
+        
+        // Generate UPI QR Code URL
+        const upiLink = `upi://pay?pa=abdulali@ptyes&pn=JanSeva&am=${amountVal}&cu=INR`;
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
+        document.getElementById('upiQrImg').src = qrUrl;
+        
+        // Show payment section
+        payDetails.style.display = 'block';
+    }
+}
+
+// Add event listener to custom amount input
+document.addEventListener('DOMContentLoaded', () => {
+    const customInput = document.getElementById('customAmountInput');
+    if (customInput) {
+        customInput.addEventListener('input', updateCustomCalculation);
+    }
+});
 </script>
 {% endblock %}

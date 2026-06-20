@@ -43,7 +43,14 @@ document.getElementById('mergeForm').addEventListener('submit', async (e) => {
     try {
         let resp = await fetch('{% url "wallet:ajax_charge" %}', {method: 'POST', body: formData});
         let json = await resp.json();
-        if(json.status === 'error') throw new Error(json.message);
+        if(json.status === 'error') {
+            let err = new Error(json.message);
+            if (json.code === 'insufficient_balance') {
+                err.isInsufficientBalance = true;
+                err.redirectUrl = json.redirect_url || '{% url "wallet:topup" %}';
+            }
+            throw err;
+        }
         
         msg.textContent = 'Merging PDFs...';
         const { PDFDocument } = PDFLib;
@@ -64,6 +71,9 @@ document.getElementById('mergeForm').addEventListener('submit', async (e) => {
     } catch(err) {
         alert('Error: ' + err.message);
         msg.style.display = 'none';
+        if (err.isInsufficientBalance) {
+            window.location.href = err.redirectUrl;
+        }
     } finally {
         submitBtn.disabled = false;
     }

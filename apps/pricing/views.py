@@ -69,3 +69,41 @@ def service_toggle(request, pk):
     state = 'enabled' if service.is_active else 'disabled'
     messages.success(request, f'Service "{service.name}" {state}.')
     return redirect('pricing:list')
+
+
+@login_required
+def user_service_list(request):
+    services = Service.objects.filter(is_active=True).select_related('category')
+    
+    # Precalculate Rupee prices
+    COIN_TO_INR_RATE = 0.50
+    for service in services:
+        service.rupee_price = float(service.price) * COIN_TO_INR_RATE
+        
+    # Group services by category
+    services_by_cat = {}
+    for service in services:
+        cat_key = (
+            service.category.name,
+            service.category.icon or 'bi-gear-fill',
+            service.category.order if hasattr(service.category, 'order') else 999
+        ) if service.category else ('General Services', 'bi-gear-fill', 999)
+        
+        if cat_key not in services_by_cat:
+            services_by_cat[cat_key] = []
+        services_by_cat[cat_key].append(service)
+        
+    # Sort categories by order, then name
+    sorted_categories = []
+    for key in sorted(services_by_cat.keys(), key=lambda x: (x[2], x[0])):
+        sorted_categories.append({
+            'name': key[0],
+            'icon': key[1],
+            'services': services_by_cat[key]
+        })
+        
+    return render(request, 'pricing/view_pricing.html', {
+        'categories': sorted_categories,
+        'page_title': 'Service Pricing',
+    })
+

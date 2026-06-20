@@ -123,3 +123,7 @@ MESSAGE_TAGS = {
     messages.WARNING: 'warning',
     messages.ERROR:   'danger',
 }
+
+# Telegram Notification Settings
+TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default='')
+TELEGRAM_CHAT_ID = config('TELEGRAM_CHAT_ID', default='')

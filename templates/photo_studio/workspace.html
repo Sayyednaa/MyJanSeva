@@ -1366,7 +1366,14 @@ async function chargeWallet(slug) {
     formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
     let resp = await fetch('{% url "wallet:ajax_charge" %}', {method: 'POST', body: formData});
     let json = await resp.json();
-    if(json.status === 'error') throw new Error(json.message);
+    if(json.status === 'error') {
+        let err = new Error(json.message);
+        if (json.code === 'insufficient_balance') {
+            err.isInsufficientBalance = true;
+            err.redirectUrl = json.redirect_url || '{% url "wallet:topup" %}';
+        }
+        throw err;
+    }
 }
 
 async function exportActive(slug) {
@@ -1380,6 +1387,9 @@ async function exportActive(slug) {
         link.click();
     } catch(err) {
         alert('Export failed: ' + err.message);
+        if (err.isInsufficientBalance) {
+            window.location.href = err.redirectUrl;
+        }
     }
 }
 
@@ -1401,6 +1411,9 @@ async function exportA4() {
         pdf.save('a4_photo_sheet.pdf');
     } catch(err) {
         alert('Export failed: ' + err.message);
+        if (err.isInsufficientBalance) {
+            window.location.href = err.redirectUrl;
+        }
     } finally {
         btn.innerHTML = origHtml;
         btn.disabled = false;
@@ -1438,6 +1451,9 @@ async function printA4Direct() {
         printWindow.document.close();
     } catch(err) {
         alert('Print failed: ' + err.message);
+        if (err.isInsufficientBalance) {
+            window.location.href = err.redirectUrl;
+        }
     } finally {
         btn.innerHTML = origHtml;
         btn.disabled = false;

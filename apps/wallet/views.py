@@ -51,7 +51,9 @@ def topup_view(request):
     packages = [
         {'coins': 100, 'price': 50, 'label': '100 Coins (₹50)'},
         {'coins': 1000, 'price': 500, 'label': '1000 Coins (₹500)'},
-        {'coins': 500, 'price': 1000, 'label': '500 Coins (₹1000)'},
+        {'coins': 2000, 'price': 1000, 'label': '2000 Coins (₹1000)'},
+        {'coins': 3000, 'price': 1500, 'label': '3000 Coins (₹1500)'},
+        {'coins': 4000, 'price': 2000, 'label': '4000 Coins (₹2000)'},
     ]
     if request.method == 'POST':
         coins = request.POST.get('coins')
@@ -67,6 +69,14 @@ def topup_view(request):
             amount = float(amount)
             if coins <= 0 or amount <= 0:
                 raise ValueError
+                
+            if amount < 50:
+                messages.error(request, 'Minimum top-up amount is ₹50.')
+                return redirect('wallet:topup')
+                
+            if coins != int(amount * 2):
+                messages.error(request, 'Invalid coins calculation for the given amount.')
+                return redirect('wallet:topup')
         except ValueError:
             messages.error(request, 'Invalid coins or amount format.')
             return redirect('wallet:topup')
@@ -89,6 +99,23 @@ def topup_view(request):
             coins=coins,
             status='pending'
         )
+        
+        # Send Telegram notification
+        try:
+            from .utils import send_telegram_message
+            full_name = request.user.get_full_name() or request.user.username
+            msg = (
+                f"<b>🪙 New Top-up Request</b>\n\n"
+                f"• <b>User:</b> {full_name} ({request.user.email})\n"
+                f"• <b>Amount:</b> ₹{amount:.2f}\n"
+                f"• <b>Coins:</b> {coins} Coins\n"
+                f"• <b>UTR / Ref No:</b> <code>{utr}</code>\n"
+                f"• <b>Status:</b> Pending Verification"
+            )
+            send_telegram_message(msg)
+        except Exception:
+            pass
+            
         messages.success(request, f'Payment request of ₹{amount} submitted! Admin will verify UTR: {utr} and credit your account shortly.')
         return redirect('wallet:topup')
         
@@ -126,7 +153,12 @@ def ajax_charge_service(request):
         # If service not found, assume free or skip charge
         return JsonResponse({'status': 'success', 'price': 0, 'total_price': 0, 'quantity': quantity})
     except InsufficientBalanceError as e:
-        return JsonResponse({'status': 'error', 'message': str(e)})
+        return JsonResponse({
+            'status': 'error',
+            'code': 'insufficient_balance',
+            'message': str(e),
+            'redirect_url': '/wallet/topup/'
+        })
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
 

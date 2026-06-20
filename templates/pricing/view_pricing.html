@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Service Pricing</h1>
+    <div class="subtitle">Official rate card for all available services</div>
+  </div>
+</div>
+
+{% if categories %}
+  {% for cat in categories %}
+    <div class="pricing-category-section" style="margin-bottom: 32px;">
+      <h2 style="display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 600; margin-bottom: 16px; color: var(--text-primary);">
+        <i class="bi {{ cat.icon }}" style="color: var(--accent); font-size: 24px;"></i>
+        <span>{{ cat.name }}</span>
+      </h2>
+      
+      <div class="grid-2">
+        {% for s in cat.services %}
+          <div class="card pricing-service-card" style="display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s; position: relative; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius);">
+            <div style="padding: 20px; display: flex; gap: 16px; align-items: flex-start;">
+              <div style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                <i class="bi {{ s.icon|default:'bi-star' }}"></i>
+              </div>
+              <div class="flex-1">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">{{ s.name }}</h3>
+                <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0;">{{ s.description|default:"Standard service operation" }}</p>
+              </div>
+            </div>
+            
+            <div style="border-top: 1px solid var(--border); padding: 12px 20px; background: var(--bg-raised); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span class="badge badge-accent" style="font-size: 13px; padding: 4px 10px; font-weight: 600; border-radius: var(--radius-xs);">
+                  {{ s.price|floatformat:0 }} Coins
+                </span>
+              </div>
+              {% if user.is_admin %}
+              <div style="font-size: 13px; font-weight: 600; color: var(--text-tertiary);">
+                Equivalent: <span style="color: var(--success); font-weight: 700; font-size: 14px;">₹{{ s.rupee_price|floatformat:2 }}</span>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="card" style="padding: 40px; text-align: center;">
+    <div class="empty-state">
+      <i class="bi bi-tags" style="font-size: 48px; color: var(--text-tertiary); margin-bottom: 16px;"></i>
+      <h3>No services active</h3>
+      <p>Please contact an administrator to configure service pricing.</p>
+    </div>
+  </div>
+{% endif %}
+
+<style>
+  .pricing-service-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent-glow) !important;
+  }
+</style>
+{% endblock %}

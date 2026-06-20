@@ -32,6 +32,9 @@
     </button>
     <div class="mobile-brand">My Jan Seva</div>
     <div class="mobile-actions">
+      <button id="langToggleMobile" class="mobile-icon-btn" aria-label="Switch language" style="margin-right: 8px;" title="Switch Language / भाषा बदलें">
+        <i class="bi bi-translate"></i>
+      </button>
       <button id="themeToggleMobile" class="mobile-icon-btn" aria-label="Toggle theme">
         <i class="bi bi-sun-fill" id="themeIconMobile"></i>
       </button>
@@ -69,6 +72,9 @@
         </a>
         <a href="{% url 'wallet:dashboard' %}" class="nav-link {% if request.resolver_match.namespace == 'wallet' %}active{% endif %}">
           <i class="bi bi-wallet2"></i><span>Wallet</span>
+        </a>
+        <a href="{% url 'pricing:view_pricing' %}" class="nav-link {% if request.resolver_match.url_name == 'view_pricing' %}active{% endif %}">
+          <i class="bi bi-tags"></i><span>Service Pricing</span>
         </a>
       </div>
 
@@ -119,6 +125,9 @@
         </a>
       </div>
       <div class="sidebar-actions">
+        <button id="langToggleBtn" class="sidebar-action-btn" title="Switch Language / भाषा बदलें">
+          <i class="bi bi-translate"></i>
+        </button>
         <button id="themeToggleBtn" class="sidebar-action-btn" title="Toggle Theme">
           <i id="themeToggleIcon" class="bi bi-sun-fill"></i>
         </button>
@@ -201,6 +210,245 @@
     btn.addEventListener('click', function(){
       var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
       setTheme(next);
+    });
+  });
+
+  // Language Switch & Translation Logic
+  const translationDict = {
+    "My Jan Seva": "मेरी जन सेवा",
+    "Overview": "अवलोकन",
+    "Farmer ID": "किसान आईडी",
+    "Dashboard": "डैशबोर्ड",
+    "Wallet": "वॉलेट",
+    "Data": "डेटा",
+    "Customers": "ग्राहक",
+    "Documents": "दस्तावेज़",
+    "Tools": "उपकरण",
+    "Photo Studio": "फोटो स्टूडियो",
+    "PDF Tools": "पीडीएफ टूल्स",
+    "Pricing": "मूल्य निर्धारण",
+    "Top-up Requests": "टॉप-अप अनुरोध",
+    "Django Admin": "जांगो एडमिन",
+    "Service Pricing": "सेवा मूल्य सूची",
+    "Balance": "बैलेंस",
+    "Top Up": "टॉप अप",
+    "Logout": "लॉगआउट",
+    "Merge PDFs": "पीडीएफ मर्ज करें",
+    "Split PDF": "पीडीएफ विभाजित करें",
+    "Compress PDF": "पीडीएफ कंप्रेस करें",
+    "Rotate PDF": "पीडीएफ घुमाएं",
+    "Images to PDF": "छवियों से पीडीएफ",
+    "Password Protect PDF": "पीडीएफ पासवर्ड सुरक्षा",
+    "My Wallet": "मेरा वॉलेट",
+    "Balance, top-ups and usage": "बैलेंस, टॉप-अप और उपयोग",
+    "Top Up Wallet": "वॉलेट टॉप अप करें",
+    "Request Balance Addition": "बैलेंस जोड़ने का अनुरोध करें",
+    "Payment Details": "भुगतान विवरण",
+    "Transaction History": "लेन-देन इतिहास",
+    "Usage History": "उपयोग इतिहास",
+    "Customer Database": "ग्राहक डेटाबेस",
+    "Manage customer profiles and document mappings.": "ग्राहक प्रोफाइल और दस्तावेज़ मैपिंग प्रबंधित करें।",
+    "Document Registry": "दस्तावेज़ रजिस्ट्री",
+    "Secure repository of processed customer documents.": "संसाधित ग्राहक दस्तावेजों का सुरक्षित भंडार।",
+    "Profile Settings": "प्रोफ़ाइल सेटिंग्स",
+    "Manage your account details and password.": "अपने खाते के विवरण और पासवर्ड प्रबंधित करें।",
+    "Terms of Service": "सेवा की शर्तें",
+    "Privacy Policy": "गोपनीयता नीति",
+    "Login to My Jan Seva": "मेरी जन सेवा में लॉगिन करें",
+    "Register Operator Account": "ऑपरेटर खाता पंजीकृत करें",
+    "Email Address": "ईमेल पता",
+    "Password": "पासवर्ड",
+    "Confirm Password": "पासवर्ड की पुष्टि करें",
+    "Full Name": "पूरा नाम",
+    "Phone Number": "फ़ोन नंबर",
+    "Create Account": "खाता बनाएं",
+    "Already have an account?": "पहले से ही एक खाता है?",
+    "Accept terms and privacy policy": "नियमों और गोपनीयता नीति को स्वीकार करें",
+    "Save": "सहेजें",
+    "Reset": "रीसेट",
+    "Cancel": "रद्द करें",
+    "Submit": "जमा करें",
+    "Upload": "अपलोड करें",
+    "Download": "डाउनलोड करें",
+    "Verify": "सत्यापित करें",
+    "Search": "खोजें",
+    "Print": "प्रिंट",
+    "Add to Queue": "कतार में जोड़ें",
+    "Reset Form": "फॉर्म रीसेट करें",
+    "Save Farmer Card": "किसान कार्ड सहेजें",
+    "Print This Card": "यह कार्ड प्रिंट करें",
+    "Add to Print Queue": "प्रिंट कतार में जोड़ें",
+    "Flip View": "कार्ड घुमाएं",
+    "Front Side": "सामने का हिस्सा",
+    "Back Side": "पीछे का हिस्सा",
+    "History": "इतिहास",
+    "Print Queue": "प्रिंट कतार",
+    "Cards per A4 Page": "प्रति A4 पृष्ठ कार्ड",
+    "Empty Queue": "कतार खाली करें",
+    "Print Queue Now (A4 Layout)": "कतार अभी प्रिंट करें (A4 लेआउट)",
+    "Create ID": "आईडी बनाएं",
+    "Search by name, Aadhaar or Farmer ID...": "नाम, आधार या किसान आईडी से खोजें...",
+    "Farmer Information": "किसान की जानकारी",
+    "Fill in the fields below. Card preview updates in real-time.": "नीचे दिए गए फ़ील्ड भरें। कार्ड पूर्वावलोकन रीयल-टाइम में अपडेट होता है।",
+    "Auto-Fill from Registry PDF": "रजिस्ट्री पीडीएफ से ऑटो-फिल",
+    "Auto-Scan": "ऑटो-स्कैन",
+    "Click to upload": "अपलोड करने के लिए क्लिक करें",
+    "or drag & drop Farmer PDF": "या किसान पीडीएफ खींचें और छोड़ें",
+    "Upload official Farmer Registry PDF to fill details and photo automatically": "स्वचालित रूप से विवरण और फोटो भरने के लिए आधिकारिक किसान रजिस्ट्री पीडीएफ अपलोड करें",
+    "Farmer ID": "किसान आईडी",
+    "Gender": "लिंग",
+    "Male": "पुरुष",
+    "Female": "महिला",
+    "Other": "अन्य",
+    "Full Name (English)": "पूरा नाम (अंग्रेजी)",
+    "Full Name (Hindi / Regional)": "पूरा नाम (हिंदी / क्षेत्रीय)",
+    "Date of Birth": "जन्म तिथि",
+    "Mobile Number": "मोबाइल नंबर",
+    "Aadhaar Number": "आधार नंबर",
+    "Farmer Photo": "किसान का फोटो",
+    "Click or Drag photo here": "फोटो को यहां क्लिक करें या खींचें",
+    "Remove": "हटाएं",
+    "Address (Behind Card)": "पता (कार्ड के पीछे)",
+    "Land / Field Details": "भूमि / खेत का विवरण",
+    "Add Row": "पंक्ति जोड़ें",
+    "State": "राज्य",
+    "Dist": "जिला",
+    "Village": "गांव",
+    "S.No": "खसरा नंबर",
+    "S/S (Share)": "हिस्सा",
+    "Area (Ha/Acre)": "क्षेत्रफल (हेक्टेयर/एकड़)",
+    "Live ID Card Preview": "लाइव आईडी कार्ड पूर्वावलोकन",
+    "Real-time design mockup conforming to standard card dimensions.": "मानक कार्ड आयामों के अनुरूप वास्तविक समय का डिज़ाइन पूर्वावलोकन।",
+    "Card Design:": "कार्ड डिज़ाइन:",
+    "Coins": "सिक्के",
+    "Coins Wallet": "सिक्के वॉलेट",
+    "Top-up Amount": "टॉप-अप राशि",
+    "Rupees": "रुपये",
+    "Total Revenue": "कुल राजस्व",
+    "Monthly Revenue": "मासिक राजस्व",
+    "Total Topups": "कुल टॉप-अप",
+    "Top Services": "शीर्ष सेवाएं",
+    "Analytics Overview": "विश्लेषण अवलोकन",
+    "Recent Transactions": "हाल के लेन-देन",
+    "Amount": "राशि",
+    "Status": "स्थिति",
+    "Date": "तिथि",
+    "Pending": "लंबित",
+    "Approved": "स्वीकृत",
+    "Rejected": "अस्वीकृत",
+    "Wallet Balance": "वॉलेट बैलेंस",
+    "Merge multiple PDF files into one.": "कई पीडीएफ फाइलों को एक में मिलाएं।",
+    "Extract pages from a PDF file.": "एक पीडीएफ फाइल से पेज निकालें।",
+    "Reduce PDF file size while keeping quality.": "गुणवत्ता बनाए रखते हुए पीडीएफ फाइल का आकार कम करें।",
+    "Rotate pages in a PDF document.": "पीडीएफ दस्तावेज़ में पेजों को घुमाएं।",
+    "Convert multiple images (JPEG/PNG) into a single PDF.": "एकाधिक छवियों (JPEG/PNG) को एक एकल पीडीएफ में बदलें।",
+    "Add a password protection layer to a PDF.": "एक पीडीएफ में पासवर्ड सुरक्षा परत जोड़ें।",
+    "Official rate card for all available services": "सभी उपलब्ध सेवाओं के लिए आधिकारिक दर सूची",
+    "Equivalent:": "समतुल्य:",
+    "No services active": "कोई सेवा सक्रिय नहीं है",
+    "Please contact an administrator to configure service pricing.": "कृपया सेवा मूल्य निर्धारण को कॉन्फ़िगर करने के लिए व्यवस्थापक से संपर्क करें।",
+    "General Services": "सामान्य सेवाएं",
+    "Standard service operation": "मानक सेवा संचालन",
+    "Government Forms": "सरकारी फॉर्म",
+    "ID Cards": "पहचान पत्र",
+    "OCR & Scanning": "ओसीआर और स्कैनिंग",
+    "Photo Services": "फोटो सेवाएं",
+    "Print": "प्रिंट",
+    "Caste Certificate": "जाति प्रमाणपत्र",
+    "Domicile Certificate": "मूल निवास प्रमाणपत्र",
+    "Income Certificate": "आय प्रमाणपत्र",
+    "Aadhaar PVC": "आधार पीवीसी",
+    "Farmer ID Card Print": "किसान आईडी कार्ड प्रिंट",
+    "ID Card": "पहचान पत्र",
+    "PAN PVC": "पैन पीवीसी",
+    "Voter PVC": "वोटर पीवीसी",
+    "OCR Extraction": "ओसीआर एक्सट्रैक्शन",
+    "Image to PDF": "छवि से पीडीएफ",
+    "PDF Compress": "पीडीएफ कंप्रेस",
+    "PDF Merge": "पीडीएफ मर्ज",
+    "PDF Password": "पीडीएफ पासवर्ड",
+    "PDF Rotate": "पीडीएफ रोटेट",
+    "PDF Split": "पीडीएफ स्प्लिट",
+    "Passport Photo": "पासपोर्ट फोटो",
+    "Photo Sheet": "फोटो शीट",
+    "Signature Resize": "हस्ताक्षर का आकार बदलना"
+  };
+
+  function translateDOM() {
+    const lang = localStorage.getItem('lang') || 'en';
+    if (lang === 'hi') {
+      const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+        acceptNode: function(node) {
+          const parentTag = node.parentNode.tagName;
+          if (parentTag === 'SCRIPT' || parentTag === 'STYLE' || parentTag === 'TEXTAREA') {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      }, false);
+      
+      let node;
+      while (node = walk.nextNode()) {
+        let val = node.nodeValue;
+        let trimmed = val.trim();
+        
+        if (translationDict[trimmed]) {
+          node.nodeValue = val.replace(trimmed, translationDict[trimmed]);
+          continue;
+        }
+        
+        if (trimmed.includes('Coins') && !trimmed.includes('{{')) {
+          val = val.replace(/Coins/g, 'सिक्के');
+        }
+        if (trimmed.includes('Balance') && !trimmed.includes('{{')) {
+          val = val.replace(/Balance/g, 'बैलेंस');
+        }
+        if (trimmed.includes('Top Up') && !trimmed.includes('{{')) {
+          val = val.replace(/Top Up/g, 'टॉप अप');
+        }
+        if (trimmed.includes('Farmer ID') && !trimmed.includes('{{')) {
+          val = val.replace(/Farmer ID/g, 'किसान आईडी');
+        }
+        if (trimmed.includes('Wallet Error') && !trimmed.includes('{{')) {
+          val = val.replace(/Wallet Error/g, 'वॉलेट त्रुटि');
+        }
+        
+        node.nodeValue = val;
+      }
+      
+      document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {
+        const ph = el.getAttribute('placeholder').trim();
+        if (translationDict[ph]) {
+          el.setAttribute('placeholder', translationDict[ph]);
+        }
+      });
+      
+      document.querySelectorAll('option').forEach(el => {
+        const txt = el.textContent.trim();
+        if (translationDict[txt]) {
+          el.textContent = translationDict[txt];
+        }
+      });
+      
+      const origTitle = document.title;
+      for (let k in translationDict) {
+        if (origTitle.includes(k)) {
+          document.title = origTitle.replace(k, translationDict[k]);
+          break;
+        }
+      }
+    }
+  }
+
+  translateDOM();
+  document.addEventListener('DOMContentLoaded', translateDOM);
+
+  document.querySelectorAll('#langToggleBtn, #langToggleMobile').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const curLang = localStorage.getItem('lang') || 'en';
+      const nextLang = curLang === 'en' ? 'hi' : 'en';
+      localStorage.setItem('lang', nextLang);
+      window.location.reload();
     });
   });
 })();

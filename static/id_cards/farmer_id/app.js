@@ -21,7 +21,14 @@ function chargeWallet(slug, quantity) {
     return fetch(window.WALLET_CHARGE_URL, {method: 'POST', body: formData})
         .then(r => r.json())
         .then(json => {
-            if(json.status === 'error') throw new Error(json.message);
+            if(json.status === 'error') {
+                let err = new Error(json.message);
+                if (json.code === 'insufficient_balance') {
+                    err.isInsufficientBalance = true;
+                    err.redirectUrl = json.redirect_url || '/wallet/topup/';
+                }
+                throw err;
+            }
             return json;
         });
 }
@@ -1223,6 +1230,9 @@ function printSingleCardDirectly(cardData) {
         window.print();
     }).catch(err => {
         alert('Wallet Error: ' + err.message);
+        if (err.isInsufficientBalance) {
+            window.location.href = err.redirectUrl || '/wallet/topup/';
+        }
     });
   }, 150);
 }
@@ -1269,6 +1279,9 @@ function printQueueA4Layout() {
   }).catch(err => {
       if(btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="printer"></i> Print Queue Now (A4 Layout)'; lucide.createIcons(); }
       alert('Wallet Error: ' + err.message);
+      if (err.isInsufficientBalance) {
+          window.location.href = err.redirectUrl || '/wallet/topup/';
+      }
   });
 }
 
