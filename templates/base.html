@@ -93,13 +93,17 @@
 
     <nav class="sidebar-nav" id="sidebarNav">
       <div class="nav-group">
-        <div class="nav-group-label">Overview</div>
+        <div class="nav-group-label">ID Cards</div>
         <a href="{% url 'id_cards:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-          <i class="bi bi-card-heading"></i><span>Farmer ID</span>
+          <i class="bi bi-card-heading"></i><span>Farmer ID Card</span>
         </a>
         <a href="{% url 'id_cards:ration_home' %}" class="nav-link {% if request.resolver_match.url_name == 'ration_home' %}active{% endif %}">
           <i class="bi bi-card-list"></i><span>Ration Card</span>
         </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-label">Services</div>
         <a href="{% url 'dashboard:home' %}" class="nav-link {% if request.resolver_match.namespace == 'dashboard' %}active{% endif %}">
           <i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span>
         </a>
@@ -110,7 +114,7 @@
           <i class="bi bi-tags"></i><span>Service Pricing</span>
         </a>
         <a href="{% url 'dashboard:help' %}" class="nav-link {% if request.resolver_match.url_name == 'help' %}active{% endif %}">
-          <i class="bi bi-question-circle"></i><span>Help & Support</span>
+          <i class="bi bi-question-circle"></i><span>Help &amp; Support</span>
         </a>
       </div>
 
@@ -138,7 +142,7 @@
       <div class="nav-group">
         <div class="nav-group-label">Admin</div>
         <a href="{% url 'dashboard:admin_users' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_users' %}active{% endif %}">
-          <i class="bi bi-people-fill"></i><span>Users & Analytics</span>
+          <i class="bi bi-people-fill"></i><span>Users &amp; Analytics</span>
         </a>
         <a href="{% url 'dashboard:admin_support' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_support' %}active{% endif %}">
           <i class="bi bi-chat-left-dots-fill"></i><span>Support Tickets</span>
