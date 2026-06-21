@@ -48,3 +48,27 @@ class IDCardGeneration(models.Model):
 
     def __str__(self):
         return f"{self.custom_name or (self.customer.full_name if self.customer else 'Unknown')} — {self.template}"
+
+
+class FarmerIDCard(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='farmer_id_cards')
+    farmer_id = models.CharField(max_length=50)
+    name_en = models.CharField(max_length=150)
+    name_hi = models.CharField(max_length=150, blank=True)
+    dob = models.CharField(max_length=20, blank=True)
+    gender = models.CharField(max_length=20, blank=True)
+    mobile = models.CharField(max_length=20, blank=True)
+    aadhaar = models.CharField(max_length=20, blank=True)
+    address = models.TextField(blank=True)
+    photo = models.TextField(blank=True)  # Store Base64 photo string directly
+    land_details = models.JSONField(default=list, blank=True)  # JSON array of land table rows
+    print_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name_en} ({self.farmer_id}) - {self.user.username}"
+

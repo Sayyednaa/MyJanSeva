@@ -57,15 +57,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     lucide.createIcons();
   }
 
-  // 2. Initialize IndexedDB
+  // 2. Initialize history & print queue from backend
   try {
-    db = await initDB();
     await loadHistory();
     loadPrintQueueFromStorage();
   } catch (error) {
-    console.error('Database initialization failed:', error);
-    alert('Failed to initialize local database. Using mock memory storage instead.');
-    setupMockDB();
+    console.error('Initialization failed:', error);
   }
 
   // 3. Setup Default Form State & Initial Row
@@ -76,128 +73,65 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /* ==========================================================================
-   INDEXEDDB DATABASE LAYER
+   BACKEND DATABASE LAYER
    ========================================================================== */
-function initDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('AgriCardDB', 1);
-
-    request.onerror = (event) => reject(event.target.error);
-    request.onsuccess = (event) => resolve(event.target.result);
-
-    request.onupgradeneeded = (event) => {
-      const dbInstance = event.target.result;
-      if (!dbInstance.objectStoreNames.contains('cards')) {
-        dbInstance.createObjectStore('cards', { keyPath: 'id', autoIncrement: true });
-      }
-    };
-  });
-}
-
-// Memory fallback in case IndexedDB fails (e.g. private browser mode restriction)
-function setupMockDB() {
-  const mockStorage = {
-    cards: [],
-    nextId: 1
-  };
-  
-  db = {
-    transaction: (storeNames, mode) => {
-      return {
-        objectStore: (name) => ({
-          getAll: () => ({
-            onsuccess: null,
-            addEventListener: function(type, cb) {
-              if(type === 'success') {
-                setTimeout(() => cb({ target: { result: mockStorage.cards } }), 50);
-              }
-            }
-          }),
-          add: (data) => {
-            const copy = { ...data, id: mockStorage.nextId++ };
-            mockStorage.cards.push(copy);
-            return {
-              onsuccess: null,
-              addEventListener: function(type, cb) {
-                if(type === 'success') setTimeout(() => cb({ target: { result: copy.id } }), 50);
-              }
-            };
-          },
-          put: (data) => {
-            const index = mockStorage.cards.findIndex(c => c.id === data.id);
-            if(index !== -1) mockStorage.cards[index] = data;
-            return {
-              onsuccess: null,
-              addEventListener: function(type, cb) {
-                if(type === 'success') setTimeout(() => cb({ target: { result: data.id } }), 50);
-              }
-            };
-          },
-          delete: (id) => {
-            mockStorage.cards = mockStorage.cards.filter(c => c.id !== id);
-            return {
-              onsuccess: null,
-              addEventListener: function(type, cb) {
-                if(type === 'success') setTimeout(() => cb({}), 50);
-              }
-            };
-          }
-        }),
-        oncomplete: null,
-        onerror: null
-      };
-    }
-  };
-}
-
 function getAllCards() {
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(['cards'], 'readonly');
-    const store = transaction.objectStore('cards');
-    const request = store.getAll();
-
-    request.onsuccess = (event) => resolve(event.target.result || []);
-    request.onerror = (event) => reject(event.target.error);
-  });
+  if (!window.FARMER_LIST_URL) return Promise.resolve([]);
+  return fetch(window.FARMER_LIST_URL)
+    .then(r => {
+      if (!r.ok) throw new Error('HTTP error ' + r.status);
+      return r.json();
+    });
 }
 
 function saveCard(cardData) {
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(['cards'], 'readwrite');
-    const store = transaction.objectStore('cards');
-    
-    let request;
-    if (cardData.id) {
-      request = store.put(cardData);
-    } else {
-      request = store.add(cardData);
-    }
-
-    request.onsuccess = (event) => resolve(event.target.result);
-    request.onerror = (event) => reject(event.target.error);
+  if (!window.FARMER_SAVE_URL) return Promise.reject(new Error('Save URL not configured.'));
+  return fetch(window.FARMER_SAVE_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': window.CSRF_TOKEN
+    },
+    body: JSON.stringify(cardData)
+  })
+  .then(r => {
+    if (!r.ok) throw new Error('HTTP error ' + r.status);
+    return r.json();
+  })
+  .then(res => {
+    if (res.status === 'error') throw new Error(res.message);
+    return res.card.id;
   });
 }
 
 function deleteCardFromDB(id) {
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(['cards'], 'readwrite');
-    const store = transaction.objectStore('cards');
-    const request = store.delete(id);
-
-    request.onsuccess = () => resolve();
-    request.onerror = (event) => reject(event.target.error);
+  if (!window.FARMER_DELETE_URL) return Promise.reject(new Error('Delete URL not configured.'));
+  return fetch(window.FARMER_DELETE_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': window.CSRF_TOKEN
+    },
+    body: JSON.stringify({ id: id })
+  })
+  .then(r => {
+    if (!r.ok) throw new Error('HTTP error ' + r.status);
+    return r.json();
+  })
+  .then(res => {
+    if (res.status === 'error') throw new Error(res.message);
+    return;
   });
 }
 
-// Read a single card by its IndexedDB id
 function getCardById(id) {
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(['cards'], 'readonly');
-    const store = transaction.objectStore('cards');
-    const request = store.get(id);
-    request.onsuccess = (event) => resolve(event.target.result || null);
-    request.onerror = (event) => reject(event.target.error);
-  });
+  if (!window.FARMER_DETAIL_URL_BASE) return Promise.resolve(null);
+  return fetch(window.FARMER_DETAIL_URL_BASE + id + '/')
+    .then(r => {
+      if (r.status === 404) return null;
+      if (!r.ok) throw new Error('HTTP error ' + r.status);
+      return r.json();
+    });
 }
 
 /**

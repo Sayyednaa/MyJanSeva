@@ -453,6 +453,10 @@ PREVIEW</div>
 </div>
 
 <script>
+window.FARMER_LIST_URL = "{% url 'id_cards:farmer_list' %}";
+window.FARMER_SAVE_URL = "{% url 'id_cards:farmer_save' %}";
+window.FARMER_DELETE_URL = "{% url 'id_cards:farmer_delete' %}";
+window.FARMER_DETAIL_URL_BASE = "/id-cards/detail/";  // base for detailing
 window.WALLET_CHARGE_URL = "{% url 'wallet:ajax_charge' %}";
 window.CSRF_TOKEN = "{{ csrf_token }}";
 window.PLACEHOLDER_AVATAR_URL = "{% static 'id_cards/farmer_id/placeholder-avatar.png' %}";
