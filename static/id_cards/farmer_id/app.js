@@ -1323,8 +1323,13 @@ async function printSingleCardDirectly(cardData) {
   printContainer.appendChild(printPageDiv);
 
   // Generate QR Code then print
+  // Set document.title to farmer name so browser uses it as the PDF filename.
   setTimeout(() => {
     generatePrintQR(card, 0);
+    const originalTitle = document.title;
+    const safeName = (card.nameEn || card.farmerId || 'Farmer-Card').replace(/[^a-zA-Z0-9 _\-]/g, '').trim();
+    document.title = safeName;
+    window.onafterprint = () => { document.title = originalTitle; window.onafterprint = null; };
     window.print();
   }, 150);
 }
@@ -1380,10 +1385,15 @@ async function printQueueA4Layout() {
   });
 
   // Generate QR codes then print
+  // Set document.title to farmer name(s) so browser uses it as the PDF filename.
   setTimeout(() => {
     resolvedCards.forEach((card, index) => {
       generatePrintQR(card, index);
     });
+    const originalTitle = document.title;
+    const names = resolvedCards.map(c => (c.nameEn || c.farmerId || 'Farmer').replace(/[^a-zA-Z0-9 _\-]/g, '').trim());
+    document.title = names.length === 1 ? names[0] : names.join(', ');
+    window.onafterprint = () => { document.title = originalTitle; window.onafterprint = null; };
     window.print();
   }, 200);
 }

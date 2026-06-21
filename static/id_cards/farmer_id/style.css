@@ -1213,7 +1213,7 @@ tr {
     min-height: var(--print-card-h) !important;
     max-height: var(--print-card-h) !important;
     border: 1px dotted #888888 !important; /* Dotted card cut borders */
-    border-radius: 3.5mm !important; /* Proportional corners in mm */
+    border-radius: 3.5mm,3.5mm,3mm,3.5mm !important; /* Proportional corners in mm */
     box-shadow: none !important; /* No heavy shadows in print */
     background-color: #fff !important;
     -webkit-print-color-adjust: exact !important;

@@ -195,6 +195,11 @@
               <div class="card-label">Front Side</div>
               <div class="card-scale-wrapper">
                 <div class="id-card card-front" id="live-card-front">
+                  <!-- Preview Watermark -->
+                  <div class="preview-watermark">
+                    <div class="preview-watermark-text">X
+PREVIEW</div>
+                  </div>
                   <!-- Leaf decorations -->
                   <div class="leaf-decor leaf-top-right">
                     <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -276,6 +281,11 @@
               <div class="card-label">Back Side</div>
               <div class="card-scale-wrapper">
                 <div class="id-card card-back" id="live-card-back">
+                  <!-- Preview Watermark -->
+                  <div class="preview-watermark">
+                    <div class="preview-watermark-text">X
+PREVIEW</div>
+                  </div>
                   <!-- Leaf decorations -->
                   <div class="leaf-decor leaf-top-right">
                     <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -510,6 +520,45 @@ document.addEventListener('click', (e) => {
 }
 .card-scale-wrapper .id-card {
     flex-shrink: 0;
+}
+
+/* Watermark for Live Preview Cards */
+.preview-watermark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 99;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+.preview-watermark-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 3.2rem;
+    font-weight: 900;
+    color: rgba(239, 68, 68, 0.17); /* Soft semi-transparent red */
+    border: 5px dashed rgba(239, 68, 68, 0.17);
+    padding: 10px 20px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    transform: rotate(-25deg);
+    letter-spacing: 4px;
+    text-align: center;
+    line-height: 1.1;
+    white-space: pre-line;
+    user-select: none;
+}
+/* Prevent long-press saving or dragging of card images, layouts and QRs */
+.id-card img, 
+.id-card .qr-container, 
+.id-card .leaf-decor,
+.id-card .card-logo {
+    pointer-events: none !important;
+    -webkit-user-drag: none !important;
 }
 </style>
 {% endblock %}
