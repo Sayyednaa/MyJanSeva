@@ -99,7 +99,14 @@ function saveCard(cardData) {
     return r.json();
   })
   .then(res => {
-    if (res.status === 'error') throw new Error(res.message);
+    if (res.status === 'error') {
+      let err = new Error(res.message);
+      if (res.code === 'insufficient_balance') {
+        err.isInsufficientBalance = true;
+        err.redirectUrl = res.redirect_url || '/wallet/topup/';
+      }
+      throw err;
+    }
     return res.card.id;
   });
 }
@@ -673,22 +680,11 @@ async function handleFormSubmit(e) {
     cardData.id = currentEditingId;
   }
 
-  // Charge wallet only for NEW cards, not updates.
-  // This deducts coins at save-time so printing is always free.
-  if (!isEditing) {
-    const saveBtn = document.querySelector('#farmer-form button[type="submit"]');
-    if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<i data-lucide="loader"></i> Charging...'; if(typeof lucide !== 'undefined') lucide.createIcons(); }
-    try {
-      await chargeWallet('farmer-id', 1);
-    } catch (err) {
-      if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i data-lucide="save"></i> Save Farmer Card'; if(typeof lucide !== 'undefined') lucide.createIcons(); }
-      alert('Cannot save card: ' + err.message);
-      if (err.isInsufficientBalance) {
-        window.location.href = err.redirectUrl || '/wallet/topup/';
-      }
-      return;
-    }
-    if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i data-lucide="save"></i> Save Farmer Card'; if(typeof lucide !== 'undefined') lucide.createIcons(); }
+  const saveBtn = document.querySelector('#farmer-form button[type="submit"]');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = isEditing ? '<i data-lucide="loader"></i> Saving...' : '<i data-lucide="loader"></i> Charging & Saving...';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 
   try {
@@ -700,6 +696,15 @@ async function handleFormSubmit(e) {
   } catch (err) {
     console.error('Error saving record:', err);
     alert('Failed to save record: ' + err.message);
+    if (err.isInsufficientBalance) {
+      window.location.href = err.redirectUrl || '/wallet/topup/';
+    }
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '<i data-lucide="save"></i> Save Farmer Card';
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
   }
 }
 

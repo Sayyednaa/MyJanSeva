@@ -3,7 +3,9 @@ import json
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.db import transaction as db_transaction
 from apps.pricing.models import Service
+from apps.wallet.services import WalletService, InsufficientBalanceError
 from .models import FarmerIDCard
 
 @login_required
@@ -66,26 +68,51 @@ def save_farmer_card(request):
     if not farmer_id or not name_en:
         return JsonResponse({'status': 'error', 'message': 'Farmer ID and Name (English) are required fields.'})
 
-    if card_id:
-        try:
-            card = FarmerIDCard.objects.get(id=card_id, user=request.user)
-        except FarmerIDCard.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Card not found or access denied.'})
-    else:
-        card = FarmerIDCard(user=request.user)
+    try:
+        with db_transaction.atomic():
+            if card_id:
+                try:
+                    card = FarmerIDCard.objects.select_for_update().get(id=card_id, user=request.user)
+                except FarmerIDCard.DoesNotExist:
+                    return JsonResponse({'status': 'error', 'message': 'Card not found or access denied.'})
+            else:
+                card = FarmerIDCard(user=request.user)
+                # Deduct wallet first inside the transaction
+                try:
+                    service = Service.objects.get(slug='farmer-id', is_active=True)
+                    price = service.price
+                    if price > 0:
+                        WalletService.deduct(
+                            user=request.user,
+                            service_name="Farmer ID Card Print",
+                            service_slug="farmer-id",
+                            amount=price
+                        )
+                except Service.DoesNotExist:
+                    pass
 
-    card.farmer_id = farmer_id
-    card.name_en = name_en
-    card.name_hi = name_hi
-    card.dob = dob
-    card.gender = gender
-    card.mobile = mobile
-    card.aadhaar = aadhaar
-    card.address = address
-    card.photo = photo
-    card.land_details = land_details
-    card.print_count = print_count
-    card.save()
+            card.farmer_id = farmer_id
+            card.name_en = name_en
+            card.name_hi = name_hi
+            card.dob = dob
+            card.gender = gender
+            card.mobile = mobile
+            card.aadhaar = aadhaar
+            card.address = address
+            card.photo = photo
+            card.land_details = land_details
+            card.print_count = print_count
+            card.save()
+
+    except InsufficientBalanceError as e:
+        return JsonResponse({
+            'status': 'error',
+            'code': 'insufficient_balance',
+            'message': str(e),
+            'redirect_url': '/wallet/topup/'
+        })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
 
     return JsonResponse({
         'status': 'success',
