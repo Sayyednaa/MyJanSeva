@@ -614,7 +614,10 @@ function updateLivePreview() {
 
   // 5. Dynamic QR Code Update
   // Create structured text for scanner (e.g. ID, Name, Mobile)
-  const qrString = `AgriCard ID: ${fId}\nName: ${nameEn}\nDOB: ${formattedDob}\nMobile: ${mobile}`;
+  let qrString = `Farmer ID: ${fId}\nName: ${nameEn}\nDOB: ${formattedDob}\nMobile: ${mobile}`;
+  if (aadhaarVal && aadhaarVal.trim()) {
+    qrString += `\nAadhaar: ${aadhaarVal.trim()}`;
+  }
   
   const qrTarget = document.getElementById('card-qr');
   qrTarget.innerHTML = '';
@@ -1183,7 +1186,10 @@ function renderPrintQueue() {
 
     // Initialize QR Code inside the mini card preview asynchronously
     setTimeout(() => {
-      const qrString = `AgriCard ID: ${card.farmerId}\nName: ${card.nameEn}\nDOB: ${formattedDob}\nMobile: ${card.mobile}`;
+      let qrString = `Farmer ID: ${card.farmerId}\nName: ${card.nameEn}\nDOB: ${formattedDob}\nMobile: ${card.mobile}`;
+      if (card.aadhaar && card.aadhaar.trim()) {
+        qrString += `\nAadhaar: ${card.aadhaar.trim()}`;
+      }
       const el = document.getElementById(`queue-qr-front-${index}`);
       if (el) {
         new QRCode(el, {
@@ -1477,7 +1483,10 @@ function generatePrintQR(card, index) {
     const parts = card.dob.split('-');
     if (parts.length === 3) formattedDob = `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
-  const qrString = `AgriCard ID: ${card.farmerId}\nName: ${card.nameEn}\nDOB: ${formattedDob}\nMobile: ${card.mobile}`;
+  let qrString = `Farmer ID: ${card.farmerId}\nName: ${card.nameEn}\nDOB: ${formattedDob}\nMobile: ${card.mobile}`;
+  if (card.aadhaar && card.aadhaar.trim()) {
+    qrString += `\nAadhaar: ${card.aadhaar.trim()}`;
+  }
   
   const el = document.getElementById(`print-qr-front-${index}`);
   if (el) {
