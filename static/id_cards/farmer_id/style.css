@@ -33,13 +33,13 @@
   --font-main: var(--font);
   --font-hi: 'Noto Sans Devanagari', sans-serif;
   
-  /* Screen ID Card Dimensions */
-  --screen-card-w: 480px;
-  --screen-card-h: 304px;
+  /* Screen ID Card Dimensions (Increased by 10%) */
+  --screen-card-w: 528px;
+  --screen-card-h: 334px;
   
-  /* Print ID Card Dimensions */
-  --print-card-w: 3.37in;
-  --print-card-h: 2.125in;
+  /* Print ID Card Dimensions (Increased by 10%) */
+  --print-card-w: 3.71in;
+  --print-card-h: 2.34in;
 }
 
 /* Reset & Base */

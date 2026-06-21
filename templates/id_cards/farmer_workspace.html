@@ -200,6 +200,12 @@
                     <div class="preview-watermark-text">X
 PREVIEW</div>
                   </div>
+                  <div class="preview-watermark-lines"></div>
+                  <div class="preview-watermark-grid">
+                    <span>PREVIEW</span><span>PREVIEW</span><span>PREVIEW</span>
+                    <span>PREVIEW</span><span>PREVIEW</span><span>PREVIEW</span>
+                    <span>PREVIEW</span><span>PREVIEW</span><span>PREVIEW</span>
+                  </div>
                   <!-- Leaf decorations -->
                   <div class="leaf-decor leaf-top-right">
                     <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -285,6 +291,12 @@ PREVIEW</div>
                   <div class="preview-watermark">
                     <div class="preview-watermark-text">X
 PREVIEW</div>
+                  </div>
+                  <div class="preview-watermark-lines"></div>
+                  <div class="preview-watermark-grid">
+                    <span>PREVIEW</span><span>PREVIEW</span><span>PREVIEW</span>
+                    <span>PREVIEW</span><span>PREVIEW</span><span>PREVIEW</span>
+                    <span>PREVIEW</span><span>PREVIEW</span><span>PREVIEW</span>
                   </div>
                   <!-- Leaf decorations -->
                   <div class="leaf-decor leaf-top-right">
@@ -475,8 +487,8 @@ function resizeIdCards() {
         const card = wrapper.querySelector('.id-card');
         if (!card) return;
         
-        const originalWidth = 480;
-        const originalHeight = 304;
+        const originalWidth = 528;
+        const originalHeight = 334;
         
         if (containerWidth < originalWidth) {
             const scale = containerWidth / originalWidth;
@@ -519,7 +531,7 @@ document.addEventListener('click', (e) => {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    height: 304px;
+    height: 334px;
     overflow: visible;
 }
 .card-scale-wrapper .id-card {
@@ -542,18 +554,74 @@ document.addEventListener('click', (e) => {
 }
 .preview-watermark-text {
     font-family: 'Inter', sans-serif;
-    font-size: 3.2rem;
-    font-weight: 900;
-    color: rgba(239, 68, 68, 0.17); /* Soft semi-transparent red */
-    border: 5px dashed rgba(239, 68, 68, 0.17);
+    font-size: 3.4rem;
+    font-weight: 950;
+    color: rgba(239, 68, 68, 0.22); /* More aggressive visible red */
+    border: 6px dashed rgba(239, 68, 68, 0.22);
     padding: 10px 20px;
     border-radius: 12px;
     text-transform: uppercase;
     transform: rotate(-25deg);
-    letter-spacing: 4px;
+    letter-spacing: 5px;
     text-align: center;
     line-height: 1.1;
     white-space: pre-line;
+    user-select: none;
+}
+/* Diagonal Security Cross-Lines */
+.preview-watermark-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 97; /* Below main text but above details */
+}
+.preview-watermark-lines::before,
+.preview-watermark-lines::after {
+    content: '';
+    position: absolute;
+    width: 160%;
+    height: 2px;
+    background: rgba(239, 68, 68, 0.18); /* Red cross line */
+    top: 50%;
+    left: 50%;
+    pointer-events: none;
+}
+.preview-watermark-lines::before {
+    transform: translate(-50%, -50%) rotate(32deg);
+}
+.preview-watermark-lines::after {
+    transform: translate(-50%, -50%) rotate(-32deg);
+}
+/* Repeating Watermark Text Grid */
+.preview-watermark-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 96; /* Below lines and main text */
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 15px;
+    padding: 15px;
+    align-items: center;
+    justify-items: center;
+    box-sizing: border-box;
+}
+.preview-watermark-grid span {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: rgba(239, 68, 68, 0.15); /* Semi-transparent repeating label */
+    text-transform: uppercase;
+    transform: rotate(-25deg);
+    letter-spacing: 1px;
+    white-space: nowrap;
     user-select: none;
 }
 /* Prevent long-press saving or dragging of card images, layouts and QRs */
