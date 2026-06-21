@@ -1,6 +1,6 @@
 """ID Cards admin"""
 from django.contrib import admin
-from .models import IDCardTemplate, IDCardGeneration, FarmerIDCard
+from .models import IDCardTemplate, IDCardGeneration, FarmerIDCard, RationCard
 
 @admin.register(IDCardTemplate)
 class IDCardTemplateAdmin(admin.ModelAdmin):
@@ -36,6 +36,37 @@ class FarmerIDCardAdmin(admin.ModelAdmin):
         }),
         ('Photo & Land Details', {
             'fields': ('image_tag', 'photo', 'land_details')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+
+@admin.register(RationCard)
+class RationCardAdmin(admin.ModelAdmin):
+    list_display = ('card_number', 'head_of_family', 'user', 'mobile', 'print_count', 'created_at')
+    list_filter = ('user', 'scheme_name', 'created_at')
+    search_fields = ('card_number', 'head_of_family', 'mobile', 'address', 'user__username', 'user__email')
+    ordering = ('-created_at',)
+    
+    def image_tag(self, obj):
+        from django.utils.safestring import mark_safe
+        if obj.photo:
+            return mark_safe(f'<img src="{obj.photo}" width="100" style="border-radius: 8px; border: 1px solid #ccc;" />')
+        return "No Photo"
+    image_tag.short_description = 'Head of Family Photo Preview'
+    
+    readonly_fields = ('created_at', 'updated_at', 'image_tag')
+    
+    fieldsets = (
+        ('Operator Info', {
+            'fields': ('user', 'print_count')
+        }),
+        ('Ration Card Details', {
+            'fields': ('card_number', 'fare_shop_number', 'scheme_name', 'head_of_family', 'address', 'mobile', 'issue_date')
+        }),
+        ('Photo & Family Details', {
+            'fields': ('image_tag', 'photo', 'family_members')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at')

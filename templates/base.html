@@ -94,8 +94,11 @@
     <nav class="sidebar-nav" id="sidebarNav">
       <div class="nav-group">
         <div class="nav-group-label">Overview</div>
-        <a href="{% url 'id_cards:home' %}" class="nav-link {% if request.resolver_match.namespace == 'id_cards' %}active{% endif %}">
+        <a href="{% url 'id_cards:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
           <i class="bi bi-card-heading"></i><span>Farmer ID</span>
+        </a>
+        <a href="{% url 'id_cards:ration_home' %}" class="nav-link {% if request.resolver_match.url_name == 'ration_home' %}active{% endif %}">
+          <i class="bi bi-card-list"></i><span>Ration Card</span>
         </a>
         <a href="{% url 'dashboard:home' %}" class="nav-link {% if request.resolver_match.namespace == 'dashboard' %}active{% endif %}">
           <i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span>

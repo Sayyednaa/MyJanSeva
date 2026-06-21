@@ -72,3 +72,27 @@ class FarmerIDCard(models.Model):
     def __str__(self):
         return f"{self.name_en} ({self.farmer_id}) - {self.user.username}"
 
+
+class RationCard(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='ration_cards')
+    card_number = models.CharField(max_length=50) # ration card number
+    fare_shop_number = models.CharField(max_length=50, blank=True)
+    scheme_name = models.CharField(max_length=50, blank=True)
+    head_of_family = models.CharField(max_length=150)
+    address = models.TextField(blank=True)
+    mobile = models.CharField(max_length=20, blank=True)
+    issue_date = models.CharField(max_length=20, blank=True)
+    photo = models.TextField(blank=True)  # Base64 photo string
+    family_members = models.JSONField(default=list, blank=True)  # List of member dicts
+    design_style = models.CharField(max_length=20, default='1')
+    print_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.card_number} ({self.head_of_family}) - {self.user.username}"
+
+

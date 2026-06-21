@@ -1,0 +1,550 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<link rel="stylesheet" href="{% static 'id_cards/ration-card/style.css' %}?v={% now 'U' %}">
+
+<div class="ration-card-workspace-wrapper" style="height: 100%; display: flex; flex-direction: column;">
+
+  <div class="page-header no-print" style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px;">
+    <div class="app-nav" style="display:flex; gap:8px;">
+      <button class="btn btn-primary nav-btn active" data-tab="creator">
+        <i class="bi bi-plus-circle"></i> Create ID
+      </button>
+      <button class="btn btn-secondary nav-btn" data-tab="history">
+        <i class="bi bi-database"></i> History <span class="badge badge-info" id="history-count" style="margin-left:8px">0</span>
+      </button>
+      <button class="btn btn-secondary nav-btn" data-tab="print-queue">
+        <i class="bi bi-printer"></i> Print Queue <span class="badge badge-warning" id="queue-count" style="margin-left:8px">0</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <main class="app-container no-print" style="flex: 1; min-height: 0; overflow-y: auto;">
+    <!-- CREATOR TAB -->
+    <section id="creator-tab" class="tab-content active">
+      <div class="grid-layout">
+        <!-- Form Panel -->
+        <div class="panel card-form-panel">
+          <div class="panel-header">
+            <h2 class="panel-title"><i data-lucide="text-cursor-input"></i> Ration Card Information</h2>
+            <p class="panel-desc">Fill in the fields below. Card preview updates in real-time.</p>
+          </div>
+
+          <!-- PDF Auto-Fill Drag and Drop Zone -->
+          <div class="pdf-upload-container">
+            <div class="pdf-upload-header">
+              <span class="pdf-upload-title"><i data-lucide="file-text"></i> Auto-Fill from Ration Card PDF</span>
+              <span class="pdf-upload-badge">Auto-Scan</span>
+            </div>
+            <div class="pdf-upload-zone" id="pdf-upload-zone">
+              <input type="file" id="pdf-upload" accept="application/pdf" class="file-input">
+              <div class="pdf-upload-placeholder" id="pdf-upload-placeholder">
+                <i data-lucide="upload-cloud" class="upload-icon"></i>
+                <div class="pdf-upload-text">
+                  <strong>Click to upload</strong> or drag & drop Ration Card PDF
+                </div>
+                <div class="pdf-upload-subtext">Upload official Ration Card PDF to fill details and family members automatically</div>
+              </div>
+              <div class="pdf-upload-progress hidden" id="pdf-upload-progress">
+                <div class="spinner"></div>
+                <div class="progress-text">Scanning and extracting ration card details...</div>
+              </div>
+              <div class="pdf-upload-success hidden" id="pdf-upload-success">
+                <i data-lucide="check-circle-2" class="success-icon"></i>
+                <div class="success-text">Successfully scanned and filled form details!</div>
+              </div>
+              <div class="pdf-upload-error hidden" id="pdf-upload-error">
+                <i data-lucide="alert-triangle" class="error-icon"></i>
+                <div class="error-text" id="pdf-error-message">Failed to parse PDF. Please check the file.</div>
+              </div>
+            </div>
+          </div>
+          
+          <form id="ration-form" autocomplete="off">
+            <div class="form-row">
+              <div class="form-group flex-2">
+                <label for="ration-card-number">Ration Card Number</label>
+                <input type="text" id="ration-card-number" placeholder="e.g. 218541384974" required>
+              </div>
+              <div class="form-group flex-1">
+                <label for="scheme-name">Scheme Name</label>
+                <input type="text" id="scheme-name" placeholder="e.g. PHH" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group flex-2">
+                <label for="head-of-family">Head of Family</label>
+                <input type="text" id="head-of-family" placeholder="e.g. Babu Jalela" required>
+              </div>
+              <div class="form-group flex-1">
+                <label for="issue-date">Issue Date</label>
+                <input type="date" id="issue-date" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="fare-shop-number">Fare Shop Number</label>
+                <input type="text" id="fare-shop-number" placeholder="e.g. 203453344" required>
+              </div>
+              <div class="form-group">
+                <label for="mobile-number">Mobile Number</label>
+                <input type="tel" id="mobile-number" maxlength="10" pattern="[0-9]{10}" placeholder="10-digit number" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="photo-upload">Head of Family Photo</label>
+                <div class="photo-upload-zone">
+                  <input type="file" id="photo-upload" accept="image/*" class="file-input">
+                  <div class="upload-placeholder">
+                    <i data-lucide="image"></i>
+                    <span>Click or Drag photo here</span>
+                  </div>
+                  <img id="photo-preview-img" class="uploaded-image-preview hidden" src="" alt="Preview">
+                  <button type="button" class="btn btn-danger btn-sm btn-icon remove-photo-btn hidden">
+                    <i data-lucide="trash-2"></i> Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="address">Address</label>
+              <textarea id="address" rows="2" placeholder="Enter Full Address" required></textarea>
+            </div>
+
+            <!-- Family Members Section -->
+            <div class="family-section">
+              <div class="section-title-row">
+                <h3><i data-lucide="users"></i> Family Members</h3>
+                <button type="button" class="btn btn-secondary btn-sm" id="add-table-row">
+                  <i data-lucide="plus"></i> Add Member
+                </button>
+              </div>
+              <div class="table-responsive">
+                <table class="family-edit-table" id="family-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 50px;">S.R.</th>
+                      <th>Member Name</th>
+                      <th style="width: 70px;">Age</th>
+                      <th style="width: 100px;">Gender (F/M)</th>
+                      <th>Relation</th>
+                      <th>Aadhaar Number</th>
+                      <th style="width: 50px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Table rows added dynamically via Javascript -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" id="clear-form">
+                <i data-lucide="rotate-ccw"></i> Reset Form
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <i data-lucide="save"></i> Save Ration Card (60 coins)
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Live Preview Panel -->
+        <div class="panel card-preview-panel">
+          <div class="panel-header">
+            <h2 class="panel-title"><i data-lucide="eye"></i> Live ID Card Preview</h2>
+            <p class="panel-desc">Real-time design mockup conforming to standard card dimensions.</p>
+          </div>
+          
+          <div class="preview-area">
+            <!-- Design Selector -->
+            <div class="design-selector-row" style="width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.5rem 1rem; background-color: var(--light-sage); border: 1px solid rgba(63, 81, 181, 0.2); border-radius: 8px; margin-bottom: 1rem;">
+              <label for="design-select" style="font-weight: 600; font-size: 0.85rem; color: var(--primary-color); display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0; pointer-events: none;">
+                <i data-lucide="palette" style="width: 16px; height: 16px; color: var(--gold-accent);"></i> Card Design:
+              </label>
+              <select id="design-select" style="font-family: var(--font-main); font-size: 0.85rem; padding: 0.35rem 0.6rem; border-radius: 6px; border: 1px solid var(--border-color); background-color: #fff; cursor: pointer;">
+                <option value="1" selected>Design 1 (Classic Blue)</option>
+                <option value="2">Design 2</option>
+                <option value="3">Design 3</option>
+              </select>
+            </div>
+
+            <!-- Card Front -->
+            <div class="id-card-wrapper" id="card-front-wrapper">
+              <div class="card-label">Front Side</div>
+              <div class="card-scale-wrapper">
+                <div class="id-card card-front design-1-front" id="live-card-front">
+                  <!-- Preview Watermark -->
+                  <div class="preview-watermark">
+                    <div class="preview-watermark-text">X
+PREVIEW</div>
+                  </div>
+                  <div class="preview-watermark-lines"></div>
+                  <div class="preview-watermark-grid">
+                    <span>PREVIEW</span><span>PREVIEW</span><span>PREVIEW</span>
+                    <span>PREVIEW</span><span>PREVIEW</span><span>PREVIEW</span>
+                    <span>PREVIEW</span><span>PREVIEW</span><span>PREVIEW</span>
+                  </div>
+  
+                  <!-- Classic Front Layout (Designs 1 & 2) -->
+                  <div class="classic-layout-front">
+                     <!-- Logo -->
+                      <img src="/static/id_cards/ration-card/logo.png"  class="logo-ration"/>
+                    <!-- Body -->
+                    <div class="card-body">
+                      <div class="photo-container">
+                        <img id="card-photo" src="{% static 'id_cards/farmer_id/placeholder-avatar.png' %}" alt="Photo">
+                      </div>
+                      
+                      <div class="card-details">
+                        <div class="detail-grid">
+                          <div id="card-number-grid-row" style="display: contents;">
+                            <div class="detail-label">Card No:</div>
+                            <div class="detail-val" id="card-number-grid">218541384974</div>
+                          </div>
+
+                          <div class="detail-label">Head Of Family:</div>
+                          <div class="detail-val" id="card-head">Babu Jalela</div>
+                          
+                          <div class="detail-label">Scheme:</div>
+                          <div class="detail-val" id="card-scheme">PHH</div>
+
+                          <div class="detail-label">FPS No:</div>
+                          <div class="detail-val" id="card-fps">203453344</div>
+                          
+                          <div class="detail-label">Mobile:</div>
+                          <div class="detail-val" id="card-mobile">1234567890</div>
+
+                          <div class="detail-label">Issued:</div>
+                          <div class="detail-val" id="card-issue">23/05/2019</div>
+                        </div>
+                      </div>
+    
+                      <div class="qr-container">
+                        <div id="card-qr"></div>
+                      </div>
+                    </div>
+
+                    <!-- Ration Card Pill Badge -->
+                    <div class="id-badge-container" id="card-number-pill-container">
+                      <div class="ration-id-badge">
+                        Ration Card No: <span id="card-number-pill">218541384974</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Design 3 Front Layout -->
+                  <div class="design3-layout-front">
+                    <!-- Title & Shop No at top -->
+                    <div class="d3-title-block">
+                      <div class="d3-title-text">Ration Card</div>
+                      <div class="d3-shop-no">Fare Price Shop No: <span id="d3-card-fps">203453344</span></div>
+                    </div>
+                    
+                    <!-- Content section -->
+                    <div class="d3-content-section">
+                      <!-- Left column: Photo and Issue Date -->
+                      <div class="d3-photo-col">
+                        <div class="d3-photo-container">
+                          <img id="d3-card-photo" src="{% static 'id_cards/farmer_id/placeholder-avatar.png' %}" alt="Photo">
+                        </div>
+                        <div class="d3-issue-block">
+                          <div class="d3-issue-label">Issue Date</div>
+                          <div class="d3-issue-val" id="d3-card-issue">23/05/2019</div>
+                        </div>
+                      </div>
+                      
+                      <!-- Right column: Details grid -->
+                      <div class="d3-details-col">
+                        <div class="d3-detail-row">
+                          <span class="d3-label">Scheme Name:</span>
+                          <span class="d3-val" id="d3-card-scheme">PHH</span>
+                        </div>
+                        <div class="d3-detail-row">
+                          <span class="d3-label">Head of Family:</span>
+                          <span class="d3-val" id="d3-card-head">Babu Jalela</span>
+                        </div>
+                        <div class="d3-detail-row">
+                          <span class="d3-label">Address:</span>
+                          <span class="d3-val d3-address" id="d3-card-address">Uganada Ki kali ghati, ki kali gufa number 2</span>
+                        </div>
+                        <div class="d3-detail-row">
+                          <span class="d3-label">Mobile Number:</span>
+                          <span class="d3-val" id="d3-card-mobile">1234567890</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Footer block -->
+                    <div class="d3-footer-block">
+                      <!-- Left signature placeholder (matches bg line) -->
+                      <div class="d3-sig-placeholder"></div>
+                      
+                      <!-- Center: Card number -->
+                      <div class="d3-number-block">
+                        <div class="d3-number-label">Ration Card Number</div>
+                        <div class="d3-number-val" id="d3-card-number-val">218541384974</div>
+                      </div>
+                      
+                      <!-- Right signature placeholder (matches bg line) -->
+                      <div class="d3-sig-placeholder"></div>
+                    </div>
+                    
+                    <!-- Bottom email (written on footer bar) -->
+                    <div class="d3-footer-email">up.fncs@gmail.com</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Back -->
+            <div class="id-card-wrapper" id="card-back-wrapper">
+              <div class="card-label">Back Side (Family Members)</div>
+              <div class="card-scale-wrapper">
+                <div class="id-card card-back design-1-back" id="live-card-back">
+                  <!-- Preview Watermark -->
+                  <div class="preview-watermark">
+                    <div class="preview-watermark-text">X
+PREVIEW</div>
+                  </div>
+                  <div class="preview-watermark-lines"></div>
+                  <div class="preview-watermark-grid">
+                    <span>PREVIEW</span><span>PREVIEW</span><span>PREVIEW</span>
+                    <span>PREVIEW</span><span>PREVIEW</span><span>PREVIEW</span>
+                    <span>PREVIEW</span><span>PREVIEW</span><span>PREVIEW</span>
+                  </div>
+  
+                  <!-- Classic Back Layout (Designs 1 & 2) -->
+                  <div class="classic-layout-back">
+                    <!-- Back Body -->
+                    <div class="card-back-body">
+                      <div class="back-header-row">
+                        <div class="back-title">Family Details</div>
+                        <div class="back-card-no" id="card-back-card-number">218541384974</div>
+                      </div>
+
+                      <div class="address-container">
+                        <strong>Address:</strong> <span id="card-back-address">Uganada Ki kali ghati, ki kali gufa number 2</span>
+                      </div>
+    
+                      <div class="members-table-container">
+                        <table class="card-members-table" id="card-members-table">
+                          <thead>
+                            <tr>
+                              <th style="width: 25px;">S.R.</th>
+                              <th>Member Name</th>
+                              <th style="width: 30px;">Age</th>
+                              <th style="width: 30px;">Gnd</th>
+                              <th style="width: 55px;">Relation</th>
+                              <th>Aadhaar No.</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <!-- Added dynamically -->
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Design 3 Back Layout -->
+                  <div class="design3-layout-back">
+                    <div class="d3-back-header">
+                      <img src="{% static 'id_cards/ration-card/design 3 back header.png' %}" alt="Header">
+                    </div>
+                    <div class="d3-back-content">
+                      <table class="d3-members-table" id="d3-card-members-table">
+                        <thead>
+                          <tr>
+                            <th style="width: 5%;">Sr</th>
+                            <th style="width: 32%;">Member Name</th>
+                            <th style="width: 15%;">Age/Gender</th>
+                            <th style="width: 20%;">Relation</th>
+                            <th style="width: 28%;">Aadhar No.</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <!-- Added dynamically -->
+                        </tbody>
+                      </table>
+                    </div>
+                    <div class="d3-back-footer">
+                      <img src="{% static 'id_cards/ration-card/design 3 back footer.png' %}" alt="Footer">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTORY TAB -->
+    <section id="history-tab" class="tab-content">
+      <div class="panel">
+        <div class="panel-header flex-header">
+          <div>
+            <h2 class="panel-title"><i data-lucide="database"></i> Ration Card Records Database</h2>
+            <p class="panel-desc">Manage saved cards, search, edit, or batch add them to print queue.</p>
+          </div>
+          <div class="header-actions">
+            <div class="search-box">
+              <i data-lucide="search" class="search-icon"></i>
+              <input type="text" id="history-search" placeholder="Search by name, Aadhaar or Card Number...">
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-bulk-queue">
+              <i data-lucide="file-plus"></i> Queue Selected (<span id="selected-count">0</span>)
+            </button>
+            <button class="btn btn-danger btn-sm" id="btn-bulk-delete">
+              <i data-lucide="trash-2"></i> Delete Selected
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive select-list-wrapper">
+          <table class="records-table">
+            <thead>
+              <tr>
+                <th style="width: 40px;">
+                  <input type="checkbox" id="select-all-records">
+                </th>
+                <th>Photo</th>
+                <th>Ration Card Number</th>
+                <th>Head of Family</th>
+                <th>Scheme</th>
+                <th>Mobile</th>
+                <th>Members Count</th>
+                <th style="text-align: center;">Prints</th>
+                <th style="text-align: right; width: 200px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="history-list-body">
+              <tr>
+                <td colspan="9" class="empty-state">
+                  <i data-lucide="folder-open"></i>
+                  <p>No records found in database. Create your first card!</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRINT QUEUE TAB -->
+    <section id="print-queue-tab" class="tab-content">
+      <div class="panel">
+        <div class="panel-header flex-header">
+          <div>
+            <h2 class="panel-title"><i data-lucide="printer"></i> Print Queue & Page Setup</h2>
+            <p class="panel-desc">Batch print multiple cards onto A4 pages. Card front and back will render side-by-side.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-secondary" id="clear-queue">
+              <i data-lucide="trash-2"></i> Empty Queue
+            </button>
+            <button class="btn btn-primary" id="trigger-batch-print">
+              <i data-lucide="printer"></i> Print Queue Now (A4 Layout)
+            </button>
+          </div>
+        </div>
+
+        <div class="queue-layout-settings">
+          <div class="setting-item">
+            <label for="cards-per-page">Cards per A4 Page</label>
+            <select id="cards-per-page">
+              <option value="3" selected>3 Cards (Recommended space for cutting)</option>
+              <option value="4">4 Cards (Tighter margins)</option>
+              <option value="2">2 Cards (Large spacing)</option>
+            </select>
+          </div>
+          <p class="settings-hint"><i data-lucide="info"></i> Standard CR80 layout prints the Front and Back horizontal next to each other. Card borders and print guides are active for easy cutting.</p>
+        </div>
+
+        <div class="queue-grid" id="queue-grid-list">
+          <div class="empty-state">
+            <i data-lucide="layers"></i>
+            <p>Your print queue is empty. Add cards from history or the creator to print.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- PRINT WRAPPER FOR A4 -->
+  <div id="print-container" class="print-only"></div>
+
+</div>
+
+<script>
+window.RATION_LIST_URL = "{% url 'id_cards:ration_list' %}";
+window.RATION_SAVE_URL = "{% url 'id_cards:ration_save' %}";
+window.RATION_DELETE_URL = "{% url 'id_cards:ration_delete' %}";
+window.RATION_DETAIL_URL_BASE = "/id-cards/ration/detail/"; 
+window.WALLET_CHARGE_URL = "{% url 'wallet:ajax_charge' %}";
+window.CSRF_TOKEN = "{{ csrf_token }}";
+window.PLACEHOLDER_AVATAR_URL = "{% static 'id_cards/farmer_id/placeholder-avatar.png' %}";
+window.WALLET_BALANCE = {{ wallet_balance|default:0 }};
+window.RATION_PRICE = {{ ration_price|default:50 }};
+</script>
+<script src="{% static 'id_cards/ration-card/app.js' %}"></script>
+
+<script>
+function resizeIdCards() {
+    const wrappers = document.querySelectorAll('.card-scale-wrapper');
+    wrappers.forEach(wrapper => {
+        const containerWidth = wrapper.clientWidth;
+        if (containerWidth === 0) return; 
+        
+        const card = wrapper.querySelector('.id-card');
+        if (!card) return;
+        
+        const originalWidth = 528;
+        const originalHeight = 334;
+        
+        if (containerWidth < originalWidth) {
+            const scale = containerWidth / originalWidth;
+            card.style.transform = `scale(${scale})`;
+            card.style.transformOrigin = 'top center';
+            wrapper.style.height = `${originalHeight * scale}px`;
+        } else {
+            card.style.transform = 'none';
+            wrapper.style.height = `${originalHeight}px`;
+        }
+    });
+}
+
+window.addEventListener('resize', resizeIdCards);
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(resizeIdCards, 150);
+});
+
+document.addEventListener('click', (e) => {
+    if (e.target.closest('.nav-btn')) {
+        setTimeout(resizeIdCards, 100);
+    }
+});
+</script>
+<style>
+.ration-card-workspace-wrapper {
+    position: relative;
+    height: calc(100vh - 80px);
+    overflow: auto;
+    background-color: var(--bg-app);
+    margin: -20px; 
+}
+.app-header { position: sticky; top: 0; z-index: 100; }
+</style>
+{% endblock %}
