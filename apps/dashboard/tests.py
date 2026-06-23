@@ -73,3 +73,88 @@ class TodoSystemTests(TestCase):
         response = self.client.get(reverse('dashboard:home'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Test Task')
+
+
+class PrintSettingsTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.username = 'testoperator2'
+        self.password = 'testpass123'
+        self.user = User.objects.create_user(
+            username=self.username,
+            password=self.password,
+            email='operator2@test.com',
+            role='operator'
+        )
+
+    def test_print_settings_model_creation(self):
+        from apps.dashboard.models import PrintSettings
+        settings_obj, created = PrintSettings.objects.get_or_create(user=self.user)
+        self.assertTrue(created)
+        self.assertEqual(settings_obj.farmer_id_width, 3.22)
+        self.assertEqual(settings_obj.farmer_id_height, 2.15)
+        self.assertEqual(settings_obj.ration_card_width, 3.71)
+        self.assertEqual(settings_obj.ration_card_height, 2.34)
+        self.assertEqual(str(settings_obj), f"Print Settings for {self.user.username}")
+
+    def test_settings_page_unauthenticated(self):
+        response = self.client.get(reverse('dashboard:settings'))
+        self.assertEqual(response.status_code, 302)
+
+    def test_settings_page_authenticated_get(self):
+        self.client.login(username=self.username, password=self.password)
+        response = self.client.get(reverse('dashboard:settings'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '3.22')
+        self.assertContains(response, '2.15')
+        self.assertContains(response, '3.71')
+        self.assertContains(response, '2.34')
+
+    def test_settings_page_post_valid(self):
+        self.client.login(username=self.username, password=self.password)
+        response = self.client.post(reverse('dashboard:settings'), {
+            'farmer_id_width': '3.5',
+            'farmer_id_height': '2.3',
+            'ration_card_width': '4.0',
+            'ration_card_height': '2.6'
+        })
+        self.assertEqual(response.status_code, 302) # Redirects on success
+        
+        from apps.dashboard.models import PrintSettings
+        settings_obj = PrintSettings.objects.get(user=self.user)
+        self.assertEqual(settings_obj.farmer_id_width, 3.5)
+        self.assertEqual(settings_obj.farmer_id_height, 2.3)
+        self.assertEqual(settings_obj.ration_card_width, 4.0)
+        self.assertEqual(settings_obj.ration_card_height, 2.6)
+
+    def test_settings_page_post_invalid(self):
+        self.client.login(username=self.username, password=self.password)
+        # Testing boundary values
+        response = self.client.post(reverse('dashboard:settings'), {
+            'farmer_id_width': '1.5', # too small, min is 2.0
+            'farmer_id_height': '2.3',
+            'ration_card_width': '4.0',
+            'ration_card_height': '2.6'
+        })
+        self.assertEqual(response.status_code, 200) # Re-renders on validation error
+        
+        from apps.dashboard.models import PrintSettings
+        settings_obj = PrintSettings.objects.get(user=self.user)
+        # Should not have changed
+        self.assertEqual(settings_obj.farmer_id_width, 3.22)
+
+    def test_settings_page_reset(self):
+        self.client.login(username=self.username, password=self.password)
+        from apps.dashboard.models import PrintSettings
+        settings_obj, created = PrintSettings.objects.get_or_create(user=self.user)
+        settings_obj.farmer_id_width = 3.5
+        settings_obj.save()
+        
+        response = self.client.post(reverse('dashboard:settings'), {
+            'action': 'reset'
+        })
+        self.assertEqual(response.status_code, 302)
+        
+        settings_obj.refresh_from_db()
+        self.assertEqual(settings_obj.farmer_id_width, 3.22)
+

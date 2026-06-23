@@ -20,4 +20,5 @@ urlpatterns = [
     path('todos/create/', views.todo_create, name='todo_create'),
     path('todos/<int:pk>/toggle/', views.todo_toggle, name='todo_toggle'),
     path('todos/<int:pk>/delete/', views.todo_delete, name='todo_delete'),
+    path('settings/', views.settings_view, name='settings'),
 ]

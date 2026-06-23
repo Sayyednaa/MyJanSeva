@@ -6,6 +6,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 <link rel="stylesheet" href="{% static 'id_cards/ration-card/style.css' %}?v={% now 'U' %}">
+<style>
+  :root {
+    --print-card-w: {{ print_settings.ration_card_width|default:"3.71" }}in !important;
+    --print-card-h: {{ print_settings.ration_card_height|default:"2.34" }}in !important;
+    --print-card-scale-x: {{ ration_scale_x|default:"0.6745" }} !important;
+    --print-card-scale-y: {{ ration_scale_y|default:"0.6724" }} !important;
+  }
+</style>
 
 <div class="ration-card-workspace-wrapper" style="height: 100%; display: flex; flex-direction: column;">
 

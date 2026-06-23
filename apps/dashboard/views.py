@@ -391,3 +391,52 @@ def todo_delete(request, pk):
     return redirect('dashboard:todo_list')
 
 
+@login_required
+def settings_view(request):
+    from .models import PrintSettings
+    settings_obj, created = PrintSettings.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'reset':
+            settings_obj.farmer_id_width = 3.22
+            settings_obj.farmer_id_height = 2.15
+            settings_obj.ration_card_width = 3.71
+            settings_obj.ration_card_height = 2.34
+            settings_obj.save()
+            messages.success(request, 'Print dimensions reset to defaults.')
+            return redirect('dashboard:settings')
+            
+        try:
+            farmer_id_width = float(request.POST.get('farmer_id_width', 3.22))
+            farmer_id_height = float(request.POST.get('farmer_id_height', 2.15))
+            ration_card_width = float(request.POST.get('ration_card_width', 3.71))
+            ration_card_height = float(request.POST.get('ration_card_height', 2.34))
+            
+            # Validation limits: width [2.0, 6.0], height [1.5, 5.0]
+            if not (2.0 <= farmer_id_width <= 6.0):
+                raise ValueError("Farmer ID width must be between 2.0 and 6.0 inches.")
+            if not (1.5 <= farmer_id_height <= 5.0):
+                raise ValueError("Farmer ID height must be between 1.5 and 5.0 inches.")
+            if not (2.0 <= ration_card_width <= 6.0):
+                raise ValueError("Ration Card width must be between 2.0 and 6.0 inches.")
+            if not (1.5 <= ration_card_height <= 5.0):
+                raise ValueError("Ration Card height must be between 1.5 and 5.0 inches.")
+                
+            settings_obj.farmer_id_width = farmer_id_width
+            settings_obj.farmer_id_height = farmer_id_height
+            settings_obj.ration_card_width = ration_card_width
+            settings_obj.ration_card_height = ration_card_height
+            settings_obj.save()
+            messages.success(request, 'Print dimensions updated successfully.')
+            return redirect('dashboard:settings')
+        except ValueError as e:
+            messages.error(request, f'Invalid inputs: {str(e)}')
+            
+    return render(request, 'dashboard/settings.html', {
+        'print_settings': settings_obj,
+        'page_title': 'Print Settings — My Jan Seva'
+    })
+
+
+

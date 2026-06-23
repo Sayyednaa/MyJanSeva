@@ -1588,33 +1588,53 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   /* Force print scaled dimensions */
-  .print-row-item .id-card {
-    width: var(--screen-card-w) !important;
-    height: var(--screen-card-h) !important;
-    zoom: 0.63 !important; /* Slightly smaller to fit both cards perfectly within A4 printable width */
-    box-shadow: none !important;
+  .print-row-item .print-card-scaler {
+    width: var(--print-card-w) !important;
+    height: var(--print-card-h) !important;
+    min-width: var(--print-card-w) !important;
+    max-width: var(--print-card-w) !important;
+    min-height: var(--print-card-h) !important;
+    max-height: var(--print-card-h) !important;
+    overflow: hidden !important;
+    position: relative !important;
+    display: block !important;
+    box-sizing: border-box !important;
     border: 1.5px dashed #888 !important;
     border-radius: 4.5mm !important;
+    margin: 2px !important;
+  }
+
+  .print-row-item .print-card-scaler .id-card {
+    width: var(--screen-card-w) !important;
+    height: var(--screen-card-h) !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    transform: scale(var(--print-card-scale-x, 0.6745), var(--print-card-scale-y, 0.6724)) !important;
+    transform-origin: top left !important;
+    zoom: none !important;
+    box-shadow: none !important;
+    border: none !important;
     background-color: #fff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     box-sizing: border-box !important;
-    margin: 2px !important;
+    margin: 0 !important;
   }
 
-  .print-row-item .card-front {
+  .print-row-item .print-card-scaler:first-child {
     margin-right: 0 !important;
   }
 
-  .print-row-item .card-back {
+  .print-row-item .print-card-scaler:last-child {
     margin-left: 0 !important;
   }
 
-  .print-row-item .id-card .card-header-overlay {
+  .print-row-item .print-card-scaler .id-card .card-header-overlay {
     display: none !important;
   }
 
-  .print-row-item .id-card .card-footer-overlay {
+  .print-row-item .print-card-scaler .id-card .card-footer-overlay {
     display: none !important;
   }
 
@@ -1652,12 +1672,12 @@ h1, h2, h3, h4, h5, h6 {
     box-sizing: border-box !important;
   }
 
-  .print-row-item .id-card.design-3-back {
-    height: auto !important;
+  .print-row-item .print-card-scaler .id-card.design-3-back {
+    height: var(--screen-card-h) !important;
     min-height: var(--screen-card-h) !important;
     background-image: none !important;
     background-color: #ffffff !important;
-    overflow: visible !important;
+    overflow: hidden !important;
   }
 
   .print-row-item .id-card.design-3-back .d3-back-header,

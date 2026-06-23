@@ -37,3 +37,15 @@ class Todo(models.Model):
     def __str__(self):
         return f"{self.title} - {self.user.username} ({'Completed' if self.is_completed else 'Pending'})"
 
+
+class PrintSettings(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='print_settings')
+    farmer_id_width = models.FloatField(default=3.22)
+    farmer_id_height = models.FloatField(default=2.15)
+    ration_card_width = models.FloatField(default=3.71)
+    ration_card_height = models.FloatField(default=2.34)
+
+    def __str__(self):
+        return f"Print Settings for {self.user.username}"
+
+

@@ -6,6 +6,12 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 <link rel="stylesheet" href="{% static 'id_cards/farmer_id/style.css' %}?v={% now 'U' %}">
+<style>
+  :root {
+    --print-card-w: {{ print_settings.farmer_id_width|default:"3.22" }}in !important;
+    --print-card-h: {{ print_settings.farmer_id_height|default:"2.15" }}in !important;
+  }
+</style>
 
 <div class="farmer-id-workspace-wrapper" style="height: 100%; display: flex; flex-direction: column;">
 

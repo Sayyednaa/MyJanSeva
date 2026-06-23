@@ -62,6 +62,7 @@ TEMPLATES = [
                 'apps.core.context_processors.site_settings',
                 'apps.pricing.context_processors.service_prices',
                 'apps.wallet.context_processors.wallet_balance',
+                'apps.dashboard.context_processors.print_settings',
             ],
         },
     },

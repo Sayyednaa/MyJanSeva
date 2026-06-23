@@ -1277,172 +1277,176 @@ async function printQueueA4Layout() {
     row.className = 'print-row-item';
     row.innerHTML = `
       <!-- Front side scaled for A4 print -->
-      <div class="id-card card-front design-${card.designStyle || '1'}-front">
-        <!-- Classic Front Layout (Designs 1 & 2) -->
-        <div class="classic-layout-front">
-          <!-- Logo -->
-          <img src="/static/id_cards/ration-card/logo.png" class="logo-ration"/>
-          <div class="card-body">
-            <div class="photo-container">
-              <img src="${card.photo || placeholderAvatar}">
-            </div>
-            <div class="card-details">
-              <div class="detail-grid">
-                <div id="card-number-grid-row" style="display: contents;">
-                  <div class="detail-label">Card No:</div>
-                  <div class="detail-val" id="card-number-grid">${card.cardNumber}</div>
-                </div>
-                <div class="detail-label">Head Of Family:</div>
-                <div class="detail-val">${card.headOfFamily}</div>
-                <div class="detail-label">Scheme:</div>
-                <div class="detail-val">${card.schemeName}</div>
-                <div class="detail-label">FPS No:</div>
-                <div class="detail-val">${card.fareShopNumber}</div>
-                <div class="detail-label">Mobile:</div>
-                <div class="detail-val">${card.mobile}</div>
-                <div class="detail-label">Issue:</div>
-                <div class="detail-val">${card.issueDate}</div>
-              </div>
-            </div>
-            <div class="qr-container">
-              <div class="print-qr-${card.id || idx}"></div>
-            </div>
-          </div>
-          <!-- Ration Card Pill Badge -->
-          <div class="id-badge-container" id="card-number-pill-container">
-            <div class="ration-id-badge">
-              Ration Card No: <span id="card-number-pill">${card.cardNumber}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Design 3 Front Layout -->
-        <div class="design3-layout-front">
-          <!-- Title & Shop No at top -->
-          <div class="d3-title-block">
-            <div class="d3-title-text">Ration Card</div>
-            <div class="d3-shop-no">Fare Price Shop No: <span>${card.fareShopNumber}</span></div>
-          </div>
-          
-          <!-- Content section -->
-          <div class="d3-content-section">
-            <!-- Left column: Photo and Issue Date -->
-            <div class="d3-photo-col">
-              <div class="d3-photo-container">
+      <div class="print-card-scaler">
+        <div class="id-card card-front design-${card.designStyle || '1'}-front">
+          <!-- Classic Front Layout (Designs 1 & 2) -->
+          <div class="classic-layout-front">
+            <!-- Logo -->
+            <img src="/static/id_cards/ration-card/logo.png" class="logo-ration"/>
+            <div class="card-body">
+              <div class="photo-container">
                 <img src="${card.photo || placeholderAvatar}">
               </div>
-              <div class="d3-issue-block">
-                <div class="d3-issue-label">Issue Date</div>
-                <div class="d3-issue-val">${card.issueDate}</div>
+              <div class="card-details">
+                <div class="detail-grid">
+                  <div id="card-number-grid-row" style="display: contents;">
+                    <div class="detail-label">Card No:</div>
+                    <div class="detail-val" id="card-number-grid">${card.cardNumber}</div>
+                  </div>
+                  <div class="detail-label">Head Of Family:</div>
+                  <div class="detail-val">${card.headOfFamily}</div>
+                  <div class="detail-label">Scheme:</div>
+                  <div class="detail-val">${card.schemeName}</div>
+                  <div class="detail-label">FPS No:</div>
+                  <div class="detail-val">${card.fareShopNumber}</div>
+                  <div class="detail-label">Mobile:</div>
+                  <div class="detail-val">${card.mobile}</div>
+                  <div class="detail-label">Issue:</div>
+                  <div class="detail-val">${card.issueDate}</div>
+                </div>
+              </div>
+              <div class="qr-container">
+                <div class="print-qr-${card.id || idx}"></div>
+              </div>
+            </div>
+            <!-- Ration Card Pill Badge -->
+            <div class="id-badge-container" id="card-number-pill-container">
+              <div class="ration-id-badge">
+                Ration Card No: <span id="card-number-pill">${card.cardNumber}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Design 3 Front Layout -->
+          <div class="design3-layout-front">
+            <!-- Title & Shop No at top -->
+            <div class="d3-title-block">
+              <div class="d3-title-text">Ration Card</div>
+              <div class="d3-shop-no">Fare Price Shop No: <span>${card.fareShopNumber}</span></div>
+            </div>
+            
+            <!-- Content section -->
+            <div class="d3-content-section">
+              <!-- Left column: Photo and Issue Date -->
+              <div class="d3-photo-col">
+                <div class="d3-photo-container">
+                  <img src="${card.photo || placeholderAvatar}">
+                </div>
+                <div class="d3-issue-block">
+                  <div class="d3-issue-label">Issue Date</div>
+                  <div class="d3-issue-val">${card.issueDate}</div>
+                </div>
+              </div>
+              
+              <!-- Right column: Details grid -->
+              <div class="d3-details-col">
+                <div class="d3-detail-row">
+                  <span class="d3-label">Scheme Name:</span>
+                  <span class="d3-val">${card.schemeName}</span>
+                </div>
+                <div class="d3-detail-row">
+                  <span class="d3-label">Head of Family:</span>
+                  <span class="d3-val">${card.headOfFamily}</span>
+                </div>
+                <div class="d3-detail-row">
+                  <span class="d3-label">Address:</span>
+                  <span class="d3-val d3-address">${card.address}</span>
+                </div>
+                <div class="d3-detail-row">
+                  <span class="d3-label">Mobile Number:</span>
+                  <span class="d3-val">${card.mobile}</span>
+                </div>
               </div>
             </div>
             
-            <!-- Right column: Details grid -->
-            <div class="d3-details-col">
-              <div class="d3-detail-row">
-                <span class="d3-label">Scheme Name:</span>
-                <span class="d3-val">${card.schemeName}</span>
+            <!-- Footer block -->
+            <div class="d3-footer-block">
+              <div class="d3-sig-placeholder"></div>
+              <div class="d3-number-block">
+                <div class="d3-number-label">Ration Card Number</div>
+                <div class="d3-number-val">${card.cardNumber}</div>
               </div>
-              <div class="d3-detail-row">
-                <span class="d3-label">Head of Family:</span>
-                <span class="d3-val">${card.headOfFamily}</span>
-              </div>
-              <div class="d3-detail-row">
-                <span class="d3-label">Address:</span>
-                <span class="d3-val d3-address">${card.address}</span>
-              </div>
-              <div class="d3-detail-row">
-                <span class="d3-label">Mobile Number:</span>
-                <span class="d3-val">${card.mobile}</span>
-              </div>
+              <div class="d3-sig-placeholder"></div>
             </div>
+            <div class="d3-footer-email">up.fncs@gmail.com</div>
           </div>
-          
-          <!-- Footer block -->
-          <div class="d3-footer-block">
-            <div class="d3-sig-placeholder"></div>
-            <div class="d3-number-block">
-              <div class="d3-number-label">Ration Card Number</div>
-              <div class="d3-number-val">${card.cardNumber}</div>
-            </div>
-            <div class="d3-sig-placeholder"></div>
-          </div>
-          <div class="d3-footer-email">up.fncs@gmail.com</div>
         </div>
       </div>
 
       <!-- Back side scaled for A4 print -->
-      <div class="id-card card-back design-${card.designStyle || '1'}-back">
-        <!-- Classic Back Layout (Designs 1 & 2) -->
-        <div class="classic-layout-back">
-          <div class="card-back-body">
-            <div class="back-header-row">
-              <div class="back-title">Family Details</div>
-              <div class="back-card-no">${card.cardNumber}</div>
+      <div class="print-card-scaler">
+        <div class="id-card card-back design-${card.designStyle || '1'}-back">
+          <!-- Classic Back Layout (Designs 1 & 2) -->
+          <div class="classic-layout-back">
+            <div class="card-back-body">
+              <div class="back-header-row">
+                <div class="back-title">Family Details</div>
+                <div class="back-card-no">${card.cardNumber}</div>
+              </div>
+              <div class="address-container">
+                <strong>Address:</strong> <span>${card.address}</span>
+              </div>
+              <div class="members-table-container">
+                <table class="card-members-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 25px;">S.R.</th>
+                      <th>Member Name</th>
+                      <th style="width: 30px;">Age</th>
+                      <th style="width: 30px;">Gnd</th>
+                      <th style="width: 55px;">Relation</th>
+                      <th>Aadhaar No.</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${(card.familyMembers || []).slice(0, 5).map(m => `
+                      <tr>
+                        <td>${m.sr}</td>
+                        <td style="font-weight: 700;">${m.name}</td>
+                        <td>${m.age}</td>
+                        <td>${m.gender}</td>
+                        <td>${m.relation}</td>
+                        <td style="font-family: monospace;">${m.aadhaar}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <div class="address-container">
-              <strong>Address:</strong> <span>${card.address}</span>
+          </div>
+
+          <!-- Design 3 Back Layout -->
+          <div class="design3-layout-back">
+            <div class="d3-back-header">
+              <img src="/static/id_cards/ration-card/design 3 back header.png" alt="Header">
             </div>
-            <div class="members-table-container">
-              <table class="card-members-table">
+            <div class="d3-back-content">
+              <table class="d3-members-table">
                 <thead>
                   <tr>
-                    <th style="width: 25px;">S.R.</th>
-                    <th>Member Name</th>
-                    <th style="width: 30px;">Age</th>
-                    <th style="width: 30px;">Gnd</th>
-                    <th style="width: 55px;">Relation</th>
-                    <th>Aadhaar No.</th>
+                    <th style="width: 5%;">Sr</th>
+                    <th style="width: 32%;">Member Name</th>
+                    <th style="width: 15%;">Age/Gender</th>
+                    <th style="width: 20%;">Relation</th>
+                    <th style="width: 28%;">Aadhar No.</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${(card.familyMembers || []).slice(0, 5).map(m => `
+                  ${(card.familyMembers || []).map(m => `
                     <tr>
                       <td>${m.sr}</td>
                       <td style="font-weight: 700;">${m.name}</td>
-                      <td>${m.age}</td>
-                      <td>${m.gender}</td>
+                      <td>${m.age} / ${m.gender.toUpperCase()}</td>
                       <td>${m.relation}</td>
-                      <td style="font-family: monospace;">${m.aadhaar}</td>
+                      <td>${m.aadhaar}</td>
                     </tr>
                   `).join('')}
                 </tbody>
               </table>
             </div>
-          </div>
-        </div>
-
-        <!-- Design 3 Back Layout -->
-        <div class="design3-layout-back">
-          <div class="d3-back-header">
-            <img src="/static/id_cards/ration-card/design 3 back header.png" alt="Header">
-          </div>
-          <div class="d3-back-content">
-            <table class="d3-members-table">
-              <thead>
-                <tr>
-                  <th style="width: 5%;">Sr</th>
-                  <th style="width: 32%;">Member Name</th>
-                  <th style="width: 15%;">Age/Gender</th>
-                  <th style="width: 20%;">Relation</th>
-                  <th style="width: 28%;">Aadhar No.</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${(card.familyMembers || []).map(m => `
-                  <tr>
-                    <td>${m.sr}</td>
-                    <td style="font-weight: 700;">${m.name}</td>
-                    <td>${m.age} / ${m.gender.toUpperCase()}</td>
-                    <td>${m.relation}</td>
-                    <td>${m.aadhaar}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-          <div class="d3-back-footer">
-            <img src="/static/id_cards/ration-card/design 3 back footer.png" alt="Footer">
+            <div class="d3-back-footer">
+              <img src="/static/id_cards/ration-card/design 3 back footer.png" alt="Footer">
+            </div>
           </div>
         </div>
       </div>
