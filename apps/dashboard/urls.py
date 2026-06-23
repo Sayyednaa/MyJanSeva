@@ -16,4 +16,8 @@ urlpatterns = [
     path('dashboard/admin/support/<int:pk>/reply/', views.admin_support_reply, name='admin_support_reply'),
     path('terms/', views.terms_view, name='terms'),
     path('privacy/', views.privacy_view, name='privacy'),
+    path('todos/', views.todo_list, name='todo_list'),
+    path('todos/create/', views.todo_create, name='todo_create'),
+    path('todos/<int:pk>/toggle/', views.todo_toggle, name='todo_toggle'),
+    path('todos/<int:pk>/delete/', views.todo_delete, name='todo_delete'),
 ]

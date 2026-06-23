@@ -88,6 +88,39 @@
 </div>
 
 <div class="grid-2">
+  <!-- Today's Tasks -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="bi bi-check2-square"></i> Today's Tasks</div>
+      <a href="{% url 'dashboard:todo_list' %}" class="btn btn-secondary btn-sm">Manage Tasks</a>
+    </div>
+    <div style="padding: 20px; display: flex; flex-direction: column; gap: 12px; max-height: 350px; overflow-y: auto;">
+      {% if today_todos %}
+        {% for t in today_todos %}
+          <div class="todo-item-card" data-id="{{ t.id }}" style="border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; background: {% if t.is_completed %}rgba(64, 145, 108, 0.04){% else %}var(--bg-raised){% endif %}; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s ease; {% if t.is_completed %}opacity: 0.75;{% endif %}">
+            <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+              <input type="checkbox" class="todo-toggle-checkbox" data-id="{{ t.id }}" {% if t.is_completed %}checked{% endif %} style="width: 18px; height: 18px; cursor: pointer;">
+              <div>
+                <span class="todo-title" style="font-weight: 700; font-size: 14px; color: var(--text-primary); {% if t.is_completed %}text-decoration: line-through; color: var(--text-tertiary);{% endif %}">{{ t.title }}</span>
+                {% if t.description %}
+                  <p class="todo-desc text-xs text-secondary" style="margin-top: 2px; line-height: 1.3; {% if t.is_completed %}text-decoration: line-through;{% endif %}">{{ t.description|truncatechars:50 }}</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state" style="padding: 30px; text-align: center;">
+          <i class="bi bi-emoji-smile-fill" style="font-size: 32px; color: var(--primary-color); opacity: 0.8; margin-bottom: 8px;"></i>
+          <p style="margin-bottom: 12px; font-size: 0.9rem;">No tasks due today!</p>
+          <a href="{% url 'dashboard:todo_list' %}" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 4px;">
+            <i class="bi bi-plus-lg"></i> Create Task
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
   <!-- Recent Usage -->
   <div class="card">
     <div class="card-header">
@@ -146,4 +179,63 @@
     {% endif %}
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  document.querySelectorAll('.todo-toggle-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      const todoId = this.dataset.id;
+      const todoCard = document.querySelector(`.todo-item-card[data-id="${todoId}"]`);
+      const titleSpan = todoCard.querySelector('.todo-title');
+      const descPara = todoCard.querySelector('.todo-desc');
+      
+      fetch(`/todos/${todoId}/toggle/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrftoken,
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          if (data.is_completed) {
+            todoCard.style.background = 'rgba(64, 145, 108, 0.04)';
+            todoCard.style.opacity = '0.75';
+            titleSpan.style.textDecoration = 'line-through';
+            titleSpan.style.color = 'var(--text-tertiary)';
+            if (descPara) descPara.style.textDecoration = 'line-through';
+          } else {
+            todoCard.style.background = 'var(--bg-raised)';
+            todoCard.style.opacity = '1';
+            titleSpan.style.textDecoration = 'none';
+            titleSpan.style.color = 'var(--text-primary)';
+            if (descPara) descPara.style.textDecoration = 'none';
+          }
+        }
+      })
+      .catch(err => {
+        console.error('Error toggling todo:', err);
+        this.checked = !this.checked;
+      });
+    });
+  });
+});
+</script>
 {% endblock %}

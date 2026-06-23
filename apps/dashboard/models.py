@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 
 class SupportTicket(models.Model):
     STATUS_CHOICES = [
@@ -19,3 +20,20 @@ class SupportTicket(models.Model):
 
     def __str__(self):
         return f"Ticket #{self.id} - {self.subject} ({self.user.username})"
+
+
+class Todo(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='todos')
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, default='')
+    due_date = models.DateField(default=timezone.localdate)
+    is_completed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['is_completed', 'due_date', '-created_at']
+
+    def __str__(self):
+        return f"{self.title} - {self.user.username} ({'Completed' if self.is_completed else 'Pending'})"
+

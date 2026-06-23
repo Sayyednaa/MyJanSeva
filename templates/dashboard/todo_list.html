@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Todo List</h1>
+    <div class="subtitle">Organize, track, and manage your daily operator tasks</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Create Task Form -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="bi bi-plus-square-fill"></i> Create New Task</div>
+    </div>
+    <div style="padding: 20px;">
+      <form method="post" action="{% url 'dashboard:todo_create' %}">
+        {% csrf_token %}
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label" style="font-weight: 600;">Task Title *</label>
+          <input type="text" name="title" class="form-control" placeholder="E.g., Renew shop register license, call Ramu Prasad" required style="width: 100%;">
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label" style="font-weight: 600;">Description</label>
+          <textarea name="description" class="form-control" placeholder="Provide extra details about the task..." rows="3" style="width: 100%; resize: vertical; min-height: 80px;"></textarea>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label class="form-label" style="font-weight: 600;">Due Date *</label>
+          <input type="date" name="due_date" class="form-control" value="{% now 'Y-m-d' %}" required style="width: 100%;">
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-block">
+          <i class="bi bi-plus-lg"></i> Create Task
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Task List -->
+  <div class="card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 20px;">
+      <div class="card-title" style="margin-bottom: 0;"><i class="bi bi-check2-square"></i> Tasks</div>
+      <div style="display: flex; gap: 8px;">
+        <a href="?filter=all" class="btn {% if filter_type == 'all' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">All</a>
+        <a href="?filter=pending" class="btn {% if filter_type == 'pending' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Pending</a>
+        <a href="?filter=completed" class="btn {% if filter_type == 'completed' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Completed</a>
+      </div>
+    </div>
+    
+    <div style="padding: 20px; display: flex; flex-direction: column; gap: 12px; max-height: 600px; overflow-y: auto;">
+      {% if todos %}
+        {% for t in todos %}
+          <div class="todo-item-card" data-id="{{ t.id }}" style="border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; background: {% if t.is_completed %}rgba(64, 145, 108, 0.04){% else %}var(--bg-raised){% endif %}; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; {% if t.is_completed %}opacity: 0.75;{% endif %}">
+            <div style="display: flex; align-items: flex-start; gap: 12px; flex: 1; margin-right: 12px;">
+              <input type="checkbox" class="todo-toggle-checkbox" data-id="{{ t.id }}" {% if t.is_completed %}checked{% endif %} style="width: 18px; height: 18px; cursor: pointer; margin-top: 3px;">
+              <div>
+                <span class="todo-title" style="font-weight: 700; font-size: 15px; color: var(--text-primary); {% if t.is_completed %}text-decoration: line-through; color: var(--text-tertiary);{% endif %}">{{ t.title }}</span>
+                {% if t.description %}
+                  <p class="todo-desc text-xs text-secondary" style="margin-top: 4px; line-height: 1.4; {% if t.is_completed %}text-decoration: line-through;{% endif %}">{{ t.description }}</p>
+                {% endif %}
+                <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px;">
+                  <span class="badge" style="font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 12px;
+                    {% if t.is_completed %}
+                      background: #e2e8f0; color: #475569;
+                    {% elif t.due_date == today %}
+                      background: #fee2e2; color: #ef4444; border: 1px solid #fecaca;
+                    {% else %}
+                      background: var(--light-sage); color: var(--primary-color);
+                    {% endif %}
+                  ">
+                    <i class="bi bi-calendar-event"></i> {{ t.due_date|date:"d M Y" }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <a href="{% url 'dashboard:todo_delete' t.id %}" class="btn btn-danger btn-icon btn-sm" onclick="return confirm('Are you sure you want to delete this task?')" style="padding: 5px;" title="Delete Task">
+              <i class="bi bi-trash-fill" style="font-size: 0.8rem;"></i>
+            </a>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state" style="padding: 40px; text-align: center;">
+          <i class="bi bi-journal-check" style="font-size: 40px; color: var(--text-tertiary); margin-bottom: 12px;"></i>
+          <p>No tasks found.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // CSRF safe fetch helper
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  document.querySelectorAll('.todo-toggle-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      const todoId = this.dataset.id;
+      const todoCard = document.querySelector(`.todo-item-card[data-id="${todoId}"]`);
+      const titleSpan = todoCard.querySelector('.todo-title');
+      const descPara = todoCard.querySelector('.todo-desc');
+      
+      fetch(`/todos/${todoId}/toggle/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrftoken,
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          if (data.is_completed) {
+            todoCard.style.background = 'rgba(64, 145, 108, 0.04)';
+            todoCard.style.opacity = '0.75';
+            titleSpan.style.textDecoration = 'line-through';
+            titleSpan.style.color = 'var(--text-tertiary)';
+            if (descPara) descPara.style.textDecoration = 'line-through';
+          } else {
+            todoCard.style.background = 'var(--bg-raised)';
+            todoCard.style.opacity = '1';
+            titleSpan.style.textDecoration = 'none';
+            titleSpan.style.color = 'var(--text-primary)';
+            if (descPara) descPara.style.textDecoration = 'none';
+          }
+        }
+      })
+      .catch(err => {
+        console.error('Error toggling todo:', err);
+        // revert check state on failure
+        this.checked = !this.checked;
+      });
+    });
+  });
+});
+</script>
+{% endblock %}

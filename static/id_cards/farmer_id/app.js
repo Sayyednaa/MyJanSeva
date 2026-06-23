@@ -1322,8 +1322,12 @@ async function printQueueA4Layout() {
   resolvedCards.forEach((card, index) => {
     if (index % cardsPerPage === 0) {
       currentPrintPage = document.createElement('div');
-      currentPrintPage.className = 'print-page';
+      currentPrintPage.className = `print-page cards-per-page-${cardsPerPage}`;
       printContainer.appendChild(currentPrintPage);
+    } else {
+      const hr = document.createElement('div');
+      hr.className = 'print-horizontal-divider';
+      currentPrintPage.appendChild(hr);
     }
     const row = createCardPrintRowHTML(card, index);
     currentPrintPage.appendChild(row);
@@ -1431,6 +1435,8 @@ function createCardPrintRowHTML(card, index) {
         <span class="footer-hi">FARMER ID</span>
       </div>
     </div>
+
+    <div class="print-vertical-divider"></div>
 
     <!-- BACK OF CARD -->
     <div class="id-card card-back ${selectedDesign === '2' ? 'design-2-back' : selectedDesign === '3' ? 'design-3-back' : ''}">

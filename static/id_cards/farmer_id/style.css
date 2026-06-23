@@ -38,8 +38,8 @@
   --screen-card-h: 334px;
   
   /* Print ID Card Dimensions (Increased by 10%) */
-  --print-card-w: 3.71in;
-  --print-card-h: 2.34in;
+  --print-card-w: 3.22in;
+  --print-card-h: 2.15in;
 }
 
 /* Reset & Base */
@@ -1092,10 +1092,7 @@ tr {
 }
 
 .queue-card-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  display: none !important;
 }
 
 .queue-card-info h4 {
@@ -1120,7 +1117,9 @@ tr {
 }
 
 /* Print Only Class */
-.print-only {
+.print-only,
+.print-vertical-divider,
+.print-horizontal-divider {
   display: none;
 }
 
@@ -1183,7 +1182,7 @@ tr {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8mm; /* Space between ID card rows */
+    gap: 0 !important; /* Gaps are handled by divider margins */
     width: 100% !important;
     box-sizing: border-box;
   }
@@ -1198,10 +1197,39 @@ tr {
     flex-direction: row !important;
     justify-content: center !important;
     align-items: center !important;
-    gap: 2mm !important; /* Gap between front and back sides */
+    gap: 0 !important; /* Centers the divider inside the gap */
     page-break-inside: avoid;
     width: 100%;
     box-sizing: border-box;
+  }
+
+  /* Print Dividers Styling */
+  .print-vertical-divider {
+    display: block !important;
+    width: 0 !important;
+    height: var(--print-card-h) !important;
+    border-left: 1px dotted #888888 !important;
+    margin: 0 1mm !important; /* 1mm on each side = 2mm gap */
+    box-sizing: border-box !important;
+  }
+
+  .print-horizontal-divider {
+    display: block !important;
+    width: 100% !important;
+    max-width: calc(var(--print-card-w) * 2 + 2mm) !important; /* Fits cards width + vertical divider */
+    height: 0 !important;
+    border-top: 1px dotted #888888 !important;
+    margin: 4mm 0 !important; /* 8mm total gap */
+    box-sizing: border-box !important;
+  }
+
+  /* Gap overrides based on cardsPerPage setting */
+  .print-page.cards-per-page-5 .print-horizontal-divider {
+    margin: 0.75mm 0 !important; /* 1.5mm total gap */
+  }
+
+  .print-page.cards-per-page-4 .print-horizontal-divider {
+    margin: 2mm 0 !important; /* 4mm total gap */
   }
 
   /* Overwrite card sizing for exact physical dimensions on A4 paper */
@@ -1228,119 +1256,120 @@ tr {
 
   /* Subtly scale contents within card to fit smaller layout */
   .print-only .card-header {
-    padding: 1.5mm 3.5mm !important;
+    padding: 1.2mm 3mm !important;
   }
 
   .print-only .card-logo-text {
-    font-size: 8.5pt !important;
+    font-size: 7.5pt !important;
   }
 
   .print-only .card-title-main {
-    font-size: 8.5pt !important;
+    font-size: 7.5pt !important;
   }
 
   .print-only .card-body {
-    grid-template-columns: 21mm 1fr 16mm !important;
-    padding: 0 3.5mm !important;
-    gap: 2.5mm !important;
+    grid-template-columns: 18mm 1fr 13.5mm !important;
+    padding: 0 3mm !important;
+    gap: 2mm !important;
     align-items: center !important;
     margin-top: 5px;
   }
 
   .print-only .photo-container {
-    width: 21mm !important;
-    height: 25.5mm !important;
-    border-radius: 1.5mm !important;
+    width: 18mm !important;
+    height: 21.5mm !important;
+    border-radius: 1.2mm !important;
   }
 
   .print-only .detail-name {
-    font-size: 8.5pt !important;
+    font-size: 7.5pt !important;
   }
 
   .print-only .detail-name-hi {
-    font-size: 8pt !important;
+    font-size: 7pt !important;
     margin-top: 0 !important;
   }
 
   .print-only .detail-grid {
-    row-gap: 0.5mm !important;
-    column-gap: 1.5mm !important;
-    margin-top: 1mm !important;
+    row-gap: 0.4mm !important;
+    column-gap: 1.2mm !important;
+    margin-top: 0.8mm !important;
   }
 
   .print-only .detail-label {
-    font-size: 5.5pt !important;
+    font-size: 4.8pt !important;
   }
 
   .print-only .detail-val {
-    font-size: 6.5pt !important;
+    font-size: 5.5pt !important;
   }
 
   .print-only .qr-container {
-    width: 16mm !important;
-    height: 16mm !important;
-    padding: 0.8mm !important;
+    width: 13.5mm !important;
+    height: 13.5mm !important;
+    padding: 0.7mm !important;
     border-radius: 1mm !important;
+    background-color: #ffffff !important;
+    border: 1.5px solid #ffffff !important;
   }
 
   .print-only .id-badge-container {
-    margin-bottom: 1mm !important;
+    margin-bottom: 0.5mm !important;
   }
 
   .print-only .farmer-id-badge {
-    padding: 0.6mm 4mm !important;
-    font-size: 6pt !important;
+    padding: 0.5mm 3.4mm !important;
+    font-size: 5pt !important;
     border-radius: 20mm !important;
     margin-bottom: 20px;
     margin-right: 20px;
   }
 
   .print-only .card-footer {
-    padding: 1.2mm 3.5mm !important;
-
+    padding: 1mm 3mm !important;
   }
 
   .print-only .card-footer .disclaimer {
-    font-size: 3.5pt !important;
+    font-size: 3pt !important;
   }
 
   .print-only .card-footer .footer-hi {
-    font-size: 6.5pt !important;
+    font-size: 5.5pt !important;
   }
 
   /* Back Card Print Layout */
   .print-only .card-back-body {
-    padding: 0 3.5mm 1.5mm 3.5mm !important;
-    gap: 1.5mm !important;
+    padding: 0 3mm 1.2mm 3mm !important;
+    gap: 1.2mm !important;
   }
 
   .print-only .address-container {
-    font-size: 6.5pt !important;
-    line-height: 1.25 !important;
+    font-size: 5.5pt !important;
+    line-height: 1.15 !important;
   }
 
   .print-only .address-container strong {
-    font-size: 6.8pt !important;
+    font-size: 5.8pt !important;
   }
 
   .print-only .field-table-container {
-    border-radius: 1.5mm !important;
+    border-radius: 1.2mm !important;
   }
 
   .print-only .card-field-table th {
-    padding: 0.8mm 1.2mm !important;
-    font-size: 5pt !important;
+    padding: 0.7mm 1mm !important;
+    font-size: 4.5pt !important;
   }
 
   .print-only .card-field-table td {
-    padding: 0.6mm 1.2mm !important;
-    font-size: 5.5pt !important;
+    padding: 0.5mm 1mm !important;
+    font-size: 4.7pt !important;
   }
 
   /* Keep leaf decorations printing cleanly */
   .print-only .leaf-decor {
-    width: 25mm !important;
-    height: 25mm !important;
+    width: 21mm !important;
+    height: 21mm !important;
     opacity: 0.15 !important;
   }
 

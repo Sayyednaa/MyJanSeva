@@ -1,0 +1,75 @@
+from django.test import TestCase, Client
+from django.urls import reverse
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+from apps.dashboard.models import Todo
+
+User = get_user_model()
+
+class TodoSystemTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.username = 'testoperator'
+        self.password = 'testpass123'
+        self.user = User.objects.create_user(
+            username=self.username,
+            password=self.password,
+            email='operator@test.com',
+            role='operator'
+        )
+        self.todo = Todo.objects.create(
+            user=self.user,
+            title='Test Task',
+            description='Test Description',
+            due_date=timezone.localdate()
+        )
+
+    def test_todo_model_creation(self):
+        self.assertEqual(self.todo.title, 'Test Task')
+        self.assertEqual(self.todo.description, 'Test Description')
+        self.assertEqual(self.todo.due_date, timezone.localdate())
+        self.assertFalse(self.todo.is_completed)
+        self.assertEqual(str(self.todo), f"Test Task - {self.user.username} (Pending)")
+
+    def test_todo_list_unauthenticated(self):
+        response = self.client.get(reverse('dashboard:todo_list'))
+        self.assertEqual(response.status_code, 302) # Redirect to login
+
+    def test_todo_list_authenticated(self):
+        self.client.login(username=self.username, password=self.password)
+        response = self.client.get(reverse('dashboard:todo_list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Test Task')
+
+    def test_todo_create_view(self):
+        self.client.login(username=self.username, password=self.password)
+        response = self.client.post(reverse('dashboard:todo_create'), {
+            'title': 'New Task',
+            'description': 'New Description',
+            'due_date': str(timezone.localdate())
+        })
+        self.assertEqual(response.status_code, 302) # Redirects back to todo_list
+        self.assertTrue(Todo.objects.filter(title='New Task').exists())
+
+    def test_todo_toggle_view(self):
+        self.client.login(username=self.username, password=self.password)
+        response = self.client.post(reverse('dashboard:todo_toggle', args=[self.todo.id]))
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['status'], 'success')
+        self.assertTrue(data['is_completed'])
+        
+        self.todo.refresh_from_db()
+        self.assertTrue(self.todo.is_completed)
+
+    def test_todo_delete_view(self):
+        self.client.login(username=self.username, password=self.password)
+        response = self.client.get(reverse('dashboard:todo_delete', args=[self.todo.id]))
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Todo.objects.filter(id=self.todo.id).exists())
+
+    def test_dashboard_shows_todays_todos(self):
+        self.client.login(username=self.username, password=self.password)
+        response = self.client.get(reverse('dashboard:home'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Test Task')

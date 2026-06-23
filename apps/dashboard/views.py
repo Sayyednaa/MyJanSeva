@@ -51,6 +51,10 @@ def user_dashboard(request):
     recent_txns = WalletTransaction.objects.filter(wallet=wallet)[:5]
     customers_count = Customer.objects.filter(created_by=request.user).count()
 
+    # Query today's todos
+    from .models import Todo
+    today_todos = Todo.objects.filter(user=request.user, due_date=today)
+
     return render(request, 'dashboard/user.html', {
         'wallet': wallet,
         'today_usage': today_usage,
@@ -58,6 +62,7 @@ def user_dashboard(request):
         'recent_usage': recent_usage,
         'recent_txns': recent_txns,
         'customers_count': customers_count,
+        'today_todos': today_todos,
         'page_title': 'Dashboard',
     })
 
@@ -318,5 +323,71 @@ def admin_support_reply(request, pk):
         ticket.save()
         messages.success(request, f'Reply sent to ticket #{ticket.id}.')
     return redirect('dashboard:admin_support')
+
+
+from .models import Todo
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+
+@login_required
+def todo_list(request):
+    filter_type = request.GET.get('filter', 'all')
+    todos = Todo.objects.filter(user=request.user)
+    
+    if filter_type == 'pending':
+        todos = todos.filter(is_completed=False)
+    elif filter_type == 'completed':
+        todos = todos.filter(is_completed=True)
+        
+    return render(request, 'dashboard/todo_list.html', {
+        'todos': todos,
+        'filter_type': filter_type,
+        'page_title': 'Todo Task List',
+    })
+
+@login_required
+def todo_create(request):
+    if request.method == 'POST':
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        due_date_str = request.POST.get('due_date', '').strip()
+        
+        if not title:
+            messages.error(request, 'Task title is required.')
+            return redirect('dashboard:todo_list')
+            
+        due_date = None
+        if due_date_str:
+            try:
+                due_date = timezone.datetime.strptime(due_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+                
+        Todo.objects.create(
+            user=request.user,
+            title=title,
+            description=description,
+            due_date=due_date or timezone.localdate()
+        )
+        messages.success(request, 'Task created successfully.')
+    return redirect('dashboard:todo_list')
+
+@login_required
+@require_POST
+def todo_toggle(request, pk):
+    todo = get_object_or_404(Todo, pk=pk, user=request.user)
+    todo.is_completed = not todo.is_completed
+    todo.save()
+    return JsonResponse({
+        'status': 'success',
+        'is_completed': todo.is_completed
+    })
+
+@login_required
+def todo_delete(request, pk):
+    todo = get_object_or_404(Todo, pk=pk, user=request.user)
+    todo.delete()
+    messages.success(request, 'Task deleted successfully.')
+    return redirect('dashboard:todo_list')
 
 

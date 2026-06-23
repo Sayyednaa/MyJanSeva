@@ -1,203 +1,333 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% load static %}
 {% block title %}My Jan Seva — Complete Document & ID Services Platform{% endblock %}
 
+{% block extra_css %}
+<style>
+  .landing-wrap * { box-sizing: border-box; }
+  .landing-wrap { font-family: 'Inter', sans-serif; color: var(--text-primary); overflow-x: hidden; }
+
+  /* ── Top Navbar ── */
+  .lp-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 6%; position: sticky; top: 0; z-index: 999;
+    background: rgba(15,15,25,0.75);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .lp-nav-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; text-decoration: none; }
+  .lp-nav-logo { background: #fff; padding: 5px; border-radius: 8px; display: inline-flex; width: 34px; height: 34px; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .lp-nav-logo img { width: 22px; height: 22px; object-fit: contain; }
+  .lp-nav-title { background: linear-gradient(135deg, var(--accent) 0%, #10b981 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .lp-nav-actions { display: flex; align-items: center; gap: 12px; }
+  .lp-btn-ghost { background: transparent; color: var(--text-primary); border: 1px solid rgba(255,255,255,0.15); padding: 9px 20px; border-radius: 8px; font-weight: 500; font-size: 14px; text-decoration: none; cursor: pointer; transition: all 0.2s; }
+  .lp-btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .lp-btn-primary { background: linear-gradient(135deg, var(--accent) 0%, #0ea5e9 100%); color: #fff; border: none; padding: 10px 22px; border-radius: 8px; font-weight: 600; font-size: 14px; text-decoration: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 14px rgba(99,102,241,0.35); display: inline-block; }
+  .lp-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.5); color: #fff; }
+
+  /* ── Hero ── */
+  .lp-hero {
+    position: relative; min-height: 90vh; display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 80px 6% 60px; overflow: hidden;
+  }
+  .lp-hero-orb-1 { position: absolute; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%); top: -150px; right: -100px; pointer-events: none; animation: floatOrb 8s ease-in-out infinite; }
+  .lp-hero-orb-2 { position: absolute; width: 500px; height: 500px; border-radius: 50%; background: radial-gradient(circle, rgba(16,185,129,0.14) 0%, transparent 70%); bottom: -100px; left: -100px; pointer-events: none; animation: floatOrb 10s ease-in-out infinite reverse; }
+  .lp-hero-orb-3 { position: absolute; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(245,158,11,0.09) 0%, transparent 70%); top: 40%; left: 10%; pointer-events: none; animation: floatOrb 12s ease-in-out infinite 2s; }
+  @keyframes floatOrb { 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(20px,-30px) scale(1.05);} }
+
+  .lp-hero-content { position: relative; z-index: 2; max-width: 820px; margin: 0 auto; }
+  .lp-badge { display: inline-flex; align-items: center; gap: 7px; background: rgba(99,102,241,0.12); color: var(--accent); padding: 7px 16px; border-radius: 99px; font-size: 12px; font-weight: 700; border: 1px solid rgba(99,102,241,0.25); margin-bottom: 28px; letter-spacing: 0.5px; animation: fadeSlideDown 0.6s ease both; }
+  .lp-hero-h1 { font-size: clamp(36px,6vw,62px); font-weight: 900; line-height: 1.1; letter-spacing: -2px; margin-bottom: 24px; color: var(--text-primary); animation: fadeSlideDown 0.7s ease 0.1s both; }
+  .lp-hero-h1 .gradient-text { background: linear-gradient(135deg, var(--accent) 0%, #06b6d4 40%, #10b981 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .lp-hero-sub { font-size: 18px; color: var(--text-secondary); line-height: 1.65; max-width: 600px; margin: 0 auto 40px; animation: fadeSlideDown 0.7s ease 0.2s both; }
+  .lp-hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; animation: fadeSlideDown 0.7s ease 0.3s both; }
+  .lp-btn-lg { padding: 15px 32px; font-size: 16px; font-weight: 700; border-radius: 10px; }
+  .lp-hero-stats { display: flex; justify-content: center; gap: 40px; margin-top: 60px; flex-wrap: wrap; animation: fadeSlideDown 0.7s ease 0.4s both; }
+  .lp-stat { text-align: center; }
+  .lp-stat-num { font-size: 32px; font-weight: 900; background: linear-gradient(135deg, var(--accent) 0%, #10b981 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .lp-stat-label { font-size: 12px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+  .lp-stat-divider { width: 1px; background: rgba(255,255,255,0.1); height: 50px; align-self: center; }
+  @keyframes fadeSlideDown { from{opacity:0;transform:translateY(-20px);} to{opacity:1;transform:translateY(0);} }
+
+  /* ── Feature Grid ── */
+  .lp-section { padding: 100px 6%; }
+  .lp-section-label { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; color: var(--accent); }
+  .lp-section-title { font-size: clamp(28px,4vw,44px); font-weight: 900; line-height: 1.2; letter-spacing: -1px; margin-bottom: 16px; }
+  .lp-section-sub { font-size: 16px; color: var(--text-secondary); max-width: 560px; line-height: 1.65; margin-bottom: 56px; }
+  .lp-features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+  .lp-feature-card { background: var(--bg-surface); border: 1px solid rgba(255,255,255,0.07); padding: 32px; border-radius: 16px; position: relative; overflow: hidden; transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s; cursor: default; }
+  .lp-feature-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(0,0,0,0.25); border-color: rgba(99,102,241,0.3); }
+  .lp-feature-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 20px; }
+  .icon-indigo { background: rgba(99,102,241,0.12); color: #818cf8; }
+  .icon-green  { background: rgba(16,185,129,0.12); color: #34d399; }
+  .icon-amber  { background: rgba(245,158,11,0.12); color: #fbbf24; }
+  .icon-rose   { background: rgba(244,63,94,0.12);  color: #fb7185; }
+  .icon-cyan   { background: rgba(6,182,212,0.12);  color: #22d3ee; }
+  .icon-violet { background: rgba(139,92,246,0.12); color: #a78bfa; }
+  .lp-feature-title { font-size: 17px; font-weight: 700; margin-bottom: 10px; }
+  .lp-feature-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+  /* ── Spotlight ── */
+  .lp-spotlight { padding: 100px 6%; background: linear-gradient(135deg, rgba(99,102,241,0.04) 0%, rgba(16,185,129,0.04) 100%); border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .lp-spotlight-inner { max-width: 1100px; margin: 0 auto; display: flex; gap: 60px; align-items: center; flex-wrap: wrap; }
+  .lp-spotlight-text { flex: 1; min-width: 280px; }
+  .lp-check-list { display: flex; flex-direction: column; gap: 14px; margin: 28px 0 36px; }
+  .lp-check-item { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; line-height: 1.5; }
+  .lp-check-item i { color: #10b981; font-size: 17px; flex-shrink: 0; margin-top: 1px; }
+  .lp-spotlight-visual { flex: 1; min-width: 300px; display: flex; justify-content: center; }
+  .lp-card-mockup { background: linear-gradient(145deg,#1b4332 0%,#2d6a4f 100%); padding: 28px; border-radius: 20px; width: 100%; max-width: 420px; box-shadow: 0 30px 60px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.06); position: relative; overflow: hidden; animation: floatCard 6s ease-in-out infinite; }
+  @keyframes floatCard { 0%,100%{transform:translateY(0) rotate(-1deg);} 50%{transform:translateY(-12px) rotate(0.5deg);} }
+  .lp-mockup-header { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+  .lp-mockup-logo { background:#fff; border-radius:50%; padding:4px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; }
+  .lp-mockup-logo img { width:24px; height:24px; object-fit:contain; }
+  .lp-mockup-title-hi { color:#fff; margin:0; font-size:12px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; }
+  .lp-mockup-title-en { color:rgba(255,255,255,0.6); margin:0; font-size:9px; font-weight:500; }
+  .lp-mockup-body { display:flex; gap:16px; }
+  .lp-mockup-photo { width:78px; height:98px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15); border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:rgba(255,255,255,0.35); flex-shrink:0; }
+  .lp-mockup-photo i { font-size:28px; margin-bottom:4px; }
+  .lp-mockup-photo span { font-size:7px; font-weight:700; text-transform:uppercase; }
+  .lp-mockup-fields { flex:1; display:flex; flex-direction:column; gap:8px; }
+  .lp-mock-field span { display:block; font-size:7px; color:rgba(255,255,255,0.45); font-weight:700; text-transform:uppercase; margin-bottom:1px; }
+  .lp-mock-field strong { font-size:11px; color:#fff; font-weight:700; display:block; }
+  .lp-mock-field p { font-size:10px; color:rgba(255,255,255,0.8); margin:0; font-weight:500; }
+  .lp-mockup-footer { margin-top:16px; background:rgba(0,0,0,0.2); border-radius:6px; padding:7px 12px; display:flex; justify-content:space-between; align-items:center; border:1px dashed rgba(255,255,255,0.15); }
+  .lp-mockup-id { font-size:8px; color:rgba(255,255,255,0.5); font-weight:600; }
+  .lp-mockup-id strong { color:#fff; font-family:monospace; font-size:9px; }
+  .lp-mockup-verified { color:#52b788; font-size:8px; font-weight:700; background:rgba(82,183,136,0.12); padding:2px 8px; border-radius:4px; }
+
+  /* ── How It Works ── */
+  .lp-steps { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; }
+  .lp-step { display:flex; gap:28px; align-items:flex-start; padding:28px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+  .lp-step:last-child { border-bottom:none; }
+  .lp-step-num { width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg,var(--accent) 0%,#0ea5e9 100%); color:#fff; font-weight:900; font-size:18px; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 14px rgba(99,102,241,0.4); }
+  .lp-step-content h4 { font-size:17px; font-weight:700; margin-bottom:6px; }
+  .lp-step-content p { font-size:14px; color:var(--text-secondary); line-height:1.6; margin:0; }
+
+  /* ── Disclaimer ── */
+  .lp-disclaimer { padding:60px 6%; background:var(--bg-surface); border-top:1px solid rgba(255,255,255,0.06); }
+  .lp-disclaimer-box { max-width:900px; margin:0 auto; background:rgba(239,68,68,0.07); border:1px solid rgba(239,68,68,0.3); padding:28px 32px; border-radius:16px; display:flex; flex-direction:column; gap:14px; }
+  .lp-disclaimer-title { color:#f87171; display:flex; align-items:center; gap:10px; font-size:16px; font-weight:800; margin:0; }
+  .lp-disclaimer-text { color:var(--text-primary); font-size:14px; line-height:1.7; margin:0; }
+  .lp-disclaimer-list { margin:0; padding-left:20px; color:var(--text-secondary); font-size:13.5px; line-height:1.7; display:flex; flex-direction:column; gap:6px; }
+
+  /* ── Footer ── */
+  .lp-footer { background:var(--bg-surface); padding:50px 6% 30px; border-top:1px solid rgba(255,255,255,0.07); }
+  .lp-footer-inner { max-width:1100px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:20px; }
+  .lp-footer-brand { display:flex; align-items:center; gap:10px; font-weight:800; font-size:16px; text-decoration:none; color:var(--text-primary); }
+  .lp-footer-links { display:flex; gap:28px; flex-wrap:wrap; }
+  .lp-footer-links a { color:var(--text-secondary); text-decoration:none; font-size:13px; font-weight:500; transition:color 0.2s; }
+  .lp-footer-links a:hover { color:var(--accent); }
+  .lp-footer-copy { font-size:12px; color:var(--text-tertiary); text-align:center; width:100%; margin-top:24px; padding-top:24px; border-top:1px solid rgba(255,255,255,0.06); }
+
+  @media (max-width: 640px) {
+    .lp-spotlight-inner { flex-direction: column; }
+    .lp-hero-stats { gap: 20px; }
+    .lp-stat-divider { display: none; }
+    .lp-nav-actions .lp-btn-ghost:not([id]) { display: none; }
+  }
+</style>
+{% endblock %}
+
 {% block auth_content %}
-<!-- Navbar -->
-<nav style="display: flex; justify-content: space-between; align-items: center; padding: 20px 5%; background: var(--bg-surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; backdrop-filter: blur(8px);">
-  <div style="display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; color: var(--accent);">
-    <div style="background: white; padding: 4px; border-radius: 6px; display: inline-flex; justify-content: center; align-items: center; width: 32px; height: 32px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-      <img src="{% static 'logo.png' %}" alt="Logo" style="height: 24px; width: 24px; object-fit: contain;">
-    </div>
-    <span style="background: linear-gradient(135deg, var(--accent) 0%, #10b981 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">My Jan Seva</span>
-  </div>
-  
-  <div style="display: flex; align-items: center; gap: 16px;">
-    <button id="themeToggleMobile" class="sidebar-action-btn" style="border: 1px solid var(--border); background: transparent; padding: 8px 12px; border-radius: var(--radius-sm); cursor: pointer; color: var(--text-primary);" title="Toggle Theme">
-      <i id="themeIconMobile" class="bi bi-sun-fill"></i>
-    </button>
-    <a href="{% url 'accounts:login' %}" class="btn" style="background: transparent; color: var(--text-primary); border: 1px solid var(--border); padding: 8px 18px; border-radius: var(--radius); font-weight: 500; text-decoration: none; font-size: 14px; transition: all 0.15s;">Sign In</a>
-    <a href="{% url 'accounts:register' %}" class="btn btn-primary" style="padding: 9px 20px; font-weight: 600; text-decoration: none; font-size: 14px;">Sign Up</a>
-  </div>
-</nav>
+<div class="landing-wrap">
 
-<!-- Hero Section -->
-<section style="padding: 100px 5% 60px; text-align: center; background: radial-gradient(circle at top right, var(--accent-soft) 0%, transparent 40%);">
-  <div style="max-width: 800px; margin: 0 auto;">
-    <div style="display: inline-flex; align-items: center; gap: 6px; background: var(--accent-soft); color: var(--accent); padding: 6px 14px; border-radius: 30px; font-size: 12px; font-weight: 600; margin-bottom: 24px; border: 1px solid var(--accent-glow);">
-      <i class="bi bi-rocket-takeoff-fill"></i> Complete Digital Document Assistant
+  <!-- Navbar -->
+  <nav class="lp-nav">
+    <a href="/" class="lp-nav-brand">
+      <div class="lp-nav-logo"><img src="{% static 'logo.png' %}" alt="Logo"></div>
+      <span class="lp-nav-title">My Jan Seva</span>
+    </a>
+    <div class="lp-nav-actions">
+      <button id="themeToggleMobile" class="lp-btn-ghost" style="padding:9px 12px;" title="Toggle Theme">
+        <i id="themeIconMobile" class="bi bi-sun-fill"></i>
+      </button>
+      <a href="{% url 'accounts:login' %}" class="lp-btn-ghost">Sign In</a>
+      <a href="{% url 'accounts:register' %}" class="lp-btn-primary">Get Started &rarr;</a>
     </div>
-    <h1 style="font-size: 48px; font-weight: 800; line-height: 1.15; margin-bottom: 20px; color: var(--text-primary); letter-spacing: -1px;">
-      Empower Your Operator Center with <br/>
-      <span style="background: linear-gradient(135deg, var(--accent) 0%, #10b981 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">My Jan Seva</span>
-    </h1>
-    <p style="font-size: 18px; color: var(--text-secondary); margin-bottom: 36px; line-height: 1.5; max-width: 600px; margin-left: auto; margin-right: auto;">
-      The ultimate document layout formatting workspace. Generate print-ready smart cards, resize photos and signatures, and process PDFs in seconds.
-    </p>
-    <div style="display: flex; gap: 16px; justify-content: center;">
-      <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg" style="padding: 14px 28px; font-size: 16px; font-weight: 700; text-decoration: none; border-radius: var(--radius);">Get Started Now</a>
-      <a href="{% url 'accounts:login' %}" class="btn btn-block btn-lg" style="background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border); padding: 14px 28px; font-size: 16px; font-weight: 500; text-decoration: none; border-radius: var(--radius); transition: all 0.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">Operator Login</a>
-    </div>
-  </div>
-</section>
+  </nav>
 
-<!-- Farmer ID Highlight Section -->
-<section style="padding: 60px 5%; background: linear-gradient(135deg, var(--bg-surface) 0%, rgba(16, 185, 129, 0.05) 100%); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
-  <div style="max-width: 1100px; margin: 0 auto; display: flex; flex-direction: row; flex-wrap: wrap; gap: 40px; align-items: center; justify-content: space-between;">
-    <div style="flex: 1; min-width: 300px;">
-      <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; margin-bottom: 16px; text-transform: uppercase; border: 1px solid rgba(16, 185, 129, 0.2);">
-        🌾 Star Feature
+  <!-- Hero -->
+  <section class="lp-hero">
+    <div class="lp-hero-orb-1"></div>
+    <div class="lp-hero-orb-2"></div>
+    <div class="lp-hero-orb-3"></div>
+    <div class="lp-hero-content">
+      <div class="lp-badge">
+        <i class="bi bi-rocket-takeoff-fill"></i> Complete Digital Document Assistant
       </div>
-      <h2 style="font-size: 32px; font-weight: 800; margin-bottom: 16px; color: var(--text-primary); line-height: 1.25;">
-        Smart Farmer ID <br/>Card Generator
-      </h2>
-      <p style="color: var(--text-secondary); font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
-        Empower farmers in your area with premium printed smart cards. Our system lets you input land details, automatically formats them into a clean front/back layout, and crops photos and signatures to standard PVC dimensions.
+      <h1 class="lp-hero-h1">
+        Empower Your Jan Seva Center<br>with<span class="gradient-text"> Smart Automation</span>
+      </h1>
+      <p class="lp-hero-sub">
+        Generate print-ready ID cards, resize passport photos, process PDFs, and manage customers &mdash; all from one powerful operator dashboard.
       </p>
-      
-      <div style="display: grid; gap: 12px; font-size: 14px; color: var(--text-primary); margin-bottom: 30px;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="bi bi-patch-check-fill" style="color: #10b981; font-size: 16px;"></i>
-          <span><strong>Dynamic QR Integration:</strong> Auto-generates scanner-ready codes for land info.</span>
+      <div class="lp-hero-ctas">
+        <a href="{% url 'accounts:register' %}" class="lp-btn-primary lp-btn-lg">
+          <i class="bi bi-lightning-fill"></i> Start for Free
+        </a>
+        <a href="{% url 'accounts:login' %}" class="lp-btn-ghost lp-btn-lg">Operator Login</a>
+      </div>
+      <div class="lp-hero-stats">
+        <div class="lp-stat"><div class="lp-stat-num">5+</div><div class="lp-stat-label">Integrated Tools</div></div>
+        <div class="lp-stat-divider"></div>
+        <div class="lp-stat"><div class="lp-stat-num">3</div><div class="lp-stat-label">ID Card Designs</div></div>
+        <div class="lp-stat-divider"></div>
+        <div class="lp-stat"><div class="lp-stat-num">A4</div><div class="lp-stat-label">Print Ready</div></div>
+        <div class="lp-stat-divider"></div>
+        <div class="lp-stat"><div class="lp-stat-num">100%</div><div class="lp-stat-label">Private &amp; Secure</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature Grid -->
+  <section class="lp-section" style="background:var(--bg-body);">
+    <div style="max-width:1100px;margin:0 auto;">
+      <div class="lp-section-label"><i class="bi bi-grid-3x3-gap-fill"></i> Everything You Need</div>
+      <h2 class="lp-section-title">Built for CSC &amp; Cyber Cafe Operators</h2>
+      <p class="lp-section-sub">One dashboard to handle ID cards, documents, photos, PDFs, and payments &mdash; no technical skills required.</p>
+      <div class="lp-features-grid">
+        <div class="lp-feature-card">
+          <div class="lp-feature-icon icon-indigo"><i class="bi bi-card-heading"></i></div>
+          <div class="lp-feature-title">Farmer ID Cards</div>
+          <div class="lp-feature-desc">Generate print-ready front &amp; back PVC cards with land records, QR codes, and photos in seconds.</div>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="bi bi-patch-check-fill" style="color: #10b981; font-size: 16px;"></i>
-          <span><strong>Structured Land Records:</strong> Auto-formats up to 4 distinct land rows.</span>
+        <div class="lp-feature-card">
+          <div class="lp-feature-icon icon-green"><i class="bi bi-card-list"></i></div>
+          <div class="lp-feature-title">Ration Cards</div>
+          <div class="lp-feature-desc">Create family ration cards with multiple design themes, family member tables, and batch print queue support.</div>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="bi bi-patch-check-fill" style="color: #10b981; font-size: 16px;"></i>
-          <span><strong>Dual-Sided Print Ready:</strong> Exact standard PVC (CR-80) sizes with bleed.</span>
+        <div class="lp-feature-card">
+          <div class="lp-feature-icon icon-amber"><i class="bi bi-camera-fill"></i></div>
+          <div class="lp-feature-title">Photo Studio</div>
+          <div class="lp-feature-desc">Crop, resize, and position passport photos and digital signatures to exact government form dimensions.</div>
+        </div>
+        <div class="lp-feature-card">
+          <div class="lp-feature-icon icon-rose"><i class="bi bi-file-earmark-pdf-fill"></i></div>
+          <div class="lp-feature-title">PDF Workspace</div>
+          <div class="lp-feature-desc">Merge, split, compress, and password-protect PDFs right inside the dashboard &mdash; no installs needed.</div>
+        </div>
+        <div class="lp-feature-card">
+          <div class="lp-feature-icon icon-cyan"><i class="bi bi-people-fill"></i></div>
+          <div class="lp-feature-title">Customer Management</div>
+          <div class="lp-feature-desc">Maintain a searchable database of your customers with their documents, cards, and service history.</div>
+        </div>
+        <div class="lp-feature-card">
+          <div class="lp-feature-icon icon-violet"><i class="bi bi-wallet2"></i></div>
+          <div class="lp-feature-title">Digital Wallet</div>
+          <div class="lp-feature-desc">Top up virtual coins via payment QR and pay-as-you-go for each card generated. Full usage history included.</div>
         </div>
       </div>
-      
-      <a href="{% url 'accounts:register' %}" class="btn btn-primary" style="padding: 12px 24px; font-weight: 600; text-decoration: none;">Create Your First Farmer ID</a>
     </div>
+  </section>
 
-    <!-- Visual Mockup Card -->
-    <div style="flex: 1; min-width: 320px; display: flex; justify-content: center;">
-      <div style="background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%); padding: 24px; border-radius: var(--radius); width: 100%; max-width: 440px; box-shadow: 0 20px 40px rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); position: relative; overflow: hidden;">
-        <!-- Leaf decoration -->
-        <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; opacity: 0.15; background: radial-gradient(circle, #fff 0%, transparent 70%); pointer-events: none;"></div>
-        
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; border-bottom: 1.5px solid rgba(255,255,255,0.15); padding-bottom: 12px;">
-          <div style="background: #fff; border-radius: 50%; padding: 4px; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px;">
-            <img src="{% static 'logo.png' %}" alt="Logo" style="width: 24px; height: 24px; object-fit: contain;">
-          </div>
-          <div>
-            <h4 style="color: #fff; margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">कृषक पहचान पत्र</h4>
-            <h5 style="color: rgba(255,255,255,0.7); margin: 0; font-size: 10px; font-weight: 500;">FARMER IDENTITY CARD</h5>
-          </div>
+  <!-- Farmer ID Spotlight -->
+  <section class="lp-spotlight">
+    <div class="lp-spotlight-inner">
+      <div class="lp-spotlight-text">
+        <div class="lp-section-label" style="color:#10b981;"><i class="bi bi-star-fill"></i> Star Feature</div>
+        <h2 class="lp-section-title">Smart Farmer ID<br>Card Generator</h2>
+        <p style="color:var(--text-secondary);font-size:15px;line-height:1.65;">
+          Empower farmers with premium printed smart cards. Input land details, format them into a clean front/back layout, and generate print-ready PVC cards instantly.
+        </p>
+        <div class="lp-check-list">
+          <div class="lp-check-item"><i class="bi bi-patch-check-fill"></i><span><strong>Dynamic QR Integration:</strong> Auto-generates scanner-ready codes linked to land records.</span></div>
+          <div class="lp-check-item"><i class="bi bi-patch-check-fill"></i><span><strong>Structured Land Records:</strong> Auto-formats up to 4 distinct land rows with district and tehsil.</span></div>
+          <div class="lp-check-item"><i class="bi bi-patch-check-fill"></i><span><strong>Dual-Sided Print Ready:</strong> Standard PVC (CR-80) dimensions with bleed marks and cut guides.</span></div>
+          <div class="lp-check-item"><i class="bi bi-patch-check-fill"></i><span><strong>Hindi + English Support:</strong> Bilingual card layout for wider accessibility across regions.</span></div>
         </div>
-
-        <div style="display: flex; gap: 16px;">
-          <!-- Photo Placeholder -->
-          <div style="width: 85px; height: 105px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: rgba(255,255,255,0.4);">
-            <i class="bi bi-person-fill" style="font-size: 32px; margin-bottom: 4px;"></i>
-            <span style="font-size: 7px; text-transform: uppercase; font-weight: 600;">PHOTO</span>
-          </div>
-
-          <!-- Details Mock -->
-          <div style="flex: 1; display: flex; flex-direction: column; gap: 6px; font-size: 10px; color: rgba(255,255,255,0.95); font-family: sans-serif;">
+        <a href="{% url 'accounts:register' %}" class="lp-btn-primary" style="padding:13px 28px;font-size:15px;">
+          Create Your First Farmer ID &rarr;
+        </a>
+      </div>
+      <div class="lp-spotlight-visual">
+        <div class="lp-card-mockup">
+          <div class="lp-mockup-header">
+            <div class="lp-mockup-logo"><img src="{% static 'logo.png' %}" alt="Logo"></div>
             <div>
-              <span style="display: block; font-size: 7px; color: rgba(255,255,255,0.5); text-transform: uppercase; font-weight: 600;">Name / नाम</span>
-              <strong style="font-weight: 700; color: #fff;">RAMESH KUMAR / रमेश कुमार</strong>
+              <p class="lp-mockup-title-hi">&#2325;&#2371;&#2359;&#2325; &#2346;&#2361;&#2330;&#2366;&#2344; &#2346;&#2340;&#2381;&#2352;</p>
+              <p class="lp-mockup-title-en">FARMER IDENTITY CARD</p>
             </div>
-            <div>
-              <span style="display: block; font-size: 7px; color: rgba(255,255,255,0.5); text-transform: uppercase; font-weight: 600;">Father Name / पिता का नाम</span>
-              <span style="font-weight: 500;">SHREE LAL / श्री लाल</span>
+          </div>
+          <div class="lp-mockup-body">
+            <div class="lp-mockup-photo">
+              <i class="bi bi-person-fill"></i><span>Photo</span>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <div>
-                <span style="display: block; font-size: 7px; color: rgba(255,255,255,0.5); text-transform: uppercase; font-weight: 600;">Mobile / मोबाइल</span>
-                <span style="font-weight: 500;">XXXXXX1234</span>
-              </div>
-              <div>
-                <span style="display: block; font-size: 7px; color: rgba(255,255,255,0.5); text-transform: uppercase; font-weight: 600;">District / जनपद</span>
-                <span style="font-weight: 500;">SIDDHARTH NAGAR</span>
+            <div class="lp-mockup-fields">
+              <div class="lp-mock-field"><span>Name / &#2344;&#2366;&#2350;</span><strong>RAMESH KUMAR</strong></div>
+              <div class="lp-mock-field"><span>Father / &#2346;&#2367;&#2340;&#2366;</span><p>SHREE LAL</p></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div class="lp-mock-field"><span>Mobile</span><p>XXXXXX1234</p></div>
+                <div class="lp-mock-field"><span>District</span><p>SIDDHARTHNAGAR</p></div>
               </div>
             </div>
           </div>
-        </div>
-
-        <div style="margin-top: 14px; background: rgba(0,0,0,0.2); border-radius: 4px; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; border: 1.5px dashed rgba(255,255,255,0.15);">
-          <span style="font-size: 8px; color: rgba(255,255,255,0.6); font-weight: 600;">AGRI CARD ID: <strong style="color: #fff; font-family: monospace; font-size: 9px; font-weight: 700;">FC-2026-98741</strong></span>
-          <span style="color: #52b788; font-size: 8px; font-weight: 700; background: rgba(82, 183, 136, 0.1); padding: 1px 6px; border-radius: 3px;">✓ VERIFIED</span>
+          <div class="lp-mockup-footer">
+            <div class="lp-mockup-id">AGRI ID: <strong>FC-2026-98741</strong></div>
+            <div class="lp-mockup-verified">&#10003; VERIFIED</div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-
-<!-- Feature Spotlight Cards -->
-<section style="padding: 60px 5%; background: var(--bg-body);">
-  <div style="max-width: 1100px; margin: 0 auto;">
-    <h2 style="font-size: 32px; font-weight: 800; text-align: center; margin-bottom: 48px; color: var(--text-primary);">
-      Designed for CSC and Cyber Cafe Operators
-    </h2>
-    
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
-      <!-- Card 1 -->
-      <div style="background: var(--bg-surface); border: 1px solid var(--border); padding: 30px; border-radius: var(--radius); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-        <div style="font-size: 32px; color: var(--accent); margin-bottom: 18px;"><i class="bi bi-card-heading"></i></div>
-        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 10px; color: var(--text-primary);">PVC Smart Cards</h3>
-        <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.5;">Format citizen details into high-definition PVC front & back layouts. Seamlessly fits standard credit card dimensions.</p>
-      </div>
-
-      <!-- Card 2 -->
-      <div style="background: var(--bg-surface); border: 1px solid var(--border); padding: 30px; border-radius: var(--radius); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-        <div style="font-size: 32px; color: var(--accent); margin-bottom: 18px;"><i class="bi bi-camera-fill"></i></div>
-        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 10px; color: var(--text-primary);">Photo Studio</h3>
-        <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.5;">Instantly crop, resize, and position passport-sized photos and digital signatures for online form submissions.</p>
-      </div>
-
-      <!-- Card 3 -->
-      <div style="background: var(--bg-surface); border: 1px solid var(--border); padding: 30px; border-radius: var(--radius); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-        <div style="font-size: 32px; color: var(--accent); margin-bottom: 18px;"><i class="bi bi-file-earmark-pdf-fill"></i></div>
-        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 10px; color: var(--text-primary);">PDF Workspace</h3>
-        <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.5;">Merge, split, and compress application PDFs directly within your dashboard. Encrypt files with custom passwords.</p>
-      </div>
-
-      <!-- Card 4 -->
-      <div style="background: var(--bg-surface); border: 1px solid var(--border); padding: 30px; border-radius: var(--radius); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-        <div style="font-size: 32px; color: var(--accent); margin-bottom: 18px;"><i class="bi bi-wallet2"></i></div>
-        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 10px; color: var(--text-primary);">Digital Wallet</h3>
-        <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.5;">Load virtual coins via secure payment QR code requests, then pay as you go for only the document layouts you generate.</p>
+  <!-- How It Works -->
+  <section class="lp-section" style="background:var(--bg-body);">
+    <div style="max-width:1100px;margin:0 auto;text-align:center;">
+      <div class="lp-section-label" style="justify-content:center;"><i class="bi bi-arrow-right-circle-fill"></i> Simple Process</div>
+      <h2 class="lp-section-title">How It Works</h2>
+      <p class="lp-section-sub" style="margin:0 auto 56px;">Get from customer data to print-ready card in under two minutes.</p>
+      <div class="lp-steps" style="text-align:left;">
+        <div class="lp-step">
+          <div class="lp-step-num">1</div>
+          <div class="lp-step-content"><h4>Sign Up &amp; Top Up Your Wallet</h4><p>Create your operator account in seconds and load coins via secure UPI payment QR. No monthly fees &mdash; pay only for what you generate.</p></div>
+        </div>
+        <div class="lp-step">
+          <div class="lp-step-num">2</div>
+          <div class="lp-step-content"><h4>Enter Customer Details</h4><p>Fill in the form fields &mdash; name, photo, land info, family members, or scheme details. The live preview updates in real time as you type.</p></div>
+        </div>
+        <div class="lp-step">
+          <div class="lp-step-num">3</div>
+          <div class="lp-step-content"><h4>Choose a Design &amp; Save</h4><p>Pick from multiple premium card designs. Each card is saved individually with its own design &mdash; creating a new card never overwrites old ones.</p></div>
+        </div>
+        <div class="lp-step">
+          <div class="lp-step-num">4</div>
+          <div class="lp-step-content"><h4>Add to Print Queue &amp; Print</h4><p>Queue multiple cards together, then print them all at once on A4 with accurate dashed cut guides. Perfectly scaled &mdash; no layout distortion.</p></div>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- Strict Legal Disclaimer Section -->
-<section style="padding: 60px 5%; background: var(--bg-surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
-  <div style="max-width: 900px; margin: 0 auto; text-align: left;">
-    <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid var(--danger); padding: 24px; border-radius: var(--radius); display: flex; flex-direction: column; gap: 12px;">
-      <h3 style="color: var(--danger); display: flex; align-items: center; gap: 8px; margin: 0; font-size: 18px; font-weight: 800;">
-        <i class="bi bi-shield-slash-fill"></i> STRICT LEGAL DISCLAIMER & NON-AFFILIATION WARNING
-      </h3>
-      <p style="color: var(--text-primary); font-size: 14px; line-height: 1.6; margin: 0;">
-        <strong>My Jan Seva</strong> is a private utility tool designed to help operators with graphic formatting, document layout adjustments, and image editing.
-      </p>
-      <ul style="margin: 0; padding-left: 20px; color: var(--text-secondary); font-size: 13.5px; line-height: 1.6; display: flex; flex-direction: column; gap: 6px;">
+  <!-- Legal Disclaimer -->
+  <section class="lp-disclaimer">
+    <div class="lp-disclaimer-box">
+      <h3 class="lp-disclaimer-title"><i class="bi bi-shield-slash-fill"></i> Strict Legal Disclaimer &amp; Non-Affiliation Warning</h3>
+      <p class="lp-disclaimer-text"><strong>My Jan Seva</strong> is a private utility tool designed to help operators with graphic formatting, document layout adjustments, and image editing.</p>
+      <ul class="lp-disclaimer-list">
         <li>This portal is <strong>NOT</strong> associated with, affiliated with, authorized by, or in any way officially connected to any government entity, authority, or national scheme.</li>
-        <li>This portal is <strong>NOT</strong> an official "Jan Seva Kendra", Common Service Center (CSC), or government portal. Official applications must be made directly via official government web domains.</li>
+        <li>This portal is <strong>NOT</strong> an official &ldquo;Jan Seva Kendra&rdquo;, Common Service Center (CSC), or government portal. Official applications must be made directly via official government web domains.</li>
         <li>We take <strong>no responsibility or liability</strong> for any data entry mistakes, print layout errors, delays, or subsequent actions resulting from printed documents. The operator assumes full responsibility.</li>
       </ul>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- Footer -->
-<footer style="background: var(--bg-surface); padding: 40px 5% 30px; border-top: 1px solid var(--border); text-align: center; font-size: 13px; color: var(--text-tertiary);">
-  <div style="max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; align-items: center;">
-    <div style="display: flex; gap: 24px; font-weight: 600;">
-      <a href="{% url 'dashboard:terms' %}" style="color: var(--text-secondary); text-decoration: none; transition: color 0.15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-secondary)'">Terms of Service</a>
-      <a href="{% url 'dashboard:privacy' %}" style="color: var(--text-secondary); text-decoration: none; transition: color 0.15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-secondary)'">Privacy Policy</a>
-      <a href="{% url 'accounts:login' %}" style="color: var(--text-secondary); text-decoration: none; transition: color 0.15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-secondary)'">Portal Login</a>
+  <!-- Footer -->
+  <footer class="lp-footer">
+    <div class="lp-footer-inner">
+      <a href="/" class="lp-footer-brand">
+        <div class="lp-nav-logo"><img src="{% static 'logo.png' %}" alt="Logo"></div>
+        <span class="lp-nav-title">My Jan Seva</span>
+      </a>
+      <div class="lp-footer-links">
+        <a href="{% url 'dashboard:terms' %}">Terms of Service</a>
+        <a href="{% url 'dashboard:privacy' %}">Privacy Policy</a>
+        <a href="{% url 'accounts:login' %}">Portal Login</a>
+        <a href="{% url 'accounts:register' %}">Sign Up</a>
+      </div>
     </div>
-    <div>
-      &copy; 2026 My Jan Seva. All Rights Reserved. Private Helper Utility.
+    <div class="lp-footer-copy">
+      &copy; 2026 My Jan Seva. All Rights Reserved. Private Helper Utility &mdash; Not affiliated with any government body.
     </div>
-  </div>
-</footer>
+  </footer>
+
+</div>
 {% endblock %}

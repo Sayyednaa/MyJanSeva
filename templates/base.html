@@ -104,8 +104,11 @@
 
       <div class="nav-group">
         <div class="nav-group-label">Services</div>
-        <a href="{% url 'dashboard:home' %}" class="nav-link {% if request.resolver_match.namespace == 'dashboard' %}active{% endif %}">
+        <a href="{% url 'dashboard:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
           <i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span>
+        </a>
+        <a href="{% url 'dashboard:todo_list' %}" class="nav-link {% if request.resolver_match.url_name == 'todo_list' %}active{% endif %}">
+          <i class="bi bi-check2-square"></i><span>Todo List</span>
         </a>
         <a href="{% url 'wallet:dashboard' %}" class="nav-link {% if request.resolver_match.namespace == 'wallet' %}active{% endif %}">
           <i class="bi bi-wallet2"></i><span>Wallet</span>
