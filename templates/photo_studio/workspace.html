@@ -76,6 +76,32 @@
             <button class="btn btn-success btn-sm" onclick="exportActive('passport-photo')"><i class="bi bi-download"></i> Export (3 Coins)</button>
           </div>
         </div>
+        
+        <!-- Image Adjustments (Brightness, Contrast, Saturation) -->
+        <div class="tool-bar image-adjustments-bar" style="background: var(--bg-surface); padding: 8px 16px; border-bottom: 1px solid var(--border); display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <i class="bi bi-sun"></i>
+            <span style="font-size: 12px; font-weight: 500; color: var(--text-secondary);">Brightness:</span>
+            <input type="range" id="brightnessRange" min="50" max="150" value="100" class="form-range" style="width: 100px; height: 4px; background: var(--border); border-radius: 2px; outline: none; cursor: pointer;" oninput="updateFilters()">
+            <span id="brightnessVal" style="font-size: 11px; width: 30px; color: var(--text-secondary);">100%</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <i class="bi bi-contrast"></i>
+            <span style="font-size: 12px; font-weight: 500; color: var(--text-secondary);">Contrast:</span>
+            <input type="range" id="contrastRange" min="50" max="150" value="100" class="form-range" style="width: 100px; height: 4px; background: var(--border); border-radius: 2px; outline: none; cursor: pointer;" oninput="updateFilters()">
+            <span id="contrastVal" style="font-size: 11px; width: 30px; color: var(--text-secondary);">100%</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <i class="bi bi-droplet-half"></i>
+            <span style="font-size: 12px; font-weight: 500; color: var(--text-secondary);">Saturation:</span>
+            <input type="range" id="saturationRange" min="0" max="200" value="100" class="form-range" style="width: 100px; height: 4px; background: var(--border); border-radius: 2px; outline: none; cursor: pointer;" oninput="updateFilters()">
+            <span id="saturationVal" style="font-size: 11px; width: 30px; color: var(--text-secondary);">100%</span>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="resetFilters()" style="margin-left: auto; padding: 2px 8px; font-size: 11px;">
+            <i class="bi bi-arrow-counterclockwise"></i> Reset
+          </button>
+        </div>
+        
         <div class="canvas-container-area editor-bg">
           <div class="image-wrapper">
              <img id="editImage">
@@ -779,6 +805,23 @@ window.onload = () => {
     fabricCanvas = new fabric.Canvas('a4Canvas', { width: A4_W, height: A4_H, backgroundColor: '#ffffff' });
     drawGridGuides();
     
+    // Recalculate guides on photo addition, removal, and position modifications
+    fabricCanvas.on('object:added', function (e) {
+        const obj = e.target;
+        if (obj && obj.isGuide) return;
+        drawGridGuides();
+    });
+    fabricCanvas.on('object:removed', function (e) {
+        const obj = e.target;
+        if (obj && obj.isGuide) return;
+        drawGridGuides();
+    });
+    fabricCanvas.on('object:modified', function (e) {
+        const obj = e.target;
+        if (obj && obj.isGuide) return;
+        drawGridGuides();
+    });
+    
     // Restrict objects within the printable area (20px margins)
     fabricCanvas.on('object:moving', function (e) {
         const obj = e.target;
@@ -976,6 +1019,9 @@ function loadActiveImage() {
                 viewMode: 1,
                 background: true,
                 autoCropArea: 0.8,
+                ready: function() {
+                    resetFilters();
+                }
             });
             let tempImg = new Image();
             tempImg.src = item.url;
@@ -995,6 +1041,36 @@ function setCropRatio(ratio) {
     if(cropper) cropper.setAspectRatio(ratio);
 }
 
+function updateFilters() {
+    const brightness = document.getElementById('brightnessRange').value;
+    const contrast = document.getElementById('contrastRange').value;
+    const saturation = document.getElementById('saturationRange').value;
+    
+    document.getElementById('brightnessVal').textContent = brightness + '%';
+    document.getElementById('contrastVal').textContent = contrast + '%';
+    document.getElementById('saturationVal').textContent = saturation + '%';
+    
+    const filterString = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+    
+    // Apply filters to cropper container preview images
+    const cropperImgs = document.querySelectorAll('.cropper-container img');
+    cropperImgs.forEach(img => {
+        img.style.filter = filterString;
+    });
+}
+
+function resetFilters() {
+    const b = document.getElementById('brightnessRange');
+    const c = document.getElementById('contrastRange');
+    const s = document.getElementById('saturationRange');
+    if (b && c && s) {
+        b.value = 100;
+        c.value = 100;
+        s.value = 100;
+        updateFilters();
+    }
+}
+
 function applyCropAndResize() {
     if(!cropper) return alert('Select an image and go to Crop tab first.');
     let w = parseInt(document.getElementById('resizeW').value);
@@ -1004,11 +1080,25 @@ function applyCropAndResize() {
     if(!isNaN(w) && w > 0) opts.width = w;
     if(!isNaN(h) && h > 0) opts.height = h;
     
-    const canvas = cropper.getCroppedCanvas(opts);
-    if(!canvas) return;
+    const croppedCanvas = cropper.getCroppedCanvas(opts);
+    if(!croppedCanvas) return;
     
-    canvas.toBlob(blob => {
+    // Create new canvas to apply filters natively
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = croppedCanvas.width;
+    finalCanvas.height = croppedCanvas.height;
+    const ctx = finalCanvas.getContext('2d');
+    
+    const brightness = document.getElementById('brightnessRange').value;
+    const contrast = document.getElementById('contrastRange').value;
+    const saturation = document.getElementById('saturationRange').value;
+    
+    ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+    ctx.drawImage(croppedCanvas, 0, 0);
+    
+    finalCanvas.toBlob(blob => {
         saveToGallery(blob, 'edited');
+        resetFilters();
     }, 'image/png', 1.0);
 }
 
@@ -1171,66 +1261,80 @@ function drawGridGuides() {
     
     gridBoxes.length = 0;
     
-    const cols = 5;
-    const rows = 5;
-    const w = 130;
-    const h = 167;
-    const gapX = 15;
-    const gapY = 20;
-    const startX = 58;
-    const startY = 127;
+    const cols = 6;
+    const rows = 7;
+    const w = 121;
+    const h = 156;
+    const gapX = 12;
+    const gapY = 6;
+    const startX = 20;
+    const startY = 20;
     
-    // Draw guide outline rectangles
+    // Populate gridBoxes in memory (no drawing guide boxes)
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
             const x = startX + c * (w + gapX);
             const y = startY + r * (h + gapY);
-            
-            gridBoxes.push({ x, y, w, h });
-            
-            const rect = new fabric.Rect({
-                left: x,
-                top: y,
-                width: w,
-                height: h,
-                fill: 'transparent',
-                stroke: '#cbd5e1',
-                strokeWidth: 1,
-                strokeDashArray: [4, 4],
-                selectable: false,
-                evented: false,
-                isGuide: true
-            });
-            fabricCanvas.add(rect);
+            gridBoxes.push({ r, c, x, y, w, h });
         }
     }
     
-    // Draw horizontal dotted cutting lines in gaps
-    for (let r = 1; r < rows; r++) {
-        const y = startY + r * (h + gapY) - gapY / 2;
-        const line = new fabric.Line([startX - 20, y, startX + cols * (w + gapX) - gapX + 20, y], {
-            stroke: '#94a3b8',
-            strokeWidth: 1,
-            strokeDashArray: [2, 4],
-            selectable: false,
-            evented: false,
-            isGuide: true
-        });
-        fabricCanvas.add(line);
-    }
+    // Determine occupancy matrix based on current image positions on canvas
+    const occupancy = Array(rows).fill(null).map(() => Array(cols).fill(false));
     
-    // Draw vertical dotted cutting lines in gaps
-    for (let c = 1; c < cols; c++) {
-        const x = startX + c * (w + gapX) - gapX / 2;
-        const line = new fabric.Line([x, startY - 20, x, startY + rows * (h + gapY) - gapY + 20], {
-            stroke: '#94a3b8',
-            strokeWidth: 1,
-            strokeDashArray: [2, 4],
-            selectable: false,
-            evented: false,
-            isGuide: true
-        });
-        fabricCanvas.add(line);
+    fabricCanvas.forEachObject(obj => {
+        if (obj && !obj.isGuide) {
+            let nearestBox = null;
+            let minDist = 15; // tolerance
+            gridBoxes.forEach(box => {
+                const dist = Math.hypot(obj.left - box.x, obj.top - box.y);
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearestBox = box;
+                }
+            });
+            if (nearestBox) {
+                occupancy[nearestBox.r][nearestBox.c] = true;
+            }
+        }
+    });
+    
+    // Draw dynamic horizontal and vertical cutting guides ONLY in between adjacent photos
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            if (occupancy[r][c]) {
+                const currentBox = gridBoxes.find(b => b.r === r && b.c === c);
+                
+                // Vertical guide to the right
+                if (c + 1 < cols && occupancy[r][c+1]) {
+                    const x = currentBox.x + w + gapX / 2;
+                    // Line extends slightly into borders for easy cutting
+                    const line = new fabric.Line([x, currentBox.y - 4, x, currentBox.y + h + 4], {
+                        stroke: '#94a3b8',
+                        strokeWidth: 1,
+                        strokeDashArray: [2, 4],
+                        selectable: false,
+                        evented: false,
+                        isGuide: true
+                    });
+                    fabricCanvas.add(line);
+                }
+                
+                // Horizontal guide to the bottom
+                if (r + 1 < rows && occupancy[r+1][c]) {
+                    const y = currentBox.y + h + gapY / 2;
+                    const line = new fabric.Line([currentBox.x - 4, y, currentBox.x + w + 4, y], {
+                        stroke: '#94a3b8',
+                        strokeWidth: 1,
+                        strokeDashArray: [2, 4],
+                        selectable: false,
+                        evented: false,
+                        isGuide: true
+                    });
+                    fabricCanvas.add(line);
+                }
+            }
+        }
     }
     
     fabricCanvas.renderAll();
@@ -1257,7 +1361,7 @@ function fillNextEmptyGridBox(id) {
         
         fabricCanvas.forEachObject(obj => {
             if (obj && !obj.isGuide) {
-                if (Math.abs(obj.left - box.x) < 5 && Math.abs(obj.top - box.y) < 5) {
+                if (Math.abs(obj.left - box.x) < 10 && Math.abs(obj.top - box.y) < 10) {
                     isOccupied = true;
                 }
             }
@@ -1301,7 +1405,10 @@ function addImageToCanvasInBox(id, box, boxIndex) {
             borderColor: '#10b981',
             cornerStrokeColor: '#fff',
             cornerSize: 10,
-            transparentCorners: false
+            transparentCorners: false,
+            stroke: '#000000',
+            strokeWidth: 1.5,
+            strokeUniform: true
         });
         img.scaleToWidth(box.w);
         img.scaleToHeight(box.h);
@@ -1309,7 +1416,7 @@ function addImageToCanvasInBox(id, box, boxIndex) {
         // Remove existing non-guide object in the same box safely
         const overlapped = [];
         fabricCanvas.forEachObject(obj => {
-            if (obj && !obj.isGuide && Math.abs(obj.left - box.x) < 5 && Math.abs(obj.top - box.y) < 5) {
+            if (obj && !obj.isGuide && Math.abs(obj.left - box.x) < 10 && Math.abs(obj.top - box.y) < 10) {
                 overlapped.push(obj);
             }
         });
@@ -1335,7 +1442,10 @@ function addImageToCanvas(id, x, y) {
             cornerColor: '#10b981',
             borderColor: '#10b981',
             cornerStrokeColor: '#fff',
-            borderScaleFactor: 2
+            borderScaleFactor: 2,
+            stroke: '#000000',
+            strokeWidth: 1.5,
+            strokeUniform: true
         });
         fabricCanvas.add(img);
         fabricCanvas.setActiveObject(img);

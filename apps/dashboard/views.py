@@ -439,4 +439,95 @@ def settings_view(request):
     })
 
 
+@login_required
+@admin_required
+def admin_user_detail(request, pk):
+    from apps.accounts.models import CustomUser
+    from apps.id_cards.models import FarmerIDCard, RationCard
+    from apps.customers.models import Customer
+    
+    operator = get_object_or_404(CustomUser, pk=pk, role='operator')
+    
+    # Calculate coin balance in INR
+    COIN_TO_INR_RATE = 0.50
+    wallet_balance = float(operator.wallet.balance) if hasattr(operator, 'wallet') else 0.0
+    wallet_balance_inr = wallet_balance * COIN_TO_INR_RATE
+    
+    # Get all lists
+    farmer_cards = FarmerIDCard.objects.filter(user=operator).order_by('-created_at')
+    ration_cards = RationCard.objects.filter(user=operator).order_by('-created_at')
+    customers = Customer.objects.filter(created_by=operator).order_by('-created_at')
+    
+    # Calculate revenue: ₹100 per generated ID card
+    farmer_count = farmer_cards.count()
+    ration_count = ration_cards.count()
+    total_cards = farmer_count + ration_count
+    revenue_generated = total_cards * 100
+    
+    return render(request, 'dashboard/admin_user_detail.html', {
+        'operator': operator,
+        'wallet_balance': wallet_balance,
+        'wallet_balance_inr': wallet_balance_inr,
+        'farmer_cards': farmer_cards,
+        'ration_cards': ration_cards,
+        'customers': customers,
+        'farmer_count': farmer_count,
+        'ration_count': ration_count,
+        'total_cards': total_cards,
+        'revenue_generated': revenue_generated,
+        'page_title': f"{operator.get_full_name() or operator.username} — Details & Operations"
+    })
+
+
+@login_required
+@admin_required
+def admin_delete_farmer_card(request, pk, card_id):
+    from apps.id_cards.models import FarmerIDCard
+    if request.method == 'POST':
+        card = get_object_or_404(FarmerIDCard, id=card_id, user_id=pk)
+        card.delete()
+        messages.success(request, f"Farmer ID Card ({card.farmer_id}) deleted successfully.")
+    return redirect('dashboard:admin_user_detail', pk=pk)
+
+
+@login_required
+@admin_required
+def admin_delete_ration_card(request, pk, card_id):
+    from apps.id_cards.models import RationCard
+    if request.method == 'POST':
+        card = get_object_or_404(RationCard, id=card_id, user_id=pk)
+        card.delete()
+        messages.success(request, f"Ration Card ({card.card_number}) deleted successfully.")
+    return redirect('dashboard:admin_user_detail', pk=pk)
+
+
+@login_required
+@admin_required
+def admin_delete_customer(request, pk, customer_id):
+    from apps.customers.models import Customer
+    if request.method == 'POST':
+        customer = get_object_or_404(Customer, id=customer_id, created_by_id=pk)
+        name = customer.full_name
+        customer.delete()
+        messages.success(request, f"Customer '{name}' deleted successfully.")
+    return redirect('dashboard:admin_user_detail', pk=pk)
+
+
+@login_required
+@admin_required
+def admin_print_farmer_card(request, pk):
+    from apps.id_cards.models import FarmerIDCard
+    card = get_object_or_404(FarmerIDCard, pk=pk)
+    return render(request, 'dashboard/print_farmer_card.html', {'card': card})
+
+
+@login_required
+@admin_required
+def admin_print_ration_card(request, pk):
+    from apps.id_cards.models import RationCard
+    card = get_object_or_404(RationCard, pk=pk)
+    return render(request, 'dashboard/print_ration_card.html', {'card': card})
+
+
+
 

@@ -63,7 +63,11 @@
         {% for op in operators %}
         <tr>
           <td>
-            <div style="font-weight:600; color:var(--text-primary);">{{ op.get_full_name|default:op.username }}</div>
+            <div style="font-weight:600; color:var(--text-primary);">
+              <a href="{% url 'dashboard:admin_user_detail' pk=op.pk %}" style="color: var(--primary); text-decoration: none; font-weight: 700; hover: underline;">
+                {{ op.get_full_name|default:op.username }}
+              </a>
+            </div>
             {% if op.business_name %}
               <div style="font-size:11px; color:var(--accent); font-weight:600; margin-top:2px;">
                 <i class="bi bi-building"></i> {{ op.business_name }}
@@ -105,6 +109,10 @@
           </td>
           <td>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <a href="{% url 'dashboard:admin_user_detail' pk=op.pk %}" class="btn btn-primary btn-sm" style="padding: 4px 8px;">
+                <i class="bi bi-eye"></i> Details
+              </a>
+              
               <button class="btn btn-secondary btn-sm" onclick="openAdjustModal({{ op.pk }}, '{{ op.username }}', {{ op.wallet_balance|floatformat:0 }})">
                 <i class="bi bi-coin"></i> Balance
               </button>

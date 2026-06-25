@@ -1,0 +1,192 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ card.name_en|default:"Farmer-Card" }}</title>
+  <link rel="stylesheet" href="{% static 'id_cards/farmer_id/style.css' %}?v={% now 'U' %}">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    /* For screen rendering, make sure the card is visible */
+    body {
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .print-only {
+      display: block !important;
+    }
+    /* Ensure colors print correctly */
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+        margin: 0;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+    .print-card-scaler {
+      display: inline-block;
+      margin: 10px;
+    }
+    .print-row-item {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+    @media print {
+      .print-card-scaler {
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="print-container" class="print-only">
+    <div class="print-page">
+      <div class="print-row-item">
+        <!-- FRONT OF CARD -->
+        <div class="id-card card-front">
+          <div class="leaf-decor leaf-top-right">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 90C40 70 80 40 90 10C70 40 40 70 10 90Z" fill="#2d6a4f" />
+            </svg>
+          </div>
+          <div class="leaf-decor leaf-bottom-left">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M90 10C60 30 20 60 10 90C30 60 60 30 90 10Z" fill="#2d6a4f" />
+            </svg>
+          </div>
+          <div class="card-header">
+            <div class="card-logo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="leaf-svg"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.58-1 8a7 7 0 0 1-7 10Z"/><path d="M9 22v-4h4v4"/><path d="M11 15h0"/></svg>
+              <div class="card-logo-text"><span class="agri">Ägri</span><span class="card-text">Cård</span></div>
+            </div>
+            <div class="card-title-main"></div>
+          </div>
+          <div class="card-body">
+            <div class="photo-container">
+              <img src="{% if card.photo %}{{ card.photo }}{% else %}{% static 'id_cards/farmer_id/placeholder-avatar.png' %}{% endif %}" alt="Photo">
+            </div>
+            <div class="farmer-details">
+              <div class="detail-name">{{ card.name_en }}</div>
+              <div class="detail-name-hi">{{ card.name_hi }}</div>
+              <div class="detail-grid">
+                <div class="detail-label">DOB:</div>
+                <div class="detail-val">{{ card.dob }}</div>
+                <div class="detail-label">Gender:</div>
+                <div class="detail-val">{{ card.gender }}</div>
+                <div class="detail-label">Mobile:</div>
+                <div class="detail-val">{{ card.mobile }}</div>
+                {% if card.aadhaar %}
+                  <div class="detail-label">Aadhaar:</div>
+                  <div class="detail-val">XXXX XXXX {{ card.aadhaar|slice:"8:12" }}</div>
+                {% endif %}
+              </div>
+            </div>
+            <div class="qr-container">
+              <div class="qr-code" id="print-qr-front"></div>
+            </div>
+          </div>
+          <div class="id-badge-container">
+            <div class="farmer-id-badge">Farmer Id: <span>{{ card.farmer_id }}</span></div>
+          </div>
+          <div class="card-footer">
+            <span class="disclaimer">This card is strictly for personal use and does not constitute a government-issued identification.</span>
+            <span class="footer-hi">FARMER ID</span>
+          </div>
+        </div>
+
+        <div class="print-vertical-divider"></div>
+
+        <!-- BACK OF CARD -->
+        <div class="id-card card-back">
+          <div class="leaf-decor leaf-top-right">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 90C40 70 80 40 90 10C70 40 40 70 10 90Z" fill="#2d6a4f" />
+            </svg>
+          </div>
+          <div class="leaf-decor leaf-bottom-left">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M90 10C60 30 20 60 10 90C30 60 60 30 90 10Z" fill="#2d6a4f" />
+            </svg>
+          </div>
+          <div class="card-header">
+            <div class="card-logo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="leaf-svg"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.58-1 8a7 7 0 0 1-7 10Z"/><path d="M9 22v-4h4v4"/><path d="M11 15h0"/></svg>
+              <div class="card-logo-text"><span class="agri">Ägri</span><span class="card-text">Cård</span></div>
+            </div>
+          </div>
+          <div class="card-back-body">
+            <div class="address-container">
+              <strong>Add:</strong> <span>{{ card.address }}</span>
+            </div>
+            <div class="field-table-container">
+              <table class="card-field-table">
+                <thead>
+                  <tr>
+                    <th>State</th>
+                    <th>Dist</th>
+                    <th>Vill</th>
+                    <th>S.No</th>
+                    <th>S/S</th>
+                    <th>Area</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if card.land_details %}
+                    {% for row in card.land_details|slice:":4" %}
+                      <tr>
+                        <td>{{ row.state|default:"-" }}</td>
+                        <td>{{ row.dist|default:"-" }}</td>
+                        <td>{{ row.vill|default:"-" }}</td>
+                        <td>{{ row.sNo|default:"-" }}</td>
+                        <td>{{ row.ss|default:"*" }}</td>
+                        <td>{{ row.area|default:"0" }}</td>
+                      </tr>
+                    {% endfor %}
+                  {% else %}
+                    <tr><td colspan="6" style="text-align: center; color: #aaa; font-size: 5.5pt;">No land data</td></tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="disclaimer">This card is strictly for personal use and does not constitute a government-issued identification.</span>
+            <span class="footer-hi">FARMER ID</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      let qrText = "Farmer ID: {{ card.farmer_id }}\nName: {{ card.name_en }}\nDOB: {{ card.dob }}\nMobile: {{ card.mobile }}";
+      {% if card.aadhaar %}
+        qrText += "\nAadhaar: {{ card.aadhaar }}";
+      {% endif %}
+
+      new QRCode(document.getElementById("print-qr-front"), {
+        text: qrText,
+        width: 75,
+        height: 75,
+        colorDark: "#1b4332",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+
+      setTimeout(function() {
+        window.print();
+      }, 300);
+    }
+  </script>
+</body>
+</html>
