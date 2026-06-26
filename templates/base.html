@@ -103,6 +103,22 @@
       </div>
 
       <div class="nav-group">
+        <div class="nav-group-label">Print Services</div>
+        <a href="{% url 'id_cards:aadhaar_pvc' %}" class="nav-link {% if request.resolver_match.url_name == 'aadhaar_pvc' %}active{% endif %}">
+          <i class="bi bi-person-vcard"></i><span>Aadhaar PVC Print</span>
+        </a>
+        <a href="{% url 'id_cards:pan_pvc' %}" class="nav-link {% if request.resolver_match.url_name == 'pan_pvc' %}active{% endif %}">
+          <i class="bi bi-person-vcard-fill"></i><span>PAN PVC Print</span>
+        </a>
+        <a href="{% url 'id_cards:voter_pvc' %}" class="nav-link {% if request.resolver_match.url_name == 'voter_pvc' %}active{% endif %}">
+          <i class="bi bi-card-image"></i><span>Voter PVC Print</span>
+        </a>
+        <a href="{% url 'id_cards:id_card_pvc' %}" class="nav-link {% if request.resolver_match.url_name == 'id_card_pvc' %}active{% endif %}">
+          <i class="bi bi-person-badge"></i><span>ID Card Print</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
         <div class="nav-group-label">Services</div>
         <a href="{% url 'dashboard:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
           <i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span>

@@ -16,4 +16,10 @@ urlpatterns = [
     path('ration/save/', views.save_ration_card, name='ration_save'),
     path('ration/delete/', views.delete_ration_card, name='ration_delete'),
     path('ration/detail/<int:pk>/', views.ration_detail, name='ration_detail'),
+    
+    # PVC Card print services
+    path('print/aadhaar/', views.aadhaar_pvc, name='aadhaar_pvc'),
+    path('print/pan/', views.pan_pvc, name='pan_pvc'),
+    path('print/voter/', views.voter_pvc, name='voter_pvc'),
+    path('print/id-card/', views.id_card_pvc, name='id_card_pvc'),
 ]

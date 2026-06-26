@@ -344,3 +344,68 @@ def ration_detail(request, pk):
     except RationCard.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Card not found or access denied.'}, status=404)
 
+
+@login_required
+def aadhaar_pvc(request):
+    try:
+        service = Service.objects.get(slug='aadhaar-pvc')
+        price = float(service.price)
+    except Service.DoesNotExist:
+        price = 5.0
+    return render(request, 'id_cards/pvc_workspace.html', {
+        'page_title': 'Aadhaar PVC Print',
+        'card_type': 'aadhaar',
+        'service_slug': 'aadhaar-pvc',
+        'service_price': price,
+        'wallet_balance': float(request.user.wallet.balance) if hasattr(request.user, 'wallet') else 0.0,
+    })
+
+
+@login_required
+def pan_pvc(request):
+    try:
+        service = Service.objects.get(slug='pan-pvc')
+        price = float(service.price)
+    except Service.DoesNotExist:
+        price = 5.0
+    return render(request, 'id_cards/pvc_workspace.html', {
+        'page_title': 'PAN PVC Print',
+        'card_type': 'pan',
+        'service_slug': 'pan-pvc',
+        'service_price': price,
+        'wallet_balance': float(request.user.wallet.balance) if hasattr(request.user, 'wallet') else 0.0,
+    })
+
+
+@login_required
+def voter_pvc(request):
+    try:
+        service = Service.objects.get(slug='voter-pvc')
+        price = float(service.price)
+    except Service.DoesNotExist:
+        price = 5.0
+    return render(request, 'id_cards/pvc_workspace.html', {
+        'page_title': 'Voter ID PVC Print',
+        'card_type': 'voter',
+        'service_slug': 'voter-pvc',
+        'service_price': price,
+        'wallet_balance': float(request.user.wallet.balance) if hasattr(request.user, 'wallet') else 0.0,
+    })
+
+
+@login_required
+def id_card_pvc(request):
+    try:
+        service = Service.objects.get(slug='id-card')
+        price = float(service.price)
+    except Service.DoesNotExist:
+        price = 5.0
+    return render(request, 'id_cards/pvc_workspace.html', {
+        'page_title': 'Custom ID Card Print',
+        'card_type': 'custom',
+        'service_slug': 'id-card',
+        'service_price': price,
+        'wallet_balance': float(request.user.wallet.balance) if hasattr(request.user, 'wallet') else 0.0,
+    })
+
+
