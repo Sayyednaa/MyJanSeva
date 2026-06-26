@@ -50,14 +50,43 @@
   {% if docs %}
   <div class="table-wrapper">
     <table class="data-table">
-      <thead><tr><th>Name</th><th>Category</th><th>Date</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Name</th><th>Category</th><th>Billing Status</th><th>Uploaded Date</th><th>Actions</th></tr></thead>
       <tbody>
       {% for d in docs %}
       <tr>
         <td class="fw-600">{{ d.name }}</td>
         <td><span class="badge badge-accent">{{ d.get_category_display }}</span></td>
+        <td>
+          {% if d.billing_record %}
+            <span class="badge" style="padding: 4px 8px; font-weight:600;
+              {% if d.billing_record.payment_status == 'paid' %}
+                background: #d1e7dd; color: #0f5132;
+              {% elif d.billing_record.payment_status == 'debt' %}
+                background: #fff3cd; color: #664d03;
+              {% else %}
+                background: #f8d7da; color: #842029;
+              {% endif %}
+            ">
+              {{ d.billing_record.get_payment_status_display }} (₹{{ d.billing_record.paid_amount }}/₹{{ d.billing_record.total_amount }})
+            </span>
+            {% if d.billing_record.payment_status != 'paid' %}
+              <a href="{% url 'accounting:record_payment' d.billing_record.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-success btn-sm" style="padding: 2px 6px; margin-left: 6px;" title="Record Payment">
+                <i class="bi bi-cash"></i> Pay
+              </a>
+            {% endif %}
+          {% else %}
+            <a href="{% url 'accounting:transaction_create' %}?document_id={{ d.pk }}&next={{ request.get_full_path|urlencode }}" class="btn btn-secondary btn-sm" style="color:var(--primary-color);">
+              <i class="bi bi-plus-circle"></i> Add Bill
+            </a>
+          {% endif %}
+        </td>
         <td class="text-sm text-muted">{{ d.uploaded_at|date:"d M Y" }}</td>
-        <td><a href="{% url 'documents:download' d.pk %}" class="btn btn-secondary btn-sm"><i class="bi bi-download"></i></a></td>
+        <td>
+          <div class="d-flex gap-1">
+            <a href="{% url 'documents:download' d.pk %}" class="btn btn-secondary btn-sm"><i class="bi bi-download"></i></a>
+            <a href="{% url 'documents:delete' d.pk %}" class="btn btn-secondary btn-sm" style="color:var(--danger)"><i class="bi bi-trash"></i></a>
+          </div>
+        </td>
       </tr>
       {% endfor %}
       </tbody>
@@ -66,5 +95,116 @@
   {% else %}
   <div class="empty-state" style="padding:30px"><i class="bi bi-folder"></i><p>No documents uploaded yet</p></div>
   {% endif %}
+</div>
+
+<!-- Accounting & Usage History Section -->
+<div class="grid-2 mt-2">
+  <!-- Accounting Card -->
+  <div class="card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 20px;">
+      <div class="card-title"><i class="bi bi-cash-coin"></i> Accounting Ledger</div>
+      <a href="{% url 'accounting:transaction_create' %}?customer_id={{ customer.pk }}&next={{ request.get_full_path|urlencode }}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus"></i> Add Bill
+      </a>
+    </div>
+    
+    <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 20px; background: rgba(27, 67, 50, 0.01);">
+      <div>
+        <div class="text-sm text-muted" style="font-weight: 600;">TOTAL PAID</div>
+        <div style="font-size: 1.3rem; font-weight: 700; color: var(--success);">₹{{ customer_total_paid|floatformat:2 }}</div>
+      </div>
+      <div style="border-left: 1px solid var(--border); padding-left: 20px;">
+        <div class="text-sm text-muted" style="font-weight: 600;">OUTSTANDING DEBT</div>
+        <div style="font-size: 1.3rem; font-weight: 700; color: {% if customer_total_due > 0 %}var(--danger){% else %}var(--text-tertiary){% endif %};">
+          ₹{{ customer_total_due|floatformat:2 }}
+        </div>
+      </div>
+    </div>
+    
+    {% if customer_txns %}
+    <div class="table-wrapper" style="max-height: 350px; overflow-y: auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Cost</th>
+            <th>Paid</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in customer_txns %}
+          <tr>
+            <td class="fw-600">{{ t.service_name }}</td>
+            <td>₹{{ t.total_amount }}</td>
+            <td style="color: var(--success);">₹{{ t.paid_amount }}</td>
+            <td>
+              <span class="badge" style="padding: 2px 6px; font-size: 0.75rem;
+                {% if t.payment_status == 'paid' %}
+                  background: #d1e7dd; color: #0f5132;
+                {% elif t.payment_status == 'debt' %}
+                  background: #fff3cd; color: #664d03;
+                {% else %}
+                  background: #f8d7da; color: #842029;
+                {% endif %}
+              ">
+                {{ t.get_payment_status_display }}
+              </span>
+            </td>
+            <td>
+              <div class="d-flex gap-05">
+                {% if t.payment_status != 'paid' %}
+                  <a href="{% url 'accounting:record_payment' t.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-success btn-xs" title="Pay" style="padding: 2px 6px; font-size: 0.75rem;">
+                    <i class="bi bi-cash"></i> Pay
+                  </a>
+                {% endif %}
+                <a href="{% url 'accounting:transaction_update' t.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-secondary btn-sm" title="Edit"><i class="bi bi-pencil"></i></a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding: 30px;">
+      <i class="bi bi-journal-x" style="font-size: 24px; color: var(--text-tertiary); margin-bottom: 8px;"></i>
+      <p>No billing records logged for this customer.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Service Prints Usage Card -->
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="bi bi-clock-history"></i> Service Print History</div></div>
+    {% if usage %}
+    <div class="table-wrapper" style="max-height: 425px; overflow-y: auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Service / Action</th>
+            <th>Charged Coins</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in usage %}
+          <tr>
+            <td class="fw-600">{{ u.service.name|default:u.service_type|title }}</td>
+            <td style="color: var(--danger); font-weight: 600;">{{ u.cost }} Coins</td>
+            <td class="text-sm text-muted">{{ u.created_at|date:"d M Y H:i" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding: 30px;">
+      <i class="bi bi-printer-fill" style="font-size: 24px; color: var(--text-tertiary); margin-bottom: 8px;"></i>
+      <p>No card generation history found for this customer.</p>
+    </div>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}

@@ -31,6 +31,7 @@ LOCAL_APPS = [
     'apps.id_cards',
     'apps.pdf_workspace',
     'apps.dashboard',
+    'apps.accounting',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS

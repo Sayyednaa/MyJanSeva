@@ -15,4 +15,5 @@ urlpatterns = [
     path('photo-studio/', include('apps.photo_studio.urls', namespace='photo_studio')),
     path('id-cards/', include('apps.id_cards.urls', namespace='id_cards')),
     path('pdf/', include('apps.pdf_workspace.urls', namespace='pdf_workspace')),
+    path('accounting/', include('apps.accounting.urls', namespace='accounting')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

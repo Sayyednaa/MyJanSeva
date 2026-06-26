@@ -3,7 +3,7 @@
 <div class="page-header">
   <div>
     <h1>{% if customer %}{{ customer.full_name }} — Documents{% else %}Document Vault{% endif %}</h1>
-    <div class="subtitle">{{ documents|length }} document{{ documents|length|pluralize }} found</div>
+    <div class="subtitle">{{ total }} document{{ total|pluralize }} found</div>
   </div>
   <div class="d-flex gap-1">
     {% if customer %}
@@ -22,7 +22,8 @@
           <th>Document Name</th>
           <th>Category</th>
           <th>Type</th>
-          <th>Date</th>
+          <th>Billing Status</th>
+          <th>Uploaded Date</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -37,7 +38,31 @@
           </td>
           <td><span class="badge">{{ doc.get_category_display|default:doc.category }}</span></td>
           <td class="text-sm text-muted">{{ doc.get_doc_type_display|default:doc.doc_type }}</td>
-          <td class="text-sm text-muted">{{ doc.created_at|date:"d M Y" }}</td>
+          <td>
+            {% if doc.billing_record %}
+              <span class="badge" style="padding: 4px 8px; font-weight:600;
+                {% if doc.billing_record.payment_status == 'paid' %}
+                  background: #d1e7dd; color: #0f5132;
+                {% elif doc.billing_record.payment_status == 'debt' %}
+                  background: #fff3cd; color: #664d03;
+                {% else %}
+                  background: #f8d7da; color: #842029;
+                {% endif %}
+              ">
+                {{ doc.billing_record.get_payment_status_display }} (₹{{ doc.billing_record.paid_amount }}/₹{{ doc.billing_record.total_amount }})
+              </span>
+              {% if doc.billing_record.payment_status != 'paid' %}
+                <a href="{% url 'accounting:record_payment' doc.billing_record.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-success btn-sm" style="padding: 2px 6px; margin-left: 6px;" title="Record Payment">
+                  <i class="bi bi-cash"></i> Pay
+                </a>
+              {% endif %}
+            {% else %}
+              <a href="{% url 'accounting:transaction_create' %}?document_id={{ doc.pk }}&next={{ request.get_full_path|urlencode }}" class="btn btn-secondary btn-sm" style="color:var(--primary-color);">
+                <i class="bi bi-plus-circle"></i> Add Bill
+              </a>
+            {% endif %}
+          </td>
+          <td class="text-sm text-muted">{{ doc.uploaded_at|date:"d M Y" }}</td>
           <td>
             <div class="d-flex gap-1">
               <a href="{{ doc.file.url }}" class="btn btn-secondary btn-sm" download title="Download"><i class="bi bi-download"></i></a>
@@ -49,6 +74,21 @@
       </tbody>
     </table>
   </div>
+  
+  {% if page_obj.has_other_pages %}
+  <div class="pagination" style="padding: 16px 20px; display: flex; justify-content: center; gap: 4px; border-top: 1px solid var(--border);">
+    {% if page_obj.has_previous %}
+      <a class="page-btn btn btn-secondary btn-sm" href="?page={{ page_obj.previous_page_number }}{% if customer %}&customer_pk={{ customer.pk }}{% endif %}"><i class="bi bi-chevron-left"></i></a>
+    {% endif %}
+    {% for n in page_obj.paginator.page_range %}
+      <a class="page-btn btn btn-sm {% if n == page_obj.number %}btn-primary{% else %}btn-secondary{% endif %}" href="?page={{ n }}{% if customer %}&customer_pk={{ customer.pk }}{% endif %}">{{ n }}</a>
+    {% endfor %}
+    {% if page_obj.has_next %}
+      <a class="page-btn btn btn-secondary btn-sm" href="?page={{ page_obj.next_page_number }}{% if customer %}&customer_pk={{ customer.pk }}{% endif %}"><i class="bi bi-chevron-right"></i></a>
+    {% endif %}
+  </div>
+  {% endif %}
+
   {% else %}
   <div class="empty-state">
     <i class="bi bi-folder2-open"></i>

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Delete Transaction</h1>
+    <div class="subtitle">Confirm deletion of ledger record</div>
+  </div>
+</div>
+
+<div class="card" style="max-width: 500px; margin: 40px auto; border-top: 4px solid var(--danger);">
+  <div style="padding: 24px; text-align: center;">
+    <div style="color: var(--danger); font-size: 3rem; margin-bottom: 16px;">
+      <i class="bi bi-exclamation-octagon-fill"></i>
+    </div>
+    
+    <h3 style="margin-bottom: 12px; font-weight: 700;">Are you sure?</h3>
+    <p class="text-secondary" style="margin-bottom: 24px; line-height: 1.5;">
+      You are about to delete the billing transaction of <strong>₹{{ txn.total_amount }}</strong> for 
+      <strong>{{ txn.customer.full_name }}</strong> ({{ txn.service_name }}). 
+      This action cannot be undone.
+    </p>
+
+    <form method="post">
+      {% csrf_token %}
+      {% if next_url %}
+        <input type="hidden" name="next" value="{{ next_url }}">
+      {% endif %}
+      
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <a href="{% if next_url %}{{ next_url }}{% else %}{% url 'accounting:dashboard' %}{% endif %}" class="btn btn-secondary">
+          No, Cancel
+        </a>
+        <button type="submit" class="btn btn-danger">
+          Yes, Delete Record
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

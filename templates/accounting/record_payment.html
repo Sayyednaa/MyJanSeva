@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Record Payment</h1>
+    <div class="subtitle">Update cash/UPI receipt for {{ txn.customer.full_name }}</div>
+  </div>
+  <div>
+    <a href="{% if next_url %}{{ next_url }}{% else %}{% url 'accounting:dashboard' %}{% endif %}" class="btn btn-secondary">
+      <i class="bi bi-arrow-left"></i> Back
+    </a>
+  </div>
+</div>
+
+<div class="card" style="max-width: 500px; margin: 0 auto;">
+  <div class="card-header"><div class="card-title"><i class="bi bi-currency-rupee"></i> Payment Details</div></div>
+  <div style="padding: 20px;">
+    
+    <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 16px;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+        <span class="text-muted">Customer:</span>
+        <span class="fw-600">{{ txn.customer.full_name }}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+        <span class="text-muted">Service:</span>
+        <span class="fw-600">{{ txn.service_name }}</span>
+      </div>
+      {% if txn.document %}
+      <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+        <span class="text-muted">Document:</span>
+        <span class="badge" style="background: var(--light-sage); color: var(--primary-color);">{{ txn.document.name }}</span>
+      </div>
+      {% endif %}
+      <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 600;">
+        <span class="text-muted">Total Cost:</span>
+        <span>₹{{ txn.total_amount }}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--success); font-weight: 600;">
+        <span class="text-muted">Amount Already Paid:</span>
+        <span>₹{{ txn.paid_amount }}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; color: var(--danger); font-weight: 700; font-size: 1.1rem; padding-top: 8px; border-top: 1px dashed var(--border);">
+        <span>Outstanding Debt:</span>
+        <span>₹{{ txn.due_amount }}</span>
+      </div>
+    </div>
+
+    <form method="post" action="{% url 'accounting:record_payment' txn.pk %}">
+      {% csrf_token %}
+      {% if next_url %}
+        <input type="hidden" name="next" value="{{ next_url }}">
+      {% endif %}
+      
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label class="form-label" style="font-weight: 600;">Amount Received (₹) *</label>
+        <input type="number" step="0.01" name="amount_paid" class="form-control" value="{{ txn.due_amount }}" min="0.01" max="{{ txn.due_amount }}" required style="width: 100%;">
+        <small style="color: var(--text-tertiary); display: block; margin-top: 4px;">
+          Input the exact cash or UPI payment amount received.
+        </small>
+      </div>
+
+      <button type="submit" class="btn btn-success btn-block" style="padding: 12px; font-weight: 600;">
+        <i class="bi bi-check-circle"></i> Save Payment
+      </button>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

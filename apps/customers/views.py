@@ -45,13 +45,22 @@ def customer_create(request):
 
 @login_required
 def customer_detail(request, pk):
+    from django.db.models import Sum
     customer = get_object_or_404(Customer, pk=pk, created_by=request.user)
-    docs = customer.documents.all()[:10]
+    docs = customer.documents.all().select_related('billing_record')[:10]
     usage = request.user.usage_records.filter(extra_data__customer_id=pk)[:10]
+    
+    customer_txns = customer.transactions.all()
+    customer_total_paid = customer_txns.aggregate(total=Sum('paid_amount'))['total'] or 0.00
+    customer_total_due = customer_txns.aggregate(total=Sum('due_amount'))['total'] or 0.00
+    
     return render(request, 'customers/detail.html', {
         'customer': customer,
         'docs': docs,
         'usage': usage,
+        'customer_txns': customer_txns[:10],
+        'customer_total_paid': customer_total_paid,
+        'customer_total_due': customer_total_due,
         'page_title': customer.full_name,
     })
 

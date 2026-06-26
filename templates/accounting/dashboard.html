@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Accounting Ledger</h1>
+    <div class="subtitle">Track customer payments, manage outstanding debts, and bill service documents</div>
+  </div>
+  <div>
+    <a href="{% url 'accounting:transaction_create' %}" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i> Record Transaction
+    </a>
+  </div>
+</div>
+
+<!-- Summary Metrics Grid -->
+<div class="grid-4" style="margin-bottom: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
+  <!-- Paid Revenue Card -->
+  <div class="card" style="border-left: 4px solid var(--success); background: var(--bg-raised);">
+    <div style="padding: 20px; display: flex; align-items: center; justify-content: space-between;">
+      <div>
+        <div style="color: var(--text-tertiary); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; margin-bottom: 4px;">Total Revenue (Paid)</div>
+        <div style="font-size: 1.6rem; font-weight: 700; color: var(--success);">₹{{ total_paid|floatformat:2|intcomma }}</div>
+      </div>
+      <div style="background: rgba(40, 167, 69, 0.1); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--success); font-size: 1.5rem;">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Outstanding Debt Card -->
+  <div class="card" style="border-left: 4px solid var(--warning); background: var(--bg-raised);">
+    <div style="padding: 20px; display: flex; align-items: center; justify-content: space-between;">
+      <div>
+        <div style="color: var(--text-tertiary); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; margin-bottom: 4px;">Outstanding Debt</div>
+        <div style="font-size: 1.6rem; font-weight: 700; color: var(--warning);">₹{{ total_due|floatformat:2|intcomma }}</div>
+      </div>
+      <div style="background: rgba(255, 193, 7, 0.1); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--warning); font-size: 1.5rem;">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transactions Count Card -->
+  <div class="card" style="border-left: 4px solid var(--primary-color); background: var(--bg-raised);">
+    <div style="padding: 20px; display: flex; align-items: center; justify-content: space-between;">
+      <div>
+        <div style="color: var(--text-tertiary); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; margin-bottom: 4px;">Total Invoices</div>
+        <div style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary);">{{ total_txns_count }}</div>
+      </div>
+      <div style="background: rgba(27, 67, 50, 0.1); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary-color); font-size: 1.5rem;">
+        <i class="bi bi-receipt"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Unpaid Documents Card -->
+  <div class="card" style="border-left: 4px solid var(--danger); background: var(--bg-raised);">
+    <div style="padding: 20px; display: flex; align-items: center; justify-content: space-between;">
+      <div>
+        <div style="color: var(--text-tertiary); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; margin-bottom: 4px;">Unpaid Documents</div>
+        <div style="font-size: 1.6rem; font-weight: 700; color: var(--danger);">{{ unpaid_docs_count }}</div>
+      </div>
+      <div style="background: rgba(220, 53, 69, 0.1); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--danger); font-size: 1.5rem;">
+        <i class="bi bi-file-earmark-lock-fill"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tabs Controls -->
+<div class="card" style="margin-bottom: 20px; padding: 12px 20px;">
+  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+    <a href="?tab=ledger" class="btn {% if active_tab == 'ledger' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm d-flex align-center gap-05">
+      <i class="bi bi-journal-text"></i> Ledger
+    </a>
+    <a href="?tab=debts" class="btn {% if active_tab == 'debts' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm d-flex align-center gap-05">
+      <i class="bi bi-people-fill"></i> Outstanding Debts ({{ debt_customers|length }})
+    </a>
+    <a href="?tab=unpaid_docs" class="btn {% if active_tab == 'unpaid_docs' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm d-flex align-center gap-05">
+      <i class="bi bi-file-earmark-exclamation-fill"></i> Unpaid Documents ({{ unpaid_documents|length }})
+    </a>
+    <a href="?tab=unbilled_docs" class="btn {% if active_tab == 'unbilled_docs' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm d-flex align-center gap-05">
+      <i class="bi bi-file-earmark-plus-fill"></i> Unbilled Documents ({{ unbilled_documents|length }})
+    </a>
+  </div>
+</div>
+
+<!-- Tab 1: Ledger -->
+{% if active_tab == 'ledger' %}
+<div class="card mb-2">
+  <form method="get" class="d-flex gap-1" style="align-items:center; padding: 16px 20px; border-bottom: 1px solid var(--border);">
+    <input type="hidden" name="tab" value="ledger">
+    <div class="search-bar flex-1">
+      <i class="bi bi-search"></i>
+      <input type="text" name="q" value="{{ query }}" placeholder="Search ledger by customer name…">
+    </div>
+    
+    <select name="status" class="form-control" style="width: 150px; height: 38px;">
+      <option value="">All Statuses</option>
+      <option value="paid" {% if status_filter == 'paid' %}selected{% endif %}>Paid</option>
+      <option value="debt" {% if status_filter == 'debt' %}selected{% endif %}>Debt</option>
+      <option value="unpaid" {% if status_filter == 'unpaid' %}selected{% endif %}>Unpaid</option>
+    </select>
+    
+    <button type="submit" class="btn btn-primary">Filter</button>
+    {% if query or status_filter %}
+      <a href="?tab=ledger" class="btn btn-secondary">Clear</a>
+    {% endif %}
+  </form>
+
+  {% if page_obj %}
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th>Service Rendered</th>
+          <th>Doc Linked</th>
+          <th>Cost</th>
+          <th>Paid</th>
+          <th>Balance Due</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for txn in page_obj %}
+        <tr>
+          <td>
+            <a href="{% url 'customers:detail' txn.customer.pk %}" style="font-weight: 600; color: var(--primary-color);">
+              {{ txn.customer.full_name }}
+            </a>
+            <div class="text-sm text-muted">{{ txn.customer.mobile }}</div>
+          </td>
+          <td><span style="font-weight: 600;">{{ txn.service_name }}</span></td>
+          <td>
+            {% if txn.document %}
+              <span class="badge" style="background: rgba(27, 67, 50, 0.05); color: var(--primary-color);">
+                <i class="bi bi-file-earmark-check"></i> {{ txn.document.name|truncatechars:18 }}
+              </span>
+            {% else %}
+              <span class="text-muted text-sm">—</span>
+            {% endif %}
+          </td>
+          <td style="font-weight: 600;">₹{{ txn.total_amount }}</td>
+          <td style="color: var(--success); font-weight: 600;">₹{{ txn.paid_amount }}</td>
+          <td style="{% if txn.due_amount > 0 %}color: var(--danger); font-weight: 700;{% else %}color: var(--text-tertiary);{% endif %}">
+            ₹{{ txn.due_amount }}
+          </td>
+          <td>
+            <span class="badge" style="padding: 4px 8px; font-weight:600;
+              {% if txn.payment_status == 'paid' %}
+                background: #d1e7dd; color: #0f5132;
+              {% elif txn.payment_status == 'debt' %}
+                background: #fff3cd; color: #664d03;
+              {% else %}
+                background: #f8d7da; color: #842029;
+              {% endif %}
+            ">
+              {{ txn.get_payment_status_display }}
+            </span>
+          </td>
+          <td class="text-sm text-muted">{{ txn.created_at|date:"d M Y" }}</td>
+          <td>
+            <div class="d-flex gap-05">
+              {% if txn.payment_status != 'paid' %}
+                <a href="{% url 'accounting:record_payment' txn.pk %}" class="btn btn-success btn-sm" title="Record Payment" style="padding: 4px 8px;">
+                  <i class="bi bi-cash"></i> Pay
+                </a>
+              {% endif %}
+              <a href="{% url 'accounting:transaction_update' txn.pk %}" class="btn btn-secondary btn-sm" title="Edit"><i class="bi bi-pencil"></i></a>
+              <a href="{% url 'accounting:transaction_delete' txn.pk %}" class="btn btn-danger btn-sm" title="Delete"><i class="bi bi-trash"></i></a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+  {% if page_obj.has_other_pages %}
+  <div class="pagination" style="padding: 16px 20px; display: flex; justify-content: center; gap: 4px;">
+    {% if page_obj.has_previous %}
+      <a class="page-btn btn btn-secondary btn-sm" href="?page={{ page_obj.previous_page_number }}&q={{ query }}&status={{ status_filter }}&tab=ledger"><i class="bi bi-chevron-left"></i></a>
+    {% endif %}
+    {% for n in page_obj.paginator.page_range %}
+      <a class="page-btn btn btn-sm {% if n == page_obj.number %}btn-primary{% else %}btn-secondary{% endif %}" href="?page={{ n }}&q={{ query }}&status={{ status_filter }}&tab=ledger">{{ n }}</a>
+    {% endfor %}
+    {% if page_obj.has_next %}
+      <a class="page-btn btn btn-secondary btn-sm" href="?page={{ page_obj.next_page_number }}&q={{ query }}&status={{ status_filter }}&tab=ledger"><i class="bi bi-chevron-right"></i></a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="empty-state" style="padding: 40px; text-align: center;">
+    <i class="bi bi-journal" style="font-size: 40px; color: var(--text-tertiary); margin-bottom: 12px;"></i>
+    <p>No transactions found. Record a payment or bill to get started.</p>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- Tab 2: Outstanding Debts -->
+{% if active_tab == 'debts' %}
+<div class="card">
+  <div class="card-header"><div class="card-title"><i class="bi bi-people"></i> Outstanding Debts by Customer</div></div>
+  {% if debt_customers %}
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th>Mobile</th>
+          <th>Total Outstanding Debt</th>
+          <th>Bill Count</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in debt_customers %}
+        <tr>
+          <td>
+            <a href="{% url 'customers:detail' c.pk %}" style="font-weight: 700; color: var(--primary-color);">{{ c.full_name }}</a>
+            <div class="text-sm text-muted">{{ c.village|default:c.district }}</div>
+          </td>
+          <td>{{ c.mobile }}</td>
+          <td style="color: var(--danger); font-weight: 700; font-size: 1.1rem;">₹{{ c.total_debt|floatformat:2 }}</td>
+          <td><span class="badge" style="background: var(--light-sage); color: var(--primary-color);">{{ c.txn_count }} pending billing{{ c.txn_count|pluralize }}</span></td>
+          <td>
+            <div class="d-flex gap-05">
+              <a href="{% url 'customers:detail' c.pk %}" class="btn btn-secondary btn-sm">
+                <i class="bi bi-eye"></i> View Profile
+              </a>
+              <a href="{% url 'accounting:transaction_create' %}?customer_id={{ c.pk }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus"></i> Add New Bill
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state" style="padding: 40px; text-align: center;">
+    <i class="bi bi-heart-fill" style="font-size: 40px; color: var(--success); margin-bottom: 12px;"></i>
+    <p>Zero debt! All customers have cleared their pending balances.</p>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- Tab 3: Unpaid Documents -->
+{% if active_tab == 'unpaid_docs' %}
+<div class="card">
+  <div class="card-header"><div class="card-title"><i class="bi bi-file-earmark-lock"></i> Pending Document Bills</div></div>
+  {% if unpaid_documents %}
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Document</th>
+          <th>Customer</th>
+          <th>Service Name</th>
+          <th>Due Balance</th>
+          <th>Payment Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for doc in unpaid_documents %}
+        <tr>
+          <td style="font-weight: 600;">
+            <i class="bi bi-file-earmark-text" style="color: var(--accent); margin-right: 6px;"></i>
+            {{ doc.name }}
+          </td>
+          <td>
+            <a href="{% url 'customers:detail' doc.customer.pk %}" style="font-weight: 600; color: var(--primary-color);">
+              {{ doc.customer.full_name }}
+            </a>
+          </td>
+          <td class="text-sm">{{ doc.billing_record.service_name }}</td>
+          <td style="color: var(--danger); font-weight: 700;">₹{{ doc.billing_record.due_amount }}</td>
+          <td>
+            <span class="badge" style="padding: 4px 8px; font-weight:600;
+              {% if doc.billing_record.payment_status == 'debt' %}
+                background: #fff3cd; color: #664d03;
+              {% else %}
+                background: #f8d7da; color: #842029;
+              {% endif %}
+            ">
+              {{ doc.billing_record.get_payment_status_display }}
+            </span>
+          </td>
+          <td>
+            <div class="d-flex gap-05">
+              <a href="{% url 'accounting:record_payment' doc.billing_record.pk %}" class="btn btn-success btn-sm">
+                <i class="bi bi-cash"></i> Record Payment
+              </a>
+              <a href="{% url 'documents:download' doc.pk %}" class="btn btn-secondary btn-sm"><i class="bi bi-download"></i></a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state" style="padding: 40px; text-align: center;">
+    <i class="bi bi-file-earmark-check" style="font-size: 40px; color: var(--success); margin-bottom: 12px;"></i>
+    <p>All document jobs have been fully paid for!</p>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- Tab 4: Unbilled Documents -->
+{% if active_tab == 'unbilled_docs' %}
+<div class="card">
+  <div class="card-header"><div class="card-title"><i class="bi bi-file-earmark-plus"></i> Unbilled Vault Documents</div></div>
+  {% if unbilled_documents %}
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Document</th>
+          <th>Customer</th>
+          <th>Category</th>
+          <th>Uploaded Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for doc in unbilled_documents %}
+        <tr>
+          <td style="font-weight: 600;">
+            <i class="bi bi-file-earmark-text" style="color: var(--accent); margin-right: 6px;"></i>
+            {{ doc.name }}
+          </td>
+          <td>
+            <a href="{% url 'customers:detail' doc.customer.pk %}" style="font-weight: 600; color: var(--primary-color);">
+              {{ doc.customer.full_name }}
+            </a>
+          </td>
+          <td><span class="badge">{{ doc.get_category_display }}</span></td>
+          <td class="text-sm text-muted">{{ doc.uploaded_at|date:"d M Y" }}</td>
+          <td>
+            <a href="{% url 'accounting:transaction_create' %}?document_id={{ doc.pk }}" class="btn btn-primary btn-sm d-inline-flex align-center gap-05">
+              <i class="bi bi-plus-circle"></i> Create Bill
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state" style="padding: 40px; text-align: center;">
+    <i class="bi bi-check-circle-fill" style="font-size: 40px; color: var(--success); margin-bottom: 12px;"></i>
+    <p>All documents have been successfully billed!</p>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

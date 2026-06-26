@@ -14,14 +14,16 @@ from .forms import DocumentUploadForm
 def document_list(request, customer_pk=None):
     if customer_pk:
         customer = get_object_or_404(Customer, pk=customer_pk, created_by=request.user)
-        docs = CustomerDocument.objects.filter(customer=customer)
+        docs = CustomerDocument.objects.filter(customer=customer).select_related('customer', 'billing_record')
     else:
-        docs = CustomerDocument.objects.filter(customer__created_by=request.user)
+        docs = CustomerDocument.objects.filter(customer__created_by=request.user).select_related('customer', 'billing_record')
         customer = None
     paginator = Paginator(docs, 20)
     page = paginator.get_page(request.GET.get('page'))
     return render(request, 'documents/list.html', {
         'page_obj': page,
+        'documents': page,
+        'total': docs.count(),
         'customer': customer,
         'page_title': f"{customer.full_name}'s Documents" if customer else 'All Documents',
     })
