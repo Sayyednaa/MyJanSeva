@@ -3,7 +3,7 @@
 <div class="page-header">
   <div>
     <h1>Record Payment</h1>
-    <div class="subtitle">Update cash/UPI receipt for {{ txn.customer.full_name }}</div>
+    <div class="subtitle">Update cash/UPI receipt for {{ txn.customer_name }}</div>
   </div>
   <div>
     <a href="{% if next_url %}{{ next_url }}{% else %}{% url 'accounting:dashboard' %}{% endif %}" class="btn btn-secondary">
@@ -19,16 +19,16 @@
     <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 16px;">
       <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
         <span class="text-muted">Customer:</span>
-        <span class="fw-600">{{ txn.customer.full_name }}</span>
+        <span class="fw-600">{{ txn.customer_name }}</span>
       </div>
       <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
         <span class="text-muted">Service:</span>
         <span class="fw-600">{{ txn.service_name }}</span>
       </div>
-      {% if txn.document %}
+      {% if txn.display_document_name %}
       <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
         <span class="text-muted">Document:</span>
-        <span class="badge" style="background: var(--light-sage); color: var(--primary-color);">{{ txn.document.name }}</span>
+        <span class="badge" style="background: var(--light-sage); color: var(--primary-color);">{{ txn.display_document_name }}</span>
       </div>
       {% endif %}
       <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 600;">

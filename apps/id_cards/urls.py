@@ -22,4 +22,8 @@ urlpatterns = [
     path('print/pan/', views.pan_pvc, name='pan_pvc'),
     path('print/voter/', views.voter_pvc, name='voter_pvc'),
     path('print/id-card/', views.id_card_pvc, name='id_card_pvc'),
+
+    # Delete confirmations
+    path('farmer/delete-confirm/<int:pk>/', views.delete_farmer_card_confirm, name='delete_farmer_card_confirm'),
+    path('ration/delete-confirm/<int:pk>/', views.delete_ration_card_confirm, name='delete_ration_card_confirm'),
 ]

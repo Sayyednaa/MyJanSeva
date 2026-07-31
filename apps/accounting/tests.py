@@ -36,12 +36,25 @@ class AccountingSystemTests(TestCase):
             file=dummy_file,
             file_size=11
         )
+        from apps.id_cards.models import FarmerIDCard, RationCard
+        self.farmer_card = FarmerIDCard.objects.create(
+            user=self.user,
+            farmer_id="F-11111",
+            name_en="Aarav Sharma",
+            mobile="9876543210"
+        )
+        self.ration_card = RationCard.objects.create(
+            user=self.user,
+            card_number="R-22222",
+            head_of_family="Aarav Sharma",
+            mobile="9876543210"
+        )
 
     def test_transaction_auto_calculation_paid(self):
         # Fully paid transaction
         txn = CustomerTransaction.objects.create(
             operator=self.user,
-            customer=self.customer,
+            document=self.document,
             service_name='Aadhaar PVC Print',
             total_amount=Decimal('50.00'),
             paid_amount=Decimal('50.00'),
@@ -54,7 +67,7 @@ class AccountingSystemTests(TestCase):
         # Partially paid transaction (debt)
         txn = CustomerTransaction.objects.create(
             operator=self.user,
-            customer=self.customer,
+            document=self.document,
             service_name='Caste Certificate Print',
             total_amount=Decimal('100.00'),
             paid_amount=Decimal('30.00'),
@@ -67,7 +80,7 @@ class AccountingSystemTests(TestCase):
         # Unpaid transaction
         txn = CustomerTransaction.objects.create(
             operator=self.user,
-            customer=self.customer,
+            document=self.document,
             service_name='Income Certificate Print',
             total_amount=Decimal('80.00'),
             paid_amount=Decimal('0.00'),
@@ -85,7 +98,7 @@ class AccountingSystemTests(TestCase):
         # Create some test transactions
         CustomerTransaction.objects.create(
             operator=self.user,
-            customer=self.customer,
+            document=self.document,
             service_name='Service A',
             total_amount=Decimal('150.00'),
             paid_amount=Decimal('100.00'),
@@ -100,7 +113,7 @@ class AccountingSystemTests(TestCase):
     def test_transaction_create_view(self):
         self.client.login(username=self.username, password=self.password)
         response = self.client.post(reverse('accounting:transaction_create'), {
-            'document': self.document.pk,
+            'associated_document': f"doc_{self.document.pk}",
             'service_name': 'PAN PVC Card',
             'total_amount': '60.00',
             'paid_amount': '10.00',
@@ -114,11 +127,47 @@ class AccountingSystemTests(TestCase):
         self.assertEqual(txn.due_amount, Decimal('50.00'))
         self.assertEqual(txn.payment_status, 'debt')
 
+    def test_transaction_create_farmer_autofill_service_name(self):
+        self.client.login(username=self.username, password=self.password)
+        response = self.client.post(reverse('accounting:transaction_create'), {
+            'associated_document': f"farmer_{self.farmer_card.pk}",
+            'service_name': '',  # empty to trigger auto-fill
+            'total_amount': '100.00',
+            'paid_amount': '100.00',
+            'payment_method': 'cash',
+        })
+        if response.status_code != 302:
+            print("FARMER FORM ERRORS:", response.context['form'].errors)
+        self.assertEqual(response.status_code, 302)
+        txn = CustomerTransaction.objects.get(farmer_card=self.farmer_card)
+        self.assertEqual(txn.customer, self.customer)
+        self.assertEqual(txn.service_name, 'Farmer ID Card')
+        self.assertEqual(txn.due_amount, Decimal('0.00'))
+        self.assertEqual(txn.payment_status, 'paid')
+
+    def test_transaction_create_ration_autofill_service_name(self):
+        self.client.login(username=self.username, password=self.password)
+        response = self.client.post(reverse('accounting:transaction_create'), {
+            'associated_document': f"ration_{self.ration_card.pk}",
+            'service_name': '',  # empty to trigger auto-fill
+            'total_amount': '50.00',
+            'paid_amount': '0.00',
+            'payment_method': 'cash',
+        })
+        if response.status_code != 302:
+            print("RATION FORM ERRORS:", response.context['form'].errors)
+        self.assertEqual(response.status_code, 302)
+        txn = CustomerTransaction.objects.get(ration_card=self.ration_card)
+        self.assertEqual(txn.customer, self.customer)
+        self.assertEqual(txn.service_name, 'Ration Card')
+        self.assertEqual(txn.due_amount, Decimal('50.00'))
+        self.assertEqual(txn.payment_status, 'unpaid')
+
     def test_record_payment_view(self):
         self.client.login(username=self.username, password=self.password)
         txn = CustomerTransaction.objects.create(
             operator=self.user,
-            customer=self.customer,
+            document=self.document,
             service_name='Merge PDF Service',
             total_amount=Decimal('40.00'),
             paid_amount=Decimal('10.00'),
@@ -132,3 +181,26 @@ class AccountingSystemTests(TestCase):
         self.assertEqual(txn.paid_amount, Decimal('40.00'))
         self.assertEqual(txn.due_amount, Decimal('0.00'))
         self.assertEqual(txn.payment_status, 'paid')
+
+    def test_transaction_create_unmatched_card(self):
+        # Create a card with an unmatched name/mobile/aadhaar
+        from apps.id_cards.models import FarmerIDCard
+        unmatched_card = FarmerIDCard.objects.create(
+            user=self.user,
+            farmer_id="F-99999",
+            name_en="Unmatched Person",
+            mobile="0000000000"
+        )
+        self.client.login(username=self.username, password=self.password)
+        response = self.client.post(reverse('accounting:transaction_create'), {
+            'associated_document': f"farmer_{unmatched_card.pk}",
+            'service_name': '',  # empty to trigger auto-fill
+            'total_amount': '150.00',
+            'paid_amount': '150.00',
+            'payment_method': 'cash',
+        })
+        self.assertEqual(response.status_code, 302)
+        txn = CustomerTransaction.objects.get(farmer_card=unmatched_card)
+        self.assertIsNone(txn.customer)
+        self.assertEqual(txn.customer_name, 'Unmatched Person')
+        self.assertEqual(txn.service_name, 'Farmer ID Card')

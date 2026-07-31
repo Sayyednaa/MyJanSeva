@@ -54,8 +54,15 @@
       <tbody>
       {% for d in docs %}
       <tr>
-        <td class="fw-600">{{ d.name }}</td>
-        <td><span class="badge badge-accent">{{ d.get_category_display }}</span></td>
+        <td class="fw-600">
+          {% if d.is_vault_doc %}
+            <i class="bi bi-file-earmark-text text-muted" style="margin-right: 4px;"></i>
+          {% else %}
+            <i class="bi bi-card-heading text-primary" style="margin-right: 4px;"></i>
+          {% endif %}
+          {{ d.display_name }}
+        </td>
+        <td><span class="badge badge-accent">{{ d.display_category }}</span></td>
         <td>
           {% if d.billing_record %}
             <span class="badge" style="padding: 4px 8px; font-weight:600;
@@ -75,16 +82,25 @@
               </a>
             {% endif %}
           {% else %}
-            <a href="{% url 'accounting:transaction_create' %}?document_id={{ d.pk }}&next={{ request.get_full_path|urlencode }}" class="btn btn-secondary btn-sm" style="color:var(--primary-color);">
+            <a href="{% url 'accounting:transaction_create' %}?document_id={% if d.is_vault_doc %}doc_{{ d.pk }}{% elif d.is_farmer_card %}farmer_{{ d.pk }}{% else %}ration_{{ d.pk }}{% endif %}&next={{ request.get_full_path|urlencode }}" class="btn btn-secondary btn-sm" style="color:var(--primary-color);">
               <i class="bi bi-plus-circle"></i> Add Bill
             </a>
           {% endif %}
         </td>
-        <td class="text-sm text-muted">{{ d.uploaded_at|date:"d M Y" }}</td>
+        <td class="text-sm text-muted">{{ d.doc_date|date:"d M Y" }}</td>
         <td>
           <div class="d-flex gap-1">
-            <a href="{% url 'documents:download' d.pk %}" class="btn btn-secondary btn-sm"><i class="bi bi-download"></i></a>
-            <a href="{% url 'documents:delete' d.pk %}" class="btn btn-secondary btn-sm" style="color:var(--danger)"><i class="bi bi-trash"></i></a>
+            {% if d.is_vault_doc %}
+              <a href="{% url 'documents:download' d.pk %}" class="btn btn-secondary btn-sm" title="Download"><i class="bi bi-download"></i></a>
+              <a href="{% url 'documents:delete' d.pk %}" class="btn btn-secondary btn-sm" style="color:var(--danger)" title="Delete"><i class="bi bi-trash"></i></a>
+            {% else %}
+              <a href="{{ d.doc_url }}" target="_blank" class="btn btn-secondary btn-sm" title="Print"><i class="bi bi-printer"></i></a>
+              {% if d.is_farmer_card %}
+                <a href="{% url 'id_cards:delete_farmer_card_confirm' d.pk %}?customer_pk={{ customer.pk }}" class="btn btn-secondary btn-sm" style="color:var(--danger)" title="Delete"><i class="bi bi-trash"></i></a>
+              {% else %}
+                <a href="{% url 'id_cards:delete_ration_card_confirm' d.pk %}?customer_pk={{ customer.pk }}" class="btn btn-secondary btn-sm" style="color:var(--danger)" title="Delete"><i class="bi bi-trash"></i></a>
+              {% endif %}
+            {% endif %}
           </div>
         </td>
       </tr>

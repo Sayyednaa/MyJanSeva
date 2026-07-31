@@ -27,9 +27,14 @@ def dashboard_view(request):
     q = request.GET.get('q', '')
     status_filter = request.GET.get('status', '')
     
-    ledger_txns = txns.select_related('customer', 'document')
+    ledger_txns = txns.select_related('document__customer', 'farmer_card', 'ration_card')
     if q:
-        ledger_txns = ledger_txns.filter(customer__full_name__icontains=q)
+        from django.db.models import Q
+        ledger_txns = ledger_txns.filter(
+            Q(document__customer__full_name__icontains=q) |
+            Q(farmer_card__name_en__icontains=q) |
+            Q(ration_card__head_of_family__icontains=q)
+        )
     if status_filter:
         ledger_txns = ledger_txns.filter(payment_status=status_filter)
         
@@ -37,27 +42,111 @@ def dashboard_view(request):
     page_obj = paginator.get_page(request.GET.get('page'))
     
     # 2. Outstanding Debts by Customer
-    # We annotate each customer who has debt to show their total unpaid balance
-    debt_customers = Customer.objects.filter(
-        created_by=request.user, 
-        transactions__due_amount__gt=0
-    ).annotate(
-        total_debt=Sum('transactions__due_amount'),
-        txn_count=Count('transactions')
-    ).filter(total_debt__gt=0).order_by('-total_debt')
+    # Group outstanding transactions in Python by resolving dynamic customer
+    debt_txns = CustomerTransaction.objects.filter(
+        operator=request.user, 
+        due_amount__gt=0
+    ).select_related('document__customer', 'farmer_card', 'ration_card')
     
+    class DebtCustomerWrapper:
+        def __init__(self, customer, total_debt, txn_count):
+            self.customer = customer
+            self.total_debt = total_debt
+            self.txn_count = txn_count
+        @property
+        def pk(self): return self.customer.pk
+        @property
+        def full_name(self): return self.customer.full_name
+        @property
+        def mobile(self): return self.customer.mobile
+        @property
+        def village(self): return self.customer.village
+        @property
+        def district(self): return self.customer.district
+
+    debts_by_cust = {}
+    for t in debt_txns:
+        cust = t.customer
+        if cust:
+            if cust.pk not in debts_by_cust:
+                debts_by_cust[cust.pk] = {
+                    'customer': cust,
+                    'total_debt': 0,
+                    'txn_count': 0
+                }
+            debts_by_cust[cust.pk]['total_debt'] += t.due_amount
+            debts_by_cust[cust.pk]['txn_count'] += 1
+
+    debt_customers = [
+        DebtCustomerWrapper(item['customer'], item['total_debt'], item['txn_count'])
+        for item in debts_by_cust.values()
+    ]
+    debt_customers.sort(key=lambda x: x.total_debt, reverse=True)
+    
+    from apps.id_cards.models import FarmerIDCard, RationCard
+    from apps.documents.views import matches_customer
+    from django.utils.timezone import now
+
     # 3. Unpaid / Under-paid Documents
-    unpaid_documents = CustomerDocument.objects.filter(
+    unpaid_docs = list(CustomerDocument.objects.filter(
         customer__created_by=request.user,
         billing_record__due_amount__gt=0
-    ).select_related('customer', 'billing_record').order_by('-uploaded_at')
+    ).select_related('customer', 'billing_record'))
+    
+    unpaid_farmers = list(FarmerIDCard.objects.filter(
+        user=request.user,
+        billing_record__due_amount__gt=0
+    ).select_related('billing_record'))
+    
+    unpaid_rations = list(RationCard.objects.filter(
+        user=request.user,
+        billing_record__due_amount__gt=0
+    ).select_related('billing_record'))
+
+    for fc in unpaid_farmers:
+        for cust in Customer.objects.filter(created_by=request.user):
+            if matches_customer(fc, cust):
+                fc.customer = cust
+                break
+    for rc in unpaid_rations:
+        for cust in Customer.objects.filter(created_by=request.user):
+            if matches_customer(rc, cust):
+                rc.customer = cust
+                break
+
+    unpaid_documents = unpaid_docs + unpaid_farmers + unpaid_rations
+    unpaid_documents.sort(key=lambda x: getattr(x, 'doc_date', None) or now(), reverse=True)
 
     # Also track documents with no billing records at all (unbilled docs)
     # to let operators track what hasn't been charged yet
-    unbilled_documents = CustomerDocument.objects.filter(
+    unbilled_docs = list(CustomerDocument.objects.filter(
         customer__created_by=request.user,
         billing_record__isnull=True
-    ).select_related('customer').order_by('-uploaded_at')
+    ).select_related('customer'))
+    
+    unbilled_farmers = list(FarmerIDCard.objects.filter(
+        user=request.user,
+        billing_record__isnull=True
+    ))
+    
+    unbilled_rations = list(RationCard.objects.filter(
+        user=request.user,
+        billing_record__isnull=True
+    ))
+
+    for fc in unbilled_farmers:
+        for cust in Customer.objects.filter(created_by=request.user):
+            if matches_customer(fc, cust):
+                fc.customer = cust
+                break
+    for rc in unbilled_rations:
+        for cust in Customer.objects.filter(created_by=request.user):
+            if matches_customer(rc, cust):
+                rc.customer = cust
+                break
+
+    unbilled_documents = unbilled_docs + unbilled_farmers + unbilled_rations
+    unbilled_documents.sort(key=lambda x: getattr(x, 'doc_date', None) or now(), reverse=True)
 
     active_tab = request.GET.get('tab', 'ledger')
 
@@ -87,7 +176,7 @@ def transaction_create(request):
             txn = form.save(commit=False)
             txn.operator = request.user
             txn.save()
-            messages.success(request, f'Transaction recorded for {txn.customer.full_name}.')
+            messages.success(request, f'Transaction recorded for {txn.customer_name}.')
             # Redirect to customer page if we came from there, otherwise accounting
             if 'next' in request.POST:
                 return redirect(request.POST.get('next'))
@@ -145,7 +234,7 @@ def record_payment(request, pk):
                 
             txn.paid_amount = txn.paid_amount + amount_paid
             txn.save()
-            messages.success(request, f'Payment of Rs. {amount_paid:.2f} recorded for {txn.customer.full_name}.')
+            messages.success(request, f'Payment of Rs. {amount_paid:.2f} recorded for {txn.customer_name}.')
         except ValueError as e:
             messages.error(request, f'Error: {str(e)}')
             
@@ -163,7 +252,7 @@ def record_payment(request, pk):
 @login_required
 def transaction_delete(request, pk):
     txn = get_object_or_404(CustomerTransaction, pk=pk, operator=request.user)
-    customer_pk = txn.customer.pk
+    customer_pk = txn.customer.pk if txn.customer else None
     
     if request.method == 'POST':
         txn.delete()

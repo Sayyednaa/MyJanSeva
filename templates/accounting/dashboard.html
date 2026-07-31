@@ -129,16 +129,21 @@
         {% for txn in page_obj %}
         <tr>
           <td>
-            <a href="{% url 'customers:detail' txn.customer.pk %}" style="font-weight: 600; color: var(--primary-color);">
-              {{ txn.customer.full_name }}
-            </a>
-            <div class="text-sm text-muted">{{ txn.customer.mobile }}</div>
+            {% if txn.customer %}
+              <a href="{% url 'customers:detail' txn.customer.pk %}" style="font-weight: 600; color: var(--primary-color);">
+                {{ txn.customer_name }}
+              </a>
+              <div class="text-sm text-muted">{{ txn.customer.mobile }}</div>
+            {% else %}
+              <span style="font-weight: 600; color: var(--text-secondary);">{{ txn.customer_name }}</span>
+              <div class="text-sm text-muted">Unlinked Card</div>
+            {% endif %}
           </td>
           <td><span style="font-weight: 600;">{{ txn.service_name }}</span></td>
           <td>
-            {% if txn.document %}
+            {% if txn.display_document_name %}
               <span class="badge" style="background: rgba(27, 67, 50, 0.05); color: var(--primary-color);">
-                <i class="bi bi-file-earmark-check"></i> {{ txn.document.name|truncatechars:18 }}
+                <i class="bi bi-file-earmark-check"></i> {{ txn.display_document_name|truncatechars:18 }}
               </span>
             {% else %}
               <span class="text-muted text-sm">—</span>
@@ -274,13 +279,21 @@
         {% for doc in unpaid_documents %}
         <tr>
           <td style="font-weight: 600;">
-            <i class="bi bi-file-earmark-text" style="color: var(--accent); margin-right: 6px;"></i>
-            {{ doc.name }}
+            {% if doc.is_vault_doc %}
+              <i class="bi bi-file-earmark-text" style="color: var(--accent); margin-right: 6px;"></i>
+            {% else %}
+              <i class="bi bi-card-heading" style="color: var(--primary-color); margin-right: 6px;"></i>
+            {% endif %}
+            {{ doc.display_name }}
           </td>
           <td>
-            <a href="{% url 'customers:detail' doc.customer.pk %}" style="font-weight: 600; color: var(--primary-color);">
-              {{ doc.customer.full_name }}
-            </a>
+            {% if doc.customer %}
+              <a href="{% url 'customers:detail' doc.customer.pk %}" style="font-weight: 600; color: var(--primary-color);">
+                {{ doc.customer.full_name }}
+              </a>
+            {% else %}
+              <span class="text-muted">Unlinked card</span>
+            {% endif %}
           </td>
           <td class="text-sm">{{ doc.billing_record.service_name }}</td>
           <td style="color: var(--danger); font-weight: 700;">₹{{ doc.billing_record.due_amount }}</td>
@@ -300,7 +313,11 @@
               <a href="{% url 'accounting:record_payment' doc.billing_record.pk %}" class="btn btn-success btn-sm">
                 <i class="bi bi-cash"></i> Record Payment
               </a>
-              <a href="{% url 'documents:download' doc.pk %}" class="btn btn-secondary btn-sm"><i class="bi bi-download"></i></a>
+              {% if doc.is_vault_doc %}
+                <a href="{% url 'documents:download' doc.pk %}" class="btn btn-secondary btn-sm"><i class="bi bi-download"></i></a>
+              {% else %}
+                <a href="{{ doc.doc_url }}" target="_blank" class="btn btn-secondary btn-sm" title="Print"><i class="bi bi-printer"></i></a>
+              {% endif %}
             </div>
           </td>
         </tr>
@@ -337,18 +354,26 @@
         {% for doc in unbilled_documents %}
         <tr>
           <td style="font-weight: 600;">
-            <i class="bi bi-file-earmark-text" style="color: var(--accent); margin-right: 6px;"></i>
-            {{ doc.name }}
+            {% if doc.is_vault_doc %}
+              <i class="bi bi-file-earmark-text" style="color: var(--accent); margin-right: 6px;"></i>
+            {% else %}
+              <i class="bi bi-card-heading" style="color: var(--primary-color); margin-right: 6px;"></i>
+            {% endif %}
+            {{ doc.display_name }}
           </td>
           <td>
-            <a href="{% url 'customers:detail' doc.customer.pk %}" style="font-weight: 600; color: var(--primary-color);">
-              {{ doc.customer.full_name }}
-            </a>
+            {% if doc.customer %}
+              <a href="{% url 'customers:detail' doc.customer.pk %}" style="font-weight: 600; color: var(--primary-color);">
+                {{ doc.customer.full_name }}
+              </a>
+            {% else %}
+              <span class="text-muted">Unlinked card</span>
+            {% endif %}
           </td>
-          <td><span class="badge">{{ doc.get_category_display }}</span></td>
-          <td class="text-sm text-muted">{{ doc.uploaded_at|date:"d M Y" }}</td>
+          <td><span class="badge">{{ doc.display_category }}</span></td>
+          <td class="text-sm text-muted">{{ doc.doc_date|date:"d M Y" }}</td>
           <td>
-            <a href="{% url 'accounting:transaction_create' %}?document_id={{ doc.pk }}" class="btn btn-primary btn-sm d-inline-flex align-center gap-05">
+            <a href="{% url 'accounting:transaction_create' %}?document_id={% if doc.is_vault_doc %}doc_{{ doc.pk }}{% elif doc.is_farmer_card %}farmer_{{ doc.pk }}{% else %}ration_{{ doc.pk }}{% endif %}" class="btn btn-primary btn-sm d-inline-flex align-center gap-05">
               <i class="bi bi-plus-circle"></i> Create Bill
             </a>
           </td>

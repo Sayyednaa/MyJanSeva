@@ -60,6 +60,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   resetForm();
   setupEventListeners();
+
+  // Check if card ID is in query parameters to auto-edit/load
+  const urlParams = new URLSearchParams(window.location.search);
+  const editId = urlParams.get('edit') || urlParams.get('id');
+  if (editId) {
+    editCard(parseInt(editId));
+  }
 });
 
 /* ==========================================================================

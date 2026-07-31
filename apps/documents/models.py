@@ -45,3 +45,35 @@ class CustomerDocument(models.Model):
 
     def file_size_kb(self):
         return round(self.file_size / 1024, 1)
+
+    @property
+    def is_vault_doc(self):
+        return True
+
+    @property
+    def is_farmer_card(self):
+        return False
+
+    @property
+    def is_ration_card(self):
+        return False
+
+    @property
+    def display_name(self):
+        return self.name
+
+    @property
+    def display_type(self):
+        return self.get_doc_type_display()
+
+    @property
+    def display_category(self):
+        return self.get_category_display()
+
+    @property
+    def doc_date(self):
+        return self.uploaded_at
+
+    @property
+    def doc_url(self):
+        return self.file.url

@@ -70,6 +70,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 4. Attach Event Listeners
   setupEventListeners();
+
+  // 5. Check if card ID is in query parameters to auto-edit/load
+  const urlParams = new URLSearchParams(window.location.search);
+  const editId = urlParams.get('edit') || urlParams.get('id');
+  if (editId) {
+    const card = historyCards.find(c => String(c.id) === String(editId));
+    if (card) {
+      editCard(card);
+    }
+  }
 });
 
 /* ==========================================================================

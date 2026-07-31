@@ -42,6 +42,23 @@ class Customer(models.Model):
             return f"{parts[0][0]}{parts[-1][0]}".upper()
         return self.full_name[:2].upper()
 
+    @property
+    def transactions(self):
+        from apps.accounting.models import CustomerTransaction
+        from apps.id_cards.models import FarmerIDCard, RationCard
+        from apps.documents.views import matches_customer
+        from django.db.models import Q
+        
+        doc_ids = list(self.documents.values_list('pk', flat=True))
+        farmer_ids = [fc.pk for fc in FarmerIDCard.objects.filter(user=self.created_by) if matches_customer(fc, self)]
+        ration_ids = [rc.pk for rc in RationCard.objects.filter(user=self.created_by) if matches_customer(rc, self)]
+        
+        return CustomerTransaction.objects.filter(
+            Q(document_id__in=doc_ids) |
+            Q(farmer_card_id__in=farmer_ids) |
+            Q(ration_card_id__in=ration_ids)
+        )
+
 
 class FamilyLink(models.Model):
     primary = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='family_links')

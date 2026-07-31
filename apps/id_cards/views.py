@@ -409,3 +409,55 @@ def id_card_pvc(request):
     })
 
 
+@login_required
+def delete_farmer_card_confirm(request, pk):
+    from django.shortcuts import get_object_or_404, redirect, render
+    from django.contrib import messages
+    from apps.customers.models import Customer
+    
+    card = get_object_or_404(FarmerIDCard, pk=pk, user=request.user)
+    customer = None
+    customer_pk = request.GET.get('customer_pk')
+    if customer_pk:
+        customer = get_object_or_404(Customer, pk=customer_pk, created_by=request.user)
+        card.customer = customer
+
+    if request.method == 'POST':
+        card.delete()
+        messages.success(request, 'Farmer ID card deleted.')
+        if customer_pk:
+            return redirect('documents:list_customer', customer_pk=customer_pk)
+        return redirect('documents:list')
+
+    return render(request, 'documents/confirm_delete.html', {
+        'doc': card,
+        'cancel_url': f'/documents/customer/{customer_pk}/' if customer_pk else '/documents/'
+    })
+
+
+@login_required
+def delete_ration_card_confirm(request, pk):
+    from django.shortcuts import get_object_or_404, redirect, render
+    from django.contrib import messages
+    from apps.customers.models import Customer
+    
+    card = get_object_or_404(RationCard, pk=pk, user=request.user)
+    customer = None
+    customer_pk = request.GET.get('customer_pk')
+    if customer_pk:
+        customer = get_object_or_404(Customer, pk=customer_pk, created_by=request.user)
+        card.customer = customer
+
+    if request.method == 'POST':
+        card.delete()
+        messages.success(request, 'Ration card deleted.')
+        if customer_pk:
+            return redirect('documents:list_customer', customer_pk=customer_pk)
+        return redirect('documents:list')
+
+    return render(request, 'documents/confirm_delete.html', {
+        'doc': card,
+        'cancel_url': f'/documents/customer/{customer_pk}/' if customer_pk else '/documents/'
+    })
+
+

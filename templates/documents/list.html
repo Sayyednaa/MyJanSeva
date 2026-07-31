@@ -32,12 +32,16 @@
         <tr>
           <td>
             <div class="d-flex align-center gap-1">
-              <i class="bi bi-file-earmark-text" style="font-size:20px;color:var(--accent)"></i>
-              <div style="font-weight:600">{{ doc.name }}</div>
+              {% if doc.is_vault_doc %}
+                <i class="bi bi-file-earmark-text" style="font-size:20px;color:var(--accent)"></i>
+              {% else %}
+                <i class="bi bi-card-heading" style="font-size:20px;color:var(--primary-color)"></i>
+              {% endif %}
+              <div style="font-weight:600">{{ doc.display_name }}</div>
             </div>
           </td>
-          <td><span class="badge">{{ doc.get_category_display|default:doc.category }}</span></td>
-          <td class="text-sm text-muted">{{ doc.get_doc_type_display|default:doc.doc_type }}</td>
+          <td><span class="badge">{{ doc.display_category }}</span></td>
+          <td class="text-sm text-muted">{{ doc.display_type }}</td>
           <td>
             {% if doc.billing_record %}
               <span class="badge" style="padding: 4px 8px; font-weight:600;
@@ -57,16 +61,25 @@
                 </a>
               {% endif %}
             {% else %}
-              <a href="{% url 'accounting:transaction_create' %}?document_id={{ doc.pk }}&next={{ request.get_full_path|urlencode }}" class="btn btn-secondary btn-sm" style="color:var(--primary-color);">
+              <a href="{% url 'accounting:transaction_create' %}?document_id={% if doc.is_vault_doc %}doc_{{ doc.pk }}{% elif doc.is_farmer_card %}farmer_{{ doc.pk }}{% else %}ration_{{ doc.pk }}{% endif %}&next={{ request.get_full_path|urlencode }}" class="btn btn-secondary btn-sm" style="color:var(--primary-color);">
                 <i class="bi bi-plus-circle"></i> Add Bill
               </a>
             {% endif %}
           </td>
-          <td class="text-sm text-muted">{{ doc.uploaded_at|date:"d M Y" }}</td>
+          <td class="text-sm text-muted">{{ doc.doc_date|date:"d M Y" }}</td>
           <td>
             <div class="d-flex gap-1">
-              <a href="{{ doc.file.url }}" class="btn btn-secondary btn-sm" download title="Download"><i class="bi bi-download"></i></a>
-              <a href="{% url 'documents:delete' doc.pk %}" class="btn btn-secondary btn-sm" title="Delete" style="color:var(--danger)"><i class="bi bi-trash"></i></a>
+              {% if doc.is_vault_doc %}
+                <a href="{{ doc.doc_url }}" class="btn btn-secondary btn-sm" download title="Download"><i class="bi bi-download"></i></a>
+                <a href="{% url 'documents:delete' doc.pk %}" class="btn btn-secondary btn-sm" title="Delete" style="color:var(--danger)"><i class="bi bi-trash"></i></a>
+              {% else %}
+                <a href="{{ doc.doc_url }}" target="_blank" class="btn btn-secondary btn-sm" title="Print"><i class="bi bi-printer"></i></a>
+                {% if doc.is_farmer_card %}
+                  <a href="{% url 'id_cards:delete_farmer_card_confirm' doc.pk %}{% if customer %}?customer_pk={{ customer.pk }}{% endif %}" class="btn btn-secondary btn-sm" title="Delete" style="color:var(--danger)"><i class="bi bi-trash"></i></a>
+                {% else %}
+                  <a href="{% url 'id_cards:delete_ration_card_confirm' doc.pk %}{% if customer %}?customer_pk={{ customer.pk }}{% endif %}" class="btn btn-secondary btn-sm" title="Delete" style="color:var(--danger)"><i class="bi bi-trash"></i></a>
+                {% endif %}
+              {% endif %}
             </div>
           </td>
         </tr>

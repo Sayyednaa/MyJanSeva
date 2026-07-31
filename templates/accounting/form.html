@@ -20,20 +20,31 @@
         <input type="hidden" name="next" value="{{ next_url }}">
       {% endif %}
 
+      {% if form.non_field_errors %}
+        <div style="background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+          {% for error in form.non_field_errors %}
+            <div class="d-flex align-center gap-05"><i class="bi bi-exclamation-triangle-fill"></i> {{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
       <div class="form-group" style="margin-bottom: 20px;">
         <label class="form-label" style="font-weight: 600;">Associated Document &amp; Customer *</label>
-        {{ form.document }}
+        {{ form.associated_document }}
         <small style="color: var(--text-tertiary); display: block; margin-top: 4px;">
-          Link this bill to an uploaded document from the customer's vault.
+          Link this bill to an uploaded document or a saved ID card.
         </small>
-        {% if form.document.errors %}
-          <div class="text-sm" style="color: var(--danger); margin-top: 4px;">{{ form.document.errors.0 }}</div>
+        {% if form.associated_document.errors %}
+          <div class="text-sm" style="color: var(--danger); margin-top: 4px;">{{ form.associated_document.errors.0 }}</div>
         {% endif %}
       </div>
 
       <div class="form-group" style="margin-bottom: 20px;">
-        <label class="form-label" style="font-weight: 600;">Service Name *</label>
+        <label class="form-label" style="font-weight: 600;">Service Name</label>
         {{ form.service_name }}
+        <small style="color: var(--text-tertiary); display: block; margin-top: 4px;">
+          Leave blank to automatically detect based on selected document or card.
+        </small>
         {% if form.service_name.errors %}
           <div class="text-sm" style="color: var(--danger); margin-top: 4px;">{{ form.service_name.errors.0 }}</div>
         {% endif %}
@@ -82,23 +93,27 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const customerSelect = document.getElementById('id_customer');
   const documentSelect = document.getElementById('id_document');
+  const serviceNameInput = document.getElementById('id_service_name');
   
-  if (customerSelect && documentSelect) {
-    // Keep track of all documents initially loaded in query
-    // so we can filter them dynamically when the customer dropdown changes.
-    const allDocs = Array.from(documentSelect.options).map(opt => ({
-      value: opt.value,
-      text: opt.text,
-      customer: opt.value ? null : "" // Empty value placeholder
-    }));
-    
-    // We fetch details about customer's documents via AJAX or simple lookup
-    // Since we don't have a dedicated API yet, we can filter by querying the server
-    // or we can let the operator load the standard filtered list.
-    // For now, let's keep Python doing the pre-filtering on GET, 
-    // and if they change it on form, it's fine.
+  if (documentSelect && serviceNameInput) {
+    documentSelect.addEventListener('change', () => {
+      const val = documentSelect.value;
+      if (!val) return;
+      
+      // Auto-fill if empty or matches standard placeholders
+      if (serviceNameInput.value.trim() === '') {
+        if (val.startsWith('farmer_')) {
+          serviceNameInput.value = 'Farmer ID Card';
+        } else if (val.startsWith('ration_')) {
+          serviceNameInput.value = 'Ration Card';
+        } else if (val.startsWith('doc_')) {
+          const optText = documentSelect.options[documentSelect.selectedIndex].text;
+          const namePart = optText.split(' — ')[0];
+          serviceNameInput.value = namePart;
+        }
+      }
+    });
   }
 });
 </script>

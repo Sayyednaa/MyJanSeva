@@ -72,6 +72,47 @@ class FarmerIDCard(models.Model):
     def __str__(self):
         return f"{self.name_en} ({self.farmer_id}) - {self.user.username}"
 
+    @property
+    def is_vault_doc(self):
+        return False
+
+    @property
+    def is_farmer_card(self):
+        return True
+
+    @property
+    def is_ration_card(self):
+        return False
+
+    @property
+    def display_name(self):
+        return f"Farmer ID: {self.name_en} ({self.farmer_id})"
+
+    @property
+    def display_type(self):
+        return "Farmer ID Card"
+
+    @property
+    def display_category(self):
+        return "ID Card"
+
+    @property
+    def doc_date(self):
+        return self.created_at
+
+    @property
+    def doc_url(self):
+        from django.urls import reverse
+        return reverse('id_cards:home') + f"?id={self.id}"
+
+    @property
+    def name(self):
+        return self.display_name
+
+    @property
+    def uploaded_at(self):
+        return self.created_at
+
 
 class RationCard(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='ration_cards')
@@ -94,5 +135,46 @@ class RationCard(models.Model):
 
     def __str__(self):
         return f"{self.card_number} ({self.head_of_family}) - {self.user.username}"
+
+    @property
+    def is_vault_doc(self):
+        return False
+
+    @property
+    def is_farmer_card(self):
+        return False
+
+    @property
+    def is_ration_card(self):
+        return True
+
+    @property
+    def display_name(self):
+        return f"Ration Card: {self.head_of_family} ({self.card_number})"
+
+    @property
+    def display_type(self):
+        return "Ration Card"
+
+    @property
+    def display_category(self):
+        return "ID Card"
+
+    @property
+    def doc_date(self):
+        return self.created_at
+
+    @property
+    def doc_url(self):
+        from django.urls import reverse
+        return reverse('id_cards:ration_home') + f"?id={self.id}"
+
+    @property
+    def name(self):
+        return self.display_name
+
+    @property
+    def uploaded_at(self):
+        return self.created_at
 
 
